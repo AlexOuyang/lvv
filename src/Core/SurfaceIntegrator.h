@@ -9,13 +9,9 @@
 #ifndef CSE168_Rendering_SurfaceIntegrator_h
 #define CSE168_Rendering_SurfaceIntegrator_h
 
+#include "Core.h"
 #include "Integrator.h"
 #include "Spectrum.h"
-
-class Scene;
-class Renderer;
-struct Ray;
-class Intersection;
 
 class SurfaceIntegrator : public Integrator {
 public:

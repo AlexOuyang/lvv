@@ -18,6 +18,8 @@ using namespace glm;
 class Ray;
 class Intersection;
 class AABB;
+class Scene;
+class Renderer;
 
 namespace Core {
     const float Epsilon = 0.0001f;
