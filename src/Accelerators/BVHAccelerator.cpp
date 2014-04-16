@@ -260,8 +260,6 @@ BVHAccelerator::Node* BVHAccelerator::recursiveBuild(std::vector<BuildPrimitiveI
         node->splitDimension = splitDimension;
         node->children[0] = recursiveBuild(buildData, start, mid, orderedPrimitives);
         node->children[1] = recursiveBuild(buildData, mid, end, orderedPrimitives);
-        node->boundingBox = AABB::Union(node->children[0]->boundingBox,
-                                        node->children[1]->boundingBox);
         node->primitivesCount = 0;
     }
     return node;

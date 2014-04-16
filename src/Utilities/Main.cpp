@@ -140,6 +140,73 @@ void randomSpheres(Scene* &scene, Renderer* &renderer, Camera* &camera, QtFilm* 
     renderer = new Renderer();
 }
 
+void project2(Scene* &scene, Renderer* &renderer, Camera* &camera, QtFilm* &film) {
+    // Create scene
+    scene = new Scene(new ListAggregate());
+    scene->lights.push_back(new SkyLight(Spectrum(vec3(0.8f, 0.8f, 1.0f))));
+    
+    // Materials
+    Material* white = new MatteMaterial();
+    
+    // Create ground
+    Mesh* groundShape = ShapesUtilities::CreateBox(5.0f, 0.1f, 5.0f);
+    GeometricPrimitive* ground = new GeometricPrimitive(groundShape, white);
+    //*scene->aggregate << ground;
+    
+    // Create dragon
+    AssimpImporter importer;
+    importer.setDefaultMaterial(white);
+    
+    Aggregate* model = new BVHAccelerator();
+    importer.importModel(model, "/Users/gael/Desktop/Courses/CSE_168/models/dragon/dragon.ply");
+    model->preprocess();
+    
+    TransformedPrimitive* inst;
+    Transform t;
+    
+    t.m = glm::rotate(t.m, (float)M_PI, vec3(0.0f, 0.1f, 0.0f));
+    t.m[3] = vec4(-0.05f, 0.0f, -0.1f, 1.0f);
+    inst = new TransformedPrimitive(model, t);
+    
+    *scene->aggregate << inst;
+    
+    // Create lights
+    DirectionalLight* sunlgt = new DirectionalLight();
+    sunlgt->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 0.9f)));
+    sunlgt->setIntensity(1.0f);
+    sunlgt->setDirection(vec3(2.0f, -3.0f, -2.0f));
+    scene->lights.push_back(sunlgt);
+    
+    PointLight* light;
+    
+    light = new PointLight();
+    light->setSpectrum(Spectrum(vec3(1.f, 0.2f, 0.2f)));
+    light->setIntensity(0.02f);
+    light->setPosition(vec3(-0.2f, 0.2f, 0.2f));
+    scene->lights.push_back(light);
+    
+    light = new PointLight();
+    light->setSpectrum(Spectrum(vec3(0.2f, 0.2f, 1.0f)));
+    light->setIntensity(0.02f);
+    light->setPosition(vec3(0.1f, 0.1f, 0.3f));
+    scene->lights.push_back(light);
+    
+    // Create camera
+    PerspectiveCamera* perspectiveCamera = new PerspectiveCamera();
+    
+    perspectiveCamera->lookAt(vec3(-0.1f, 0.1f, 0.2f), vec3(-0.05f, 0.12f, 0.0f));
+
+    film = new QtFilm(vec2(800.0, 600));
+    perspectiveCamera->film = film;
+    
+    perspectiveCamera->setVFov(40.0f);
+    perspectiveCamera->setAspect(film->resolution.x/film->resolution.y);
+    
+    camera = perspectiveCamera;
+    
+    renderer = new Renderer();
+}
+
 void model(Scene* &scene, Renderer* &renderer, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
@@ -162,14 +229,14 @@ void model(Scene* &scene, Renderer* &renderer, Camera* &camera, QtFilm* &film) {
     
     BVHAccelerator* grid = new BVHAccelerator();
     
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 100; ++i) {
         for (int j = 0; j < 100; ++j) {
             TransformedPrimitive* instance;
             
             Transform t;
-            t.m = glm::scale(t.m, vec3(1.0f, 1.0f, 1.0f)*0.1f);
-            t.m[3].x = -50.0f + i*20.0f;
-            t.m[3].z = -(j*20.0f);
+            t.m = glm::scale(t.m, vec3(1.0f, 1.0f, 1.0f)*0.05f);
+            t.m[3].x = -100.0f + i*10.0f;
+            t.m[3].z = -(j*10.0f);
             instance = new TransformedPrimitive(aggregate, t);
             
             *grid << instance;
@@ -227,7 +294,7 @@ Main::Main() {
     _timer.setInterval(1000/24); // Refresh 24 times per second
     connect(&_timer, SIGNAL(timeout()), this, SLOT(refresh()));
     
-    model(_scene, _renderer, _camera, _film);
+    project2(_scene, _renderer, _camera, _film);
     
     _film->show();
     
