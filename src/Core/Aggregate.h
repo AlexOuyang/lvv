@@ -19,8 +19,10 @@ public:
     
     Aggregate& operator<<(Primitive* primitive);
     
-    virtual void preprocess();
     virtual void addPrimitive(Primitive* primitive) = 0;
+    virtual void preprocess();
+    
+    virtual Primitive* findPrimitive(const std::string& name);
 };
 
 #endif /* defined(__CSE168_Rendering__Aggregate__) */

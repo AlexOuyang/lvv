@@ -9,9 +9,9 @@
 #include "Main.h"
 
 #include <QDebug>
-#include <QTime>
 
 #include "Core/ListAggregate.h"
+#include "Accelerators/BVHAccelerator.h"
 #include "Lights/SkyLight.h"
 #include "Lights/PointLight.h"
 #include "Lights/DirectionalLight.h"
@@ -152,9 +152,33 @@ void model(Scene* &scene, Renderer* &renderer, Camera* &camera, QtFilm* &film) {
     AssimpImporter importer;
     importer.setDefaultMaterial(white);
     
-    importer.importScene(scene, "/Users/gael/Downloads/models/teapot/teapot.obj");
-    //importer.importScene(scene, "/Users/gael/Downloads/models/Bedroom_OBJ/Bedroom.obj");
+    Aggregate* aggregate = new BVHAccelerator();
     
+    importer.importModel(aggregate, "/Users/gael/Desktop/Courses/CSE_168/models/teapot/teapot.obj");
+    //importer.importModel(aggregate, "/Users/gael/Desktop/Courses/CSE_168/models/Bedroom_OBJ/Bedroom.obj");
+    //importer.importModel(aggregate, "/Users/gael/Desktop/Courses/CSE_168/models/dragon/dragon.ply");
+    
+    aggregate->preprocess();
+    
+    BVHAccelerator* grid = new BVHAccelerator();
+    
+    for (int i = 0; i < 10; ++i) {
+        for (int j = 0; j < 100; ++j) {
+            TransformedPrimitive* instance;
+            
+            Transform t;
+            t.m = glm::scale(t.m, vec3(1.0f, 1.0f, 1.0f)*0.1f);
+            t.m[3].x = -50.0f + i*20.0f;
+            t.m[3].z = -(j*20.0f);
+            instance = new TransformedPrimitive(aggregate, t);
+            
+            *grid << instance;
+        }
+    }
+    
+    grid->preprocess();
+    
+    *scene->aggregate << grid;
     
     Plane* groundShape = new Plane();
     GeometricPrimitive* ground = new GeometricPrimitive(groundShape, white);
@@ -184,8 +208,8 @@ void model(Scene* &scene, Renderer* &renderer, Camera* &camera, QtFilm* &film) {
     // Create camera
     PerspectiveCamera* perspectiveCamera = new PerspectiveCamera();
     
-    perspectiveCamera->lookAt(vec3(0.0f, 50.0f, 200.0f), vec3(0.0f, 50.0f, 0.0f));
-    //perspectiveCamera->lookAt(vec3(0, 0.75, 3), vec3(0.0f, 0.75f, 0.0f));
+    perspectiveCamera->lookAt(vec3(0.0f, 10.0f, 20.0f), vec3(0.0f, 5.0f, 0.0f));
+    //perspectiveCamera->lookAt(vec3(0.0f, 0.1f, 0.2f), vec3(0, 0.12f, 0.0f));
     //perspectiveCamera->lookAt(vec3(49.155, 190.717, -107.093), vec3(22.78, 162.45, -69.4));
     film = new QtFilm(vec2(800.0, 450.0)/1.0f);
     perspectiveCamera->film = film;
@@ -223,13 +247,15 @@ Main::~Main() {
 
 void Main::renderThread() {
     qDebug() << "Begin rendering...";
-    QTime t;
-    t.start();
+    _clock.start();
     _renderer->render(*_scene, _camera);
-    float elapsed = ((float)t.elapsed()/1000);
+    float elapsed = ((float)_clock.elapsed()/1000);
     qDebug() << "Rendering done in" << elapsed << "s";
 }
 
 void Main::refresh() {
     _film->repaint();
+    float elapsed = ((float)_clock.elapsed()/1000);
+    QString msg = "Ellapsed time: " + QString::number(elapsed) + "s";
+    _film->statusBar()->showMessage(msg);
 }

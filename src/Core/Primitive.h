@@ -11,11 +11,15 @@
 
 #include "Core.h"
 
+#include <string>
 #include <vector>
 
 class Primitive {
 public:
+    
+    static int nextPrimitiveId;
 
+    Primitive();
     virtual ~Primitive();
 
     virtual AABB getBoundingBox() const = 0;
@@ -26,6 +30,9 @@ public:
     
     virtual void refine(std::vector<Primitive*> &refined) const;
     void fullyRefine(std::vector<Primitive*> &refined);
+    
+    int         primitiveId;    
+    std::string name;
 };
 
 #endif

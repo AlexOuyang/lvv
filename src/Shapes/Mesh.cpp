@@ -22,26 +22,6 @@ Mesh::~Mesh() {
     }
 }
 
-bool Mesh::intersect(const Ray& ray, Intersection* intersection) const {
-    bool intersect = false;
-    
-    for (int i = 0; i < trianglesCount; ++i) {
-        if (triangles[i].intersect(ray, intersection)) {
-            intersect = true;
-        }
-    }
-    return intersect;
-}
-
-bool Mesh::intersectP(const Ray& ray) const {
-    for (int i = 0; i < trianglesCount; ++i) {
-        if (triangles[i].intersectP(ray)) {
-            return true;
-        }
-    }
-    return false;
-}
-
 AABB Mesh::getBoundingBox() const {
     AABB bound;
     
@@ -49,4 +29,14 @@ AABB Mesh::getBoundingBox() const {
         bound = AABB::Union(bound, vertices[i].position);
     }
     return bound;
+}
+
+bool Mesh::canIntersect() const {
+    return false;
+}
+
+void Mesh::refine(std::vector<Shape*> &refined) const {
+    for (int i = 0; i < trianglesCount; ++i) {
+        refined.push_back(&triangles[i]);
+    }
 }

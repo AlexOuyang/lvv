@@ -20,9 +20,12 @@ public:
     GeometricPrimitive(Shape* shape, Material* material);
     ~GeometricPrimitive();
     
+    virtual bool canIntersect() const;
     virtual bool intersect(const Ray& ray, Intersection* intersection) const;
     virtual bool intersectP(const Ray& ray) const;
     virtual AABB getBoundingBox() const;
+    
+    virtual void refine(std::vector<Primitive*> &refined) const;
     
 private:
     Shape*      _shape;

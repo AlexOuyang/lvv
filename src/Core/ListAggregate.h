@@ -22,6 +22,9 @@ public:
     ~ListAggregate();
     
     virtual void addPrimitive(Primitive* primitive);
+    virtual void preprocess();
+    
+    virtual Primitive* findPrimitive(const std::string& name);
     
     virtual AABB getBoundingBox() const;
     

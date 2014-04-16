@@ -11,6 +11,7 @@
 
 #include <thread>
 #include <QTimer>
+#include <QTime>
 
 #include "Core/Core.h"
 #include "Utilities/AssimpImporter.h"
@@ -39,6 +40,7 @@ private:
     
     QTimer          _timer;
     std::thread*    _thread;
+    QTime           _clock;
 };
 
 #endif /* defined(__CSE168_Rendering__Main__) */

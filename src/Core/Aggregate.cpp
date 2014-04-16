@@ -20,3 +20,7 @@ Aggregate& Aggregate::operator<<(Primitive* primitive) {
     addPrimitive(primitive);
     return *this;
 }
+
+Primitive* Aggregate::findPrimitive(const std::string&) {
+    return nullptr;
+}

@@ -14,15 +14,19 @@
 #include "Vertex.h"
 #include "Triangle.h"
 
+#include <vector>
+
 class Mesh : public Shape {
 public:
     
     Mesh();
     virtual ~Mesh();
     
-    virtual bool intersect(const Ray& ray, Intersection* intersection) const;
-    virtual bool intersectP(const Ray& ray) const;
     virtual AABB getBoundingBox() const;
+    
+    virtual bool canIntersect() const;
+
+    virtual void refine(std::vector<Shape*> &refined) const;
     
     int         verticesCount;
     int         trianglesCount;

@@ -17,6 +17,10 @@ GeometricPrimitive::~GeometricPrimitive() {
     
 }
 
+bool GeometricPrimitive::canIntersect() const {
+    return _shape->canIntersect();
+}
+
 bool GeometricPrimitive::intersect(const Ray& ray, Intersection* intersection) const {
     if (!_shape->intersect(ray, intersection)) {
         return false;
@@ -31,4 +35,13 @@ bool GeometricPrimitive::intersectP(const Ray& ray) const {
 
 AABB GeometricPrimitive::getBoundingBox() const {
     return _shape->getBoundingBox();
+}
+
+void GeometricPrimitive::refine(std::vector<Primitive*> &refined) const {
+    std::vector<Shape*> refinedShapes;
+    _shape->refine(refinedShapes);
+    
+    for (Shape* s : refinedShapes) {
+        refined.push_back(new GeometricPrimitive(s, _material));
+    }
 }

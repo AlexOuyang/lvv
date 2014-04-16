@@ -25,10 +25,10 @@ public:
     
     void setDefaultMaterial(Material* material);
     
-    bool importScene(Scene* scene, const std::string& filename);
+    bool importModel(Aggregate* aggregate, const std::string& filename);
     
     bool importAssimpMaterials(const aiScene* assimpScene);
-    bool importAssimpNode(Scene* scene, const aiScene* assimpScene, aiNode* assimpNode);
+    bool importAssimpNode(Aggregate* aggregate, const aiScene* assimpScene, aiNode* assimpNode);
     
 private:
     Assimp::Importer        _importer;

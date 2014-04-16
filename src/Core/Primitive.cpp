@@ -8,6 +8,17 @@
 
 #include "Primitive.h"
 
+#include <sstream>
+
+int Primitive::nextPrimitiveId = 1;
+
+Primitive::Primitive() : primitiveId(nextPrimitiveId++), name() {
+    std::stringstream ss;
+    
+    ss << "Primitive " << primitiveId;
+    name = ss.str();
+}
+
 Primitive::~Primitive() {
     
 }

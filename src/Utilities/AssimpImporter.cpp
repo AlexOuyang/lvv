@@ -28,7 +28,7 @@ void AssimpImporter::setDefaultMaterial(Material *material) {
     _defaultMaterial = material;
 }
 
-bool AssimpImporter::importScene(Scene* scene, const std::string& filename) {
+bool AssimpImporter::importModel(Aggregate* aggregate, const std::string& filename) {
     // Read the scene from the file
     const aiScene* assimpScene = _importer.ReadFile(filename,
                                               aiProcess_Triangulate
@@ -47,7 +47,7 @@ bool AssimpImporter::importScene(Scene* scene, const std::string& filename) {
     }
     
     _trianglesCount = 0;
-    bool status = importAssimpNode(scene, assimpScene, assimpScene->mRootNode);
+    bool status = importAssimpNode(aggregate, assimpScene, assimpScene->mRootNode);
     
     std::cout << "AssimImporter: loaded " << _trianglesCount << " triangles" << std::endl;
     
@@ -71,8 +71,11 @@ bool AssimpImporter::importAssimpMaterials(const aiScene* assimpScene) {
     return true;
 }
 
-bool AssimpImporter::importAssimpNode(Scene* scene, const aiScene* assimpScene,
+bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assimpScene,
                                       aiNode* assimpNode) {
+    
+    std::string name = assimpNode->mName.C_Str();
+    
     // Load meshes
     for (uint i = 0; i < assimpNode->mNumMeshes; ++i) {
         aiMesh* assimpMesh = assimpScene->mMeshes[assimpNode->mMeshes[i]];
@@ -92,6 +95,10 @@ bool AssimpImporter::importAssimpNode(Scene* scene, const aiScene* assimpScene,
         }
         
         GeometricPrimitive* primitive = new GeometricPrimitive(mesh, material);
+    
+        if (!name.empty()) {
+            primitive->name = name;
+        }
         
         // Load vertices
         mesh->verticesCount = assimpMesh->mNumVertices;
@@ -132,12 +139,12 @@ bool AssimpImporter::importAssimpNode(Scene* scene, const aiScene* assimpScene,
         }
         
         // Add mesh to scene
-        *scene->aggregate << primitive;
+        *aggregate << primitive;
     }
     
     // Load child nodes recursively
     for (uint i = 0; i < assimpNode->mNumChildren; ++i) {
-        importAssimpNode(scene, assimpScene, assimpNode->mChildren[i]);
+        importAssimpNode(aggregate, assimpScene, assimpNode->mChildren[i]);
     }
     
     return true;

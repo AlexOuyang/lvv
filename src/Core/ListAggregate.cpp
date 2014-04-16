@@ -8,6 +8,8 @@
 
 #include "ListAggregate.h"
 
+#include <QDebug>
+
 ListAggregate::ListAggregate() : _primitives() {
     
 }
@@ -18,6 +20,24 @@ ListAggregate::~ListAggregate() {
 
 void ListAggregate::addPrimitive(Primitive* primitive) {
     _primitives.push_back(primitive);
+}
+
+void ListAggregate::preprocess() {
+    // Refine the primitives
+    std::vector<Primitive*> refined;
+    for (Primitive* p : _primitives) {
+        p->fullyRefine(refined);
+    }
+    _primitives.swap(refined);
+}
+
+Primitive* ListAggregate::findPrimitive(const std::string& name) {
+    for (Primitive* p : _primitives) {
+        if (p->name == name) {
+            return p;
+        }
+    }
+    return nullptr;
 }
 
 AABB ListAggregate::getBoundingBox() const {

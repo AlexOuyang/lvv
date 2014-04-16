@@ -30,7 +30,10 @@ bool TransformedPrimitive::intersect(const Ray& ray, Intersection* intersection)
     
     // Transform intersection
     intersection->point = _primitiveToWorld(intersection->point);
-    intersection->normal = _primitiveToWorld.applyToVector(intersection->normal);
+    // Transform normal with inverse transpose of transformation matrix
+    mat4x4 normalMatrix = glm::inverse(glm::transpose(_primitiveToWorld.m));
+    intersection->normal = vec3(normalMatrix * vec4(intersection->normal, 0.0f));
+    intersection->normal = glm::normalize(intersection->normal);
     intersection->t = transformedRay.tmax;
     
     // Transform ray
