@@ -85,8 +85,6 @@ void BVHAccelerator::preprocess() {
     orderedPrimitives.reserve(_primitives.size());
     _root = recursiveBuild(buildData, 0, _primitives.size(), orderedPrimitives);
     _primitives.swap(orderedPrimitives);
-    qDebug() << _root->boundingBox.min.x << _root->boundingBox.min.y << _root->boundingBox.min.z;
-    qDebug() << _root->boundingBox.max.x << _root->boundingBox.max.y << _root->boundingBox.max.z;
 }
 
 AABB BVHAccelerator::getBoundingBox() const {
@@ -214,6 +212,7 @@ BVHAccelerator::Node* BVHAccelerator::recursiveBuild(std::vector<BuildPrimitiveI
         for (uint32_t i = start; i < end; ++i) {
             orderedPrimitives.push_back(_primitives[buildData[i].primitiveIndex]);
         }
+        return node;
     } else {
         // Compute bounding box of primitive centroids used to choose split dimension
         AABB centroidsBB;
@@ -230,6 +229,7 @@ BVHAccelerator::Node* BVHAccelerator::recursiveBuild(std::vector<BuildPrimitiveI
             for (uint32_t i = start; i < end; ++i) {
                 orderedPrimitives.push_back(_primitives[buildData[i].primitiveIndex]);
             }
+            return node;
         }
         
         // Partitions primitives base on splitMethod
