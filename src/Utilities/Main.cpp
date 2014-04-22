@@ -151,7 +151,6 @@ void project2(Scene* &scene, Renderer* &renderer, Camera* &camera, QtFilm* &film
     // Create ground
     Mesh* groundShape = ShapesUtilities::CreateBox(5.0f, 0.1f, 5.0f);
     GeometricPrimitive* ground = new GeometricPrimitive(groundShape, white);
-    //*scene->aggregate << ground;
     
     // Create dragon
     AssimpImporter importer;
@@ -159,7 +158,17 @@ void project2(Scene* &scene, Renderer* &renderer, Camera* &camera, QtFilm* &film
     
     Aggregate* model = new BVHAccelerator();
     importer.importModel(model, "/Users/gael/Desktop/Courses/CSE_168/models/dragon/dragon.ply");
+    
+    // Add ground to model aggregate (cannot be directly added to the scene)
+    *model << ground;
+    
+    Main::startClock("Generating model bvh...");
+    
     model->preprocess();
+    
+    Main::endClock("Model bvh generated in");
+    
+    *scene->aggregate << model;
     
     TransformedPrimitive* inst;
     Transform t;
@@ -289,6 +298,8 @@ void model(Scene* &scene, Renderer* &renderer, Camera* &camera, QtFilm* &film) {
     renderer = new Renderer();
 }
 
+QTime Main::clock = QTime();
+
 Main::Main() {
     // Setup timer
     _timer.setInterval(1000/24); // Refresh 24 times per second
@@ -313,16 +324,24 @@ Main::~Main() {
 }
 
 void Main::renderThread() {
-    qDebug() << "Begin rendering...";
-    _clock.start();
+    startClock("Begin rendering...");
     _renderer->render(*_scene, _camera);
-    float elapsed = ((float)_clock.elapsed()/1000);
-    qDebug() << "Rendering done in" << elapsed << "s";
+    endClock("Rendering done in");
 }
 
 void Main::refresh() {
     _film->repaint();
-    float elapsed = ((float)_clock.elapsed()/1000);
+    float elapsed = ((float)clock.elapsed()/1000);
     QString msg = "Ellapsed time: " + QString::number(elapsed) + "s";
     _film->statusBar()->showMessage(msg);
+}
+
+void Main::startClock(const std::string& message) {
+    qDebug() << message.c_str();
+    clock.start();
+}
+
+void Main::endClock(const std::string& message) {
+    float elapsed = ((float)clock.elapsed()/1000);
+    qDebug() << message.c_str() << elapsed << "s";
 }

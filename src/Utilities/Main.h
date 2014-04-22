@@ -29,6 +29,10 @@ public:
     
     void renderThread();
     
+    static void startClock(const std::string& message);
+    static void endClock(const std::string& message);
+    static QTime clock;
+    
 public slots:
     void refresh();
 
@@ -40,7 +44,6 @@ private:
     
     QTimer          _timer;
     std::thread*    _thread;
-    QTime           _clock;
 };
 
 #endif /* defined(__CSE168_Rendering__Main__) */
