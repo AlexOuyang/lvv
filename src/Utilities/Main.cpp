@@ -43,28 +43,34 @@ void project1(Scene* &scene, Renderer* &renderer, Camera* &camera, QtFilm* &film
     // Create boxes
     Mesh* boxShape;
     GeometricPrimitive* box;
+    Aggregate* aggregate = new BVHAccelerator();
     
     // Box 1
     boxShape = ShapesUtilities::CreateBox(5.0f, 0.1f, 5.0f);
     box = new GeometricPrimitive(boxShape, white);
-    *scene->aggregate << box;
+    *aggregate << box;
+    aggregate->preprocess();
+    *scene->aggregate << aggregate;
     
     // Box 2
     boxShape = ShapesUtilities::CreateBox(1.0f, 1.0f, 1.0f);
     box = new GeometricPrimitive(boxShape, white);
+    aggregate = new BVHAccelerator();
+    *aggregate << box;
+    aggregate->preprocess();
     
     // Instances
     TransformedPrimitive* inst;
     Transform t;
     t.m = rotate(t.m, 0.5f, vec3(1.0f, 0.0f, 0.0f));
     t.m[3].y = 1.0f;
-    inst = new TransformedPrimitive(box, t);
+    inst = new TransformedPrimitive(aggregate, t);
     *scene->aggregate << inst;
 
     t = Transform();
     t.m = rotate(t.m, 1.0f, vec3(0.0f, 1.0f, 0.0f));
     t.m[3] = vec4(vec3(-1.0f, 0.0f, 1.0f), 1.0f);
-    inst = new TransformedPrimitive(box, t);
+    inst = new TransformedPrimitive(aggregate, t);
     *scene->aggregate << inst;
     
     DirectionalLight* sunlgt = new DirectionalLight();
@@ -306,6 +312,7 @@ Main::Main() {
     connect(&_timer, SIGNAL(timeout()), this, SLOT(refresh()));
     
     project2(_scene, _renderer, _camera, _film);
+    //randomSpheres(_scene, _renderer, _camera, _film);
     
     _film->show();
     
