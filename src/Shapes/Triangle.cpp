@@ -69,6 +69,7 @@ bool Triangle::intersect(const Ray& ray, Intersection* intersection) const {
     intersection->uv = ((1-alpha-beta)*vertices[0]->texCoord
                        + alpha*vertices[1]->texCoord
                         + beta*vertices[2]->texCoord);
+    
     intersection->rayEpsilon = 1e-3f * t;
     return true;
 }
@@ -80,7 +81,7 @@ bool Triangle::intersectP(const Ray& ray) const {
     float det = dot(-ray.direction, normal);
     
     // Determinant null
-    if (det < Core::Epsilon && det > -Core::Epsilon) {
+    if (det == 0.0f) {
         return false;
     }
     
