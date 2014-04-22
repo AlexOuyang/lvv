@@ -19,6 +19,9 @@ QtFilm::QtFilm(const vec2& res)
     resize(resolution.x + 10, resolution.y + 30);
     
     connect(_ui.actionSave, SIGNAL(triggered()), this, SLOT(saveAction()));
+    
+    // Fill image of black
+    _image.fill(Spectrum().getIntColor());
 }
 
 QtFilm::~QtFilm() {
