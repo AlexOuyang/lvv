@@ -31,7 +31,7 @@ bool Triangle::intersect(const Ray& ray, Intersection* intersection) const {
     float det = dot(-ray.direction, normal);
     
     // Determinant null
-    if (det < Core::Epsilon && det > -Core::Epsilon) {
+    if (det == 0.0f) {
         return false;
     }
     
