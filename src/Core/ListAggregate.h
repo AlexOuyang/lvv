@@ -25,6 +25,8 @@ public:
     virtual void preprocess();
     
     virtual Primitive* findPrimitive(const std::string& name);
+    virtual void removePrimitive(const std::string& name);
+    virtual const std::vector<Primitive*> getPrimitives() const;
     
     virtual AABB getBoundingBox() const;
     

@@ -9,7 +9,7 @@
 #include "DirectionalLight.h"
 
 DirectionalLight::DirectionalLight(const vec3& direction, float intensity, const Spectrum& spectrum)
-: _direction(direction), _intensity(intensity), _spectrum(spectrum) {
+: Light(), _direction(direction), _intensity(intensity), _spectrum(spectrum) {
     
 }
 
@@ -34,6 +34,7 @@ Spectrum DirectionalLight::le(const Ray&) const {
 }
 
 Spectrum DirectionalLight::sampleL(const vec3& point, float rayEpsilon,
+                                   const LightSample&,
                                    vec3* wi, VisibilityTester* vt) const {
     *wi = -_direction;
     vt->setRay(point, rayEpsilon, *wi);

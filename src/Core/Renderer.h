@@ -1,4 +1,4 @@
-    //
+//
 //  Renderer.h
 //  CSE168_Rendering
 //
@@ -49,8 +49,9 @@ public:
     
     Spectrum li(const Scene& scene, const Ray& ray) const;
     
+    RenderOptions options;
+    
 private:
-    RenderOptions       _options;
     SurfaceIntegrator*  _surfaceIntegrator;
 };
 

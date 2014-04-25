@@ -17,8 +17,11 @@
 class GeometricPrimitive : public Primitive {
 public:
     
-    GeometricPrimitive(Shape* shape, Material* material);
+    GeometricPrimitive(Shape* shape, Material* material, AreaLight* areaLight=nullptr);
     ~GeometricPrimitive();
+    
+    Shape*  getShape() const;
+    void    setMaterial(Material* material);
     
     virtual bool canIntersect() const;
     virtual bool intersect(const Ray& ray, Intersection* intersection) const;
@@ -26,10 +29,14 @@ public:
     virtual AABB getBoundingBox() const;
     
     virtual void refine(std::vector<Primitive*> &refined) const;
+
+    void setAreaLight(AreaLight* areaLight);
+    virtual AreaLight* getAreaLight() const;
     
 private:
     Shape*      _shape;
     Material*   _material;
+    AreaLight*  _areaLight;
 };
 
 #endif /* defined(__CSE168_Rendering__GeometricPrimitive__) */

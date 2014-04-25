@@ -8,8 +8,9 @@
 
 #include "Intersection.h"
 
-Intersection::Intersection()
-: t(INFINITY), rayEpsilon(Core::Epsilon), point(), normal(), uv(0), material(nullptr) {
+Intersection::Intersection() :
+t(INFINITY), rayEpsilon(Core::Epsilon), point(), normal(), uv(0),
+material(nullptr), primitive(nullptr) {
     
 }
 

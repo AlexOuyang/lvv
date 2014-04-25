@@ -10,7 +10,10 @@
 
 #include "Integrators/WhittedIntegrator.h"
 
-RenderOptions::RenderOptions() {
+RenderOptions::RenderOptions() :
+maxThreadsCount(-1),
+antialiasingSampling(1, true, ShirleyDistribution),
+maxRayDepth(5) {
     
 }
 

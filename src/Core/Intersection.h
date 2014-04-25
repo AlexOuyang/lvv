@@ -10,7 +10,6 @@
 #define __CSE168_Rendering__Intersection__
 
 #include "Core.h"
-#include "Material.h"
 
 class Intersection {
 public:
@@ -18,12 +17,13 @@ public:
     Intersection();
     ~Intersection();
     
-    float       t;
-    float       rayEpsilon;
-    vec3        point;
-    vec3        normal;
-    vec2        uv;
-    Material*   material;
+    float               t;
+    float               rayEpsilon;
+    vec3                point;
+    vec3                normal;
+    vec2                uv;
+    Material*           material;
+    const Primitive*    primitive;
 };
 
 #endif /* defined(__CSE168_Rendering__Intersection__) */

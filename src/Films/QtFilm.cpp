@@ -62,7 +62,9 @@ const QImage& QtFilm::getImage() const {
 }
 
 void QtFilm::addSample(const CameraSample &sample, const Spectrum &L) {
-    _image.setPixel(sample.image.x, sample.image.y, L.getIntColor());
+    //vec3 filtered = vec3(1.0f) - glm::exp(L.getColor() * -1.0f);
+    vec3 filtered = L.getColor();
+    _image.setPixel(sample.pixel.x, sample.pixel.y, Spectrum(filtered).getIntColor());
 }
 
 void QtFilm::saveAction() {

@@ -12,6 +12,7 @@
 #include <thread>
 #include <QTimer>
 #include <QTime>
+#include <QDebug>
 
 #include "Core/Core.h"
 #include "Utilities/AssimpImporter.h"
@@ -19,6 +20,33 @@
 #include "Core/Renderer.h"
 #include "Core/Camera.h"
 #include "Films/QtFilm.h"
+#include "Core/ListAggregate.h"
+#include "Accelerators/BVHAccelerator.h"
+#include "Lights/SkyLight.h"
+#include "Lights/PointLight.h"
+#include "Lights/DirectionalLight.h"
+#include "Lights/AreaLight.h"
+#include "Core/CameraSample.h"
+#include "Core/Spectrum.h"
+#include "Films/QtFilm.h"
+#include "Core/GeometricPrimitive.h"
+#include "Core/TransformedPrimitive.h"
+#include "Shapes/ShapesUtilities.h"
+#include "Shapes/Sphere.h"
+#include "Shapes/Plane.h"
+#include "Cameras/PerspectiveCamera.h"
+#include "Materials/Matte.h"
+#include "Materials/Metal.h"
+#include "Materials/Glass.h"
+#include "Materials/Glossy.h"
+
+// Scenes
+void project1(Scene* &scene, Camera* &camera, QtFilm* &film);
+void randomSpheres(Scene* &scene, Camera* &camera, QtFilm* &film);
+void project2(Scene* &scene, Camera* &camera, QtFilm* &film);
+void instancing(Scene* &scene, Camera* &camera, QtFilm* &film);
+void cornellBox(Scene* &scene, Camera* &camera, QtFilm* &film);
+void materials(Scene* &scene, Camera* &camera, QtFilm* &film);
 
 class Main : public QObject {
     Q_OBJECT
@@ -32,6 +60,19 @@ public:
     static void startClock(const std::string& message);
     static void endClock(const std::string& message);
     static QTime clock;
+    static bool clockActive;
+    
+    static void buildAccelerationStructures(Aggregate* model);
+    
+    template<class T>
+    static T findPrimitive(Aggregate* aggregate, const std::string& name) {
+        Primitive* p = aggregate->findPrimitive(name);
+        TransformedPrimitive* tp = dynamic_cast<TransformedPrimitive*>(p);
+        if (!tp) {
+            return nullptr;
+        }
+        return dynamic_cast<T>(tp->getPrimitive());
+    }
     
 public slots:
     void refresh();

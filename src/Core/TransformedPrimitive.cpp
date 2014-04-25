@@ -21,6 +21,27 @@ _worldToPrimitive(Transform::Inverse(transform)) {
 TransformedPrimitive::~TransformedPrimitive() {
 }
 
+void TransformedPrimitive::setPrimitive(Primitive* primitive) {
+    _primitive = primitive;
+}
+
+Primitive* TransformedPrimitive::getPrimitive() const {
+    return _primitive;
+}
+
+void TransformedPrimitive::setTransform(const Transform& transform) {
+    _primitiveToWorld = transform;
+    _worldToPrimitive = Transform::Inverse(transform);
+}
+
+const Transform& TransformedPrimitive::getTransform() const {
+    return _primitiveToWorld;
+}
+
+bool TransformedPrimitive::canIntersect() const {
+    return _primitive->canIntersect();
+}
+
 bool TransformedPrimitive::intersect(const Ray& ray, Intersection* intersection) const {
     Ray transformedRay = _worldToPrimitive(ray);
     

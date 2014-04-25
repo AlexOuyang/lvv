@@ -31,6 +31,10 @@ public:
     virtual void addPrimitive(Primitive* primitive);
     virtual void preprocess();
     
+    virtual Primitive* findPrimitive(const std::string& name);
+    virtual void removePrimitive(const std::string& name);
+    virtual const std::vector<Primitive*> getPrimitives() const;
+    
     virtual AABB getBoundingBox() const;
     
     virtual bool intersect(const Ray& ray, Intersection* intersection) const;

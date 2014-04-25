@@ -19,6 +19,12 @@ public:
     TransformedPrimitive(Primitive* primitive, const Transform& transform);
     ~TransformedPrimitive();
     
+    void setPrimitive(Primitive* primitive);
+    Primitive* getPrimitive() const;
+    void setTransform(const Transform& transform);
+    const Transform& getTransform() const;
+    
+    virtual bool canIntersect() const;
     virtual bool intersect(const Ray& ray, Intersection* intersection) const;
     virtual bool intersectP(const Ray& ray) const;
     virtual AABB getBoundingBox() const;

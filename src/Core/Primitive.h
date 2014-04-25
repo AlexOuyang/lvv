@@ -10,6 +10,7 @@
 #define CSE168_Rendering_Primitive_h
 
 #include "Core.h"
+#include "Lights/AreaLight.h"
 
 #include <string>
 #include <vector>
@@ -31,7 +32,9 @@ public:
     virtual void refine(std::vector<Primitive*> &refined) const;
     void fullyRefine(std::vector<Primitive*> &refined);
     
-    int         primitiveId;    
+    virtual AreaLight* getAreaLight() const;
+    
+    int         primitiveId;
     std::string name;
 };
 

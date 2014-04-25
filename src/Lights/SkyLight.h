@@ -20,6 +20,7 @@ public:
     
     virtual Spectrum le(const Ray& ray) const;
     virtual Spectrum sampleL(const vec3& point, float rayEpsilon,
+                             const LightSample& lightSample,
                              vec3* wi, VisibilityTester* vt) const;
     
 private:

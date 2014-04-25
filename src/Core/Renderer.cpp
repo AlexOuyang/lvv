@@ -46,8 +46,8 @@ void Renderer::Task::run() {
 }
 
 Renderer::Renderer(RenderOptions options)
-: _options(options), _surfaceIntegrator(nullptr) {
-    _surfaceIntegrator = _options.createSurfaceIntegrator();
+: options(options), _surfaceIntegrator(nullptr) {
+    _surfaceIntegrator = options.createSurfaceIntegrator();
 }
 
 Renderer::~Renderer() {
@@ -81,7 +81,10 @@ void Renderer::render(const Scene& scene, Camera* camera) {
     
     // Create thread pool
     QThreadPool threadPool;
-    //threadPool.setMaxThreadCount(1);
+    
+    if (options.maxThreadsCount > 0) {
+        threadPool.setMaxThreadCount(options.maxThreadsCount);
+    }
     
     // Launch tasks
     for (int i = 0; i < tasksCount; ++i) {
@@ -146,11 +149,13 @@ CameraSample* Renderer::getSamples(Renderer::Task *task, int* samplesCount) cons
 
     for (int x = 0; x < subSampleWidth; ++x) {
         for (int y = 0; y < subSampleHeight; ++y) {
-            samples[y*subSampleWidth + x].image.x = subSamplesStart.x + x;
-            samples[y*subSampleWidth + x].image.y = subSamplesStart.y + y;
-            samples[y*subSampleWidth + x].lens.x = (subSamplesStart.x + x + 0.5) / resolution.x;
-            samples[y*subSampleWidth + x].lens.y = 1 - ((subSamplesStart.y + y + 0.5)
-                                                        / resolution.y);
+            samples[y*subSampleWidth + x].pixel.x = subSamplesStart.x + x;
+            samples[y*subSampleWidth + x].pixel.y = subSamplesStart.y + y;
+            samples[y*subSampleWidth + x].position.x = (subSamplesStart.x + x) / resolution.x;
+            samples[y*subSampleWidth + x].position.y = 1 - ((subSamplesStart.y + y + 1)
+                                                            / resolution.y);
+            samples[y*subSampleWidth + x].pixelSize.x = 1.0f / resolution.x;
+            samples[y*subSampleWidth + x].pixelSize.y = 1.0f / resolution.y;
         }
     }
     
@@ -158,13 +163,67 @@ CameraSample* Renderer::getSamples(Renderer::Task *task, int* samplesCount) cons
 }
 
 void Renderer::renderSample(const Scene& scene, Camera* camera, const CameraSample& sample) const {
-    Ray ray;
+    Spectrum ls;
     
-    // Generate primary ray
-    float rayWeight = camera->generateRay(sample, &ray);
-    
-    // Compute amount of light arriving along the ray
-    Spectrum ls = rayWeight * li(scene, ray);
+    // Create sub-samples for anti-aliasing
+    int samplesCount = options.antialiasingSampling.count;
+    for (int subSampleX = 0; subSampleX < samplesCount; ++subSampleX) {
+        for (int subSampleY = 0; subSampleY < samplesCount; ++subSampleY) {
+            // Create sub sample based on sampling method
+            CameraSample subSample = sample;
+            
+            vec2 subSampleDelta = vec2((float)subSampleX/samplesCount,
+                                       (float)subSampleY/samplesCount);
+            
+            vec2 subSampleSize = vec2(1.0f) / (float)samplesCount;
+            
+            if (options.antialiasingSampling.jittered) {
+                subSampleDelta += (vec2((float)rand()/RAND_MAX, (float)rand()/RAND_MAX)
+                                   * subSampleSize);
+            } else {
+                subSampleDelta += (vec2(0.5f, 0.5f) * subSampleSize);
+            }
+
+            switch (options.antialiasingSampling.distribution) {
+                case GaussDistribution: {
+                    float a = 0.4f * sqrt(-2*log(subSampleDelta.x));
+                    float b = 2.0f * M_PI * subSampleDelta.y;
+                    subSampleDelta.x = 0.5f + a * sin(b);
+                    subSampleDelta.y = 0.5f + a * cos(b);
+                    break;
+                }
+                case ShirleyDistribution: {
+                    if (subSampleDelta.x < 0.5f) {
+                        subSampleDelta.x = -0.5f + sqrt(2*subSampleDelta.x);
+                    } else {
+                        subSampleDelta.x = 1.5f - sqrt(2-2*subSampleDelta.x);
+                    }
+                    
+                    if (subSampleDelta.y < 0.5f) {
+                        subSampleDelta.y = -0.5f + sqrt(2*subSampleDelta.y);
+                    } else {
+                        subSampleDelta.y = 1.5f - sqrt(2-2*subSampleDelta.y);
+                    }
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+            
+            subSample.position += subSampleDelta * sample.pixelSize;
+            
+            // Generate primary ray
+            Ray ray;
+            float rayWeight = camera->generateRay(subSample, &ray);
+            
+            // Scale ray weight by sample contribution
+            rayWeight *= 1.0f / ((float)(samplesCount*samplesCount));
+            
+            // Compute amount of light arriving along the ray
+            ls += rayWeight * li(scene, ray);
+        }
+    }
     
     // Add sample contribution to camera film
     camera->film->addSample(sample, ls);

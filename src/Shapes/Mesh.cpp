@@ -36,6 +36,7 @@ bool Mesh::canIntersect() const {
 }
 
 void Mesh::refine(std::vector<Shape*> &refined) const {
+    refined.reserve(trianglesCount);
     for (int i = 0; i < trianglesCount; ++i) {
         refined.push_back(&triangles[i]);
     }

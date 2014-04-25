@@ -26,13 +26,17 @@ float PerspectiveCamera::generateRay(const CameraSample& sample, Ray* ray) {
     // Plane center
     ray->direction = ray->origin - c;
 
-    // vec3 on plane
-    ray->direction += (a*planeWidth*sample.lens.x - a*(planeWidth/2)
-                       + b*planeHeight*sample.lens.y - b*(planeHeight/2));
+    // Point on plane
+    ray->direction += (a*planeWidth*sample.position.x - a*(planeWidth/2)
+                       + b*planeHeight*sample.position.y - b*(planeHeight/2));
     
     ray->direction = normalize(ray->direction - ray->origin);
     
     return 1.0;
+}
+
+void PerspectiveCamera::setMatrix(const mat4x4& matrix) {
+    _matrix = matrix;
 }
 
 void PerspectiveCamera::lookAt(const vec3& position, const vec3& target, const vec3& up) {

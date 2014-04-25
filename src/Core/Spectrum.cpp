@@ -17,6 +17,14 @@ Spectrum::Spectrum(const vec3& color) : _color(color) {
     
 }
 
+Spectrum::Spectrum(int intColor) : _color(0.f, 0.f, 0.f) {
+    unsigned char* components = (unsigned char*)&intColor;
+    
+    _color.r = ((float)components[2]) / 255.f;
+    _color.g = ((float)components[1]) / 255.f;
+    _color.b = ((float)components[0]) / 255.f;
+}
+
 Spectrum::~Spectrum() {
     
 }
@@ -25,9 +33,13 @@ void Spectrum::setColor(const vec3& color) {
     _color = color;
 }
 
+vec3 Spectrum::getColor() const {
+    return _color;
+}
+
 int Spectrum::getIntColor() const {
     int value = 0;
-    char* components = (char*)&value;
+    unsigned char* components = (unsigned char*)&value;
     
     components[2] = (char)clamp((int)(_color.r * 256), 0, 255);
     components[1] = (char)clamp((int)(_color.g * 256), 0, 255);
@@ -43,6 +55,10 @@ bool Spectrum::isBlack() const {
 Spectrum& Spectrum::operator+=(const Spectrum& s) {
     _color += s._color;
     return *this;
+}
+
+Spectrum Spectrum::operator+(const Spectrum& s) const {
+    return Spectrum(_color + s._color);
 }
 
 Spectrum Spectrum::operator*(const Spectrum& s) const {

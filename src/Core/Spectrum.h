@@ -16,16 +16,19 @@ public:
     
     static const float Epsilon;
     
-    Spectrum(float value=0.0);
+    Spectrum(float value=0.0f);
     Spectrum(const vec3& color);
+    Spectrum(int intColor);
     ~Spectrum();
     
-    void setColor(const vec3& color);
-    int getIntColor() const;
+    void    setColor(const vec3& color);
+    vec3    getColor() const;
+    int     getIntColor() const;
     
     bool isBlack() const;
     
     Spectrum& operator+=(const Spectrum& s);
+    Spectrum operator+(const Spectrum& s) const;
     Spectrum operator*(const Spectrum& s) const;
     Spectrum operator*(float v) const;
     

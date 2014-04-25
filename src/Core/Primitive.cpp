@@ -13,10 +13,6 @@
 int Primitive::nextPrimitiveId = 1;
 
 Primitive::Primitive() : primitiveId(nextPrimitiveId++), name() {
-    std::stringstream ss;
-    
-    ss << "Primitive " << primitiveId;
-    name = ss.str();
 }
 
 Primitive::~Primitive() {
@@ -33,7 +29,7 @@ void Primitive::refine(std::vector<Primitive*> &) const {
 
 void Primitive::fullyRefine(std::vector<Primitive*> &refined) {
     std::vector<Primitive*> todo;
-    
+
     todo.push_back(this);
     while (todo.size()) {
         Primitive* current = todo.back();
@@ -45,4 +41,8 @@ void Primitive::fullyRefine(std::vector<Primitive*> &refined) {
             current->refine(todo);
         }
     }
+}
+
+AreaLight* Primitive::getAreaLight() const {
+    return nullptr;
 }

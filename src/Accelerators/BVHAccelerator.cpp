@@ -87,6 +87,32 @@ void BVHAccelerator::preprocess() {
     _primitives.swap(orderedPrimitives);
 }
 
+Primitive* BVHAccelerator::findPrimitive(const std::string& name) {
+    for (Primitive* p : _primitives) {
+        Aggregate* child;
+        
+        if (p->name == name) {
+            return p;
+        } else if ((child = dynamic_cast<Aggregate*>(p))) {
+            Primitive* res = child->findPrimitive(name);
+            if (res) {
+                return res;
+            }
+        }
+    }
+    return nullptr;
+}
+
+void BVHAccelerator::removePrimitive(const std::string& name) {
+    std::remove_if(_primitives.begin(), _primitives.end(), [name] (Primitive* p) {
+        return p->name == name;
+    });
+}
+
+const std::vector<Primitive*> BVHAccelerator::getPrimitives() const {
+    return _primitives;
+}
+
 AABB BVHAccelerator::getBoundingBox() const {
     return _root ? _root->boundingBox : AABB();
 }
@@ -147,8 +173,6 @@ bool BVHAccelerator::intersectP(const Ray& ray) const {
         return false;
     }
     
-    bool hit = false;
-    
     // Follow ray through BVH nodes to find primitives intersections
     uint32_t todoOffset = 0;
     Node* todo[64];
@@ -190,7 +214,7 @@ bool BVHAccelerator::intersectP(const Ray& ray) const {
         }
     }
     
-    return hit;
+    return false;
 }
 
 BVHAccelerator::Node* BVHAccelerator::recursiveBuild(std::vector<BuildPrimitiveInfo>& buildData,

@@ -8,13 +8,21 @@
 
 #include "GeometricPrimitive.h"
 
-GeometricPrimitive::GeometricPrimitive(Shape* shape, Material* material)
-: _shape(shape), _material(material) {
+GeometricPrimitive::GeometricPrimitive(Shape* shape, Material* material, AreaLight* areaLight)
+: _shape(shape), _material(material), _areaLight(areaLight) {
     
 }
 
 GeometricPrimitive::~GeometricPrimitive() {
     
+}
+
+Shape* GeometricPrimitive::getShape() const {
+    return _shape;
+}
+
+void GeometricPrimitive::setMaterial(Material *material) {
+    _material = material;
 }
 
 bool GeometricPrimitive::canIntersect() const {
@@ -25,6 +33,7 @@ bool GeometricPrimitive::intersect(const Ray& ray, Intersection* intersection) c
     if (!_shape->intersect(ray, intersection)) {
         return false;
     }
+    intersection->primitive = this;
     intersection->material = _material;
     return true;
 }
@@ -42,6 +51,14 @@ void GeometricPrimitive::refine(std::vector<Primitive*> &refined) const {
     _shape->refine(refinedShapes);
     
     for (Shape* s : refinedShapes) {
-        refined.push_back(new GeometricPrimitive(s, _material));
+        refined.push_back(new GeometricPrimitive(s, _material, _areaLight));
     }
+}
+
+void GeometricPrimitive::setAreaLight(AreaLight* areaLight) {
+    _areaLight = areaLight;
+}
+
+AreaLight* GeometricPrimitive::getAreaLight() const {
+    return _areaLight;
 }

@@ -9,7 +9,7 @@
 #include "PointLight.h"
 
 PointLight::PointLight(const vec3& position, float intensity, const Spectrum& spectrum)
-: _position(position), _intensity(intensity), _spectrum(spectrum) {
+: Light(), _position(position), _intensity(intensity), _spectrum(spectrum) {
     
 }
 
@@ -30,10 +30,11 @@ void PointLight::setSpectrum(const Spectrum& spectrum) {
 }
 
 Spectrum PointLight::le(const Ray&) const {
-    return Spectrum(0);
+    return Spectrum(0.0f);
 }
 
 Spectrum PointLight::sampleL(const vec3& point, float rayEpsilon,
+                             const LightSample&,
                              vec3* wi, VisibilityTester* vt) const {
     vec3 dist = _position - point;
     *wi = vec3(normalize(dist));

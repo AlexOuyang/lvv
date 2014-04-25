@@ -18,6 +18,7 @@ public:
     
     virtual float generateRay(const CameraSample& sample, Ray* ray);
     
+    void setMatrix(const mat4x4& matrix);
     void lookAt(const vec3& position, const vec3& target, const vec3& up=vec3(0, 1, 0));
     void setVFov(float vfov);
     void setAspect(float aspect);

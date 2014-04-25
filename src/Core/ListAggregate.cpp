@@ -40,6 +40,16 @@ Primitive* ListAggregate::findPrimitive(const std::string& name) {
     return nullptr;
 }
 
+void ListAggregate::removePrimitive(const std::string& name) {
+    std::remove_if(_primitives.begin(), _primitives.end(), [name] (Primitive* p) {
+        return p->name == name;
+    });
+}
+
+const std::vector<Primitive*> ListAggregate::getPrimitives() const {
+    return _primitives;
+}
+
 AABB ListAggregate::getBoundingBox() const {
     AABB bound;
     

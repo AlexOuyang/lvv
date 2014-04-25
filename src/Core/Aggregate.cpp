@@ -24,3 +24,10 @@ Aggregate& Aggregate::operator<<(Primitive* primitive) {
 Primitive* Aggregate::findPrimitive(const std::string&) {
     return nullptr;
 }
+
+void Aggregate::removePrimitive(const std::string&) {
+}
+
+const std::vector<Primitive*> Aggregate::getPrimitives() const {
+    return std::vector<Primitive*>();
+}

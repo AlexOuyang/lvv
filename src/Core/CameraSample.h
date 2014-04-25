@@ -12,8 +12,9 @@
 #include "Core.h"
 
 struct CameraSample {
-    vec2 image;
-    vec2 lens;
+    vec2 pixel;
+    vec2 position;
+    vec2 pixelSize;
 };
 
 #endif /* defined(__CSE168_Rendering__CameraSample__) */

@@ -15,11 +15,15 @@
 
 using namespace glm;
 
+#include <QDebug>
+
 class Ray;
 class Intersection;
 class AABB;
 class Scene;
 class Renderer;
+class Material;
+class Primitive;
 
 namespace Core {
     const float Epsilon = 0.0001f;

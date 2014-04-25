@@ -7,13 +7,17 @@
 //
 
 #include <iostream>
+#include <sstream>
 
 #include "AssimpImporter.h"
 
 #include "Core/GeometricPrimitive.h"
+#include "Core/TransformedPrimitive.h"
 #include "Shapes/Vertex.h"
 #include "Shapes/Mesh.h"
-#include "Materials/MatteMaterial.h"
+#include "Materials/Matte.h"
+#include "Accelerators/BVHAccelerator.h"
+#include "Cameras/PerspectiveCamera.h"
 
 AssimpImporter::AssimpImporter()
 : _importer(), _defaultMaterial(), _materials(), _trianglesCount() {
@@ -28,12 +32,12 @@ void AssimpImporter::setDefaultMaterial(Material *material) {
     _defaultMaterial = material;
 }
 
-bool AssimpImporter::importModel(Aggregate* aggregate, const std::string& filename) {
+bool AssimpImporter::importModel(Aggregate* aggregate, const std::string& filename,
+                                 Camera** camera) {
     // Read the scene from the file
-    const aiScene* assimpScene = _importer.ReadFile(filename,
-                                              aiProcess_Triangulate
-                                              | aiProcess_GenSmoothNormals
-                                              | aiProcess_FixInfacingNormals);
+    const aiScene* assimpScene = _importer.ReadFile(filename, 0
+                                                    | aiProcess_Triangulate
+                                                    | aiProcess_GenSmoothNormals);
     
     // If the import failed, report it
     if(!assimpScene) {
@@ -47,7 +51,7 @@ bool AssimpImporter::importModel(Aggregate* aggregate, const std::string& filena
     }
     
     _trianglesCount = 0;
-    bool status = importAssimpNode(aggregate, assimpScene, assimpScene->mRootNode);
+    bool status = importAssimpNode(aggregate, assimpScene, assimpScene->mRootNode, camera);
     
     std::cout << "AssimImporter: loaded " << _trianglesCount << " triangles" << std::endl;
     
@@ -58,7 +62,7 @@ bool AssimpImporter::importAssimpMaterials(const aiScene* assimpScene) {
     _materials.clear();
     for (uint i = 0; i < assimpScene->mNumMaterials; ++i) {
         aiMaterial* assimpMaterial = assimpScene->mMaterials[i];
-        MatteMaterial* material = new MatteMaterial();
+        Matte* material = new Matte();
         
         aiColor3D aiColor;
         
@@ -72,9 +76,33 @@ bool AssimpImporter::importAssimpMaterials(const aiScene* assimpScene) {
 }
 
 bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assimpScene,
-                                      aiNode* assimpNode) {
+                                      aiNode* assimpNode, Camera** camera,
+                                      const mat4x4& parentMatrix) {
     
     std::string name = assimpNode->mName.C_Str();
+    aiMatrix4x4 t = assimpNode->mTransformation;
+    
+    mat4x4 matrix = mat4x4(
+                           vec4(t.a1, t.a2, t.a3, t.a4),
+                           vec4(t.b1, t.b2, t.b3, t.b4),
+                           vec4(t.c1, t.c2, t.c3, t.c4),
+                           vec4(t.d1, t.d2, t.d3, t.d4)
+    );
+    matrix = glm::transpose(matrix);
+    
+    // Multiply matrix by parent matrix
+    matrix = parentMatrix * matrix;
+    
+    // Import camera
+    if (camera && name.find("camera") != std::string::npos) {
+        PerspectiveCamera* perspectiveCamera = new PerspectiveCamera();
+        
+        perspectiveCamera->setMatrix(matrix);
+        aiCamera* assimpCamera = assimpScene->mCameras[0];
+        perspectiveCamera->setVFov(glm::degrees(assimpCamera->mHorizontalFOV)
+                                   / assimpCamera->mAspect);
+        *camera = perspectiveCamera;
+    }
     
     // Load meshes
     for (uint i = 0; i < assimpNode->mNumMeshes; ++i) {
@@ -95,11 +123,7 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
         }
         
         GeometricPrimitive* primitive = new GeometricPrimitive(mesh, material);
-    
-        if (!name.empty()) {
-            primitive->name = name;
-        }
-        
+
         // Load vertices
         mesh->verticesCount = assimpMesh->mNumVertices;
         mesh->vertices = new Vertex[mesh->verticesCount];
@@ -138,14 +162,32 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
             }
         }
         
-        // Add mesh to scene
-        *aggregate << primitive;
+        // Create transformed primitive
+        Transform transform(matrix);
+        TransformedPrimitive* transformed = new TransformedPrimitive(primitive, transform);
+
+        if (!name.empty()) {
+            transformed->name = name;
+        } else {
+            std::stringstream ss;
+            ss << "Primitive " << primitive->primitiveId;
+            transformed->name = ss.str();
+        }
+        
+        qDebug() << transformed->name.c_str();
+        
+        // Add primitive to scene
+        *aggregate << transformed;
     }
     
     // Load child nodes recursively
     for (uint i = 0; i < assimpNode->mNumChildren; ++i) {
-        importAssimpNode(aggregate, assimpScene, assimpNode->mChildren[i]);
+        importAssimpNode(aggregate, assimpScene, assimpNode->mChildren[i], camera, matrix);
     }
     
     return true;
+}
+
+vec3 AssimpImporter::importAssimpVec3(const aiVector3D& v) {
+    return vec3(v.x, v.y, v.z);
 }
