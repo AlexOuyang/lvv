@@ -17,14 +17,41 @@
 #include "Core/Scene.h"
 #include "Core/Material.h"
 #include "Core/Camera.h"
+#include "Core/TransformedPrimitive.h"
+#include "Core/GeometricPrimitive.h"
 
 class AssimpImporter {
 public:
+    
+    enum ShadingMode {
+        Lambert,
+        Phong
+    };
+    
+    struct MaterialAttributes {
+        std::string name;
+        vec3        color;
+        vec3        transparency;
+        ShadingMode shadingMode;
+    };
+    
+    struct LightAttributes {
+        vec3    position;
+        vec3    color;
+        float   intensity;
+    };
+    
+    typedef std::function<Material* (const MaterialAttributes&)> MaterialCallback;
+    typedef std::function<void (TransformedPrimitive*, GeometricPrimitive*)> PrimitiveCallback;
+    typedef std::function<void (const LightAttributes&)> LightCallback;
     
     AssimpImporter();
     ~AssimpImporter();
     
     void setDefaultMaterial(Material* material);
+    void setMaterialCallback(MaterialCallback callback);
+    void setPrimitivesCallback(PrimitiveCallback callback);
+    void setLightsCallback(LightCallback callback);
     
     bool importModel(Aggregate* aggregate, const std::string& filename, Camera** camera=nullptr);
     
@@ -37,9 +64,12 @@ public:
     
 private:
     Assimp::Importer        _importer;
-    Material*               _defaultMaterial;
     std::vector<Material*>  _materials;
     int                     _trianglesCount;
+    MaterialCallback        _materialCallback;
+    Material*               _defaultMaterial;
+    PrimitiveCallback       _primitivesCallback;
+    LightCallback           _lightsCallback;
 };
 
 #endif /* defined(__CSE168_Rendering__AssimpImporter__) */

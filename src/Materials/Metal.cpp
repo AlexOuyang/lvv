@@ -8,7 +8,7 @@
 
 #include "Metal.h"
 
-Metal::Metal() : Material() {
+Metal::Metal() : Material(), eta(2.485f), k(3.433f), roughness(0.2f), color() {
     
 }
 
@@ -21,7 +21,7 @@ Spectrum Metal::evaluateBSDF(const vec3& wo, const vec3& wi,
     float cosi = glm::abs(glm::dot(wo, intersection.normal));
     float f = fresnelConductor(cosi, eta, k);
     float cookTorrance = cookTorranceReflection(wo, wi, intersection.normal, roughness, f);
-    return color * (cookTorrance*0.2f);
+    return color * cookTorrance;
 }
 
 Spectrum Metal::sampleBSDF(const vec3& wo, vec3* wi, const Intersection& intersection,

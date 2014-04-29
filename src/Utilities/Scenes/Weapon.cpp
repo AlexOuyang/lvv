@@ -1,5 +1,5 @@
 //
-//  Materials.cpp
+//  Glass.cpp
 //  CSE168_Rendering
 //
 //  Created by Gael Jochaud du Plessix on 4/24/14.
@@ -8,7 +8,7 @@
 
 #include "Utilities/Main.h"
 
-void materials(Scene* &scene, Camera* &camera, QtFilm* &film) {
+void weapon(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
     scene->lights.push_back(new SkyLight(Spectrum(0xF0FAFF)));
@@ -19,9 +19,7 @@ void materials(Scene* &scene, Camera* &camera, QtFilm* &film) {
     
     Aggregate* model = new BVHAccelerator();
     
-    Main::startClock("Loading model...");
-    importer.importModel(model, "/Users/gael/Desktop/Courses/CSE_168/models/scenes/statues.dae", &camera);
-    Main::endClock("Model loaded in");
+    importer.importModel(model, "/Users/gael/Desktop/Courses/CSE_168/models/scenes/weapon.dae", &camera);
     
     Primitive* lightPrimitive = model->findPrimitive("areaLight");
     TransformedPrimitive* lightTransformed = nullptr;
@@ -35,20 +33,26 @@ void materials(Scene* &scene, Camera* &camera, QtFilm* &film) {
         }
     }
     
+    // Materials
+    Main::steel->color = Spectrum(0xB3B3B3);
+    Main::glossy->color = Spectrum(0x00000);
+    
     // Models
-    GeometricPrimitive* buddha = Main::findPrimitive<GeometricPrimitive*>(model, "buddha_body");
-    buddha->setMaterial(Main::gold);
-    GeometricPrimitive* dragon = Main::findPrimitive<GeometricPrimitive*>(model, "dragon_body");
-    dragon->setMaterial(Main::glass);
-    GeometricPrimitive* dragonStatue = Main::findPrimitive<GeometricPrimitive*>(model, "dragon_statue_body");
-    dragonStatue->setMaterial(Main::copper);
+    GeometricPrimitive* body = Main::findPrimitive<GeometricPrimitive*>(model, "body");
+    body->setMaterial(Main::gold);
+    GeometricPrimitive* magazine = Main::findPrimitive<GeometricPrimitive*>(model, "magazine");
+    magazine->setMaterial(Main::gold);
+    GeometricPrimitive* bullet = Main::findPrimitive<GeometricPrimitive*>(model, "bullet_body_1");
+    bullet->setMaterial(Main::steel);
+    bullet = Main::findPrimitive<GeometricPrimitive*>(model, "bullet_body_2");
+    bullet->setMaterial(Main::steel);
+    bullet = Main::findPrimitive<GeometricPrimitive*>(model, "bullet_head_1");
+    bullet->setMaterial(Main::copper);
+    bullet = Main::findPrimitive<GeometricPrimitive*>(model, "bullet_head_2");
+    bullet->setMaterial(Main::copper);
     
     // Stands
-    GeometricPrimitive* stand = Main::findPrimitive<GeometricPrimitive*>(model, "dragon_stand");
-    stand->setMaterial(Main::glossy);
-    stand = Main::findPrimitive<GeometricPrimitive*>(model, "buddha_stand");
-    stand->setMaterial(Main::glossy);
-    stand = Main::findPrimitive<GeometricPrimitive*>(model, "dragon_statue_stand");
+    GeometricPrimitive* stand = Main::findPrimitive<GeometricPrimitive*>(model, "stand");
     stand->setMaterial(Main::glossy);
     
     // Create area light using model light shape
@@ -64,10 +68,16 @@ void materials(Scene* &scene, Camera* &camera, QtFilm* &film) {
         
         AreaLight* areaLight = new AreaLight(lightShape);
         areaLight->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 1.0f)));
-        areaLight->setIntensity(70.0f);
+        areaLight->setIntensity(30.0f);
         lightGeometric->setAreaLight(areaLight);
-        areaLight->samplingConfig.count = 2;
+        areaLight->samplingConfig.count = 4;
         scene->lights.push_back(areaLight);
+    } else {
+        DirectionalLight* light = new DirectionalLight();
+        light->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 1.0f)));
+        light->setIntensity(2.0f);
+        light->setDirection(vec3(2.0f, -3.0f, -2.0f));
+        scene->lights.push_back(light);
     }
     
     // Build acceleration structures
@@ -89,7 +99,7 @@ void materials(Scene* &scene, Camera* &camera, QtFilm* &film) {
         }
     }
     
-    film = new QtFilm(vec2(1920.f, 1080.f)*4.0f);
+    film = new QtFilm(vec2(1280.f, 720.f)/1.0f);
     perspectiveCamera->film = film;
     
     //perspectiveCamera->setVFov(45.f);

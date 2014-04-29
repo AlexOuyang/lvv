@@ -1,5 +1,5 @@
 //
-//  Materials.cpp
+//  Car.cpp
 //  CSE168_Rendering
 //
 //  Created by Gael Jochaud du Plessix on 4/24/14.
@@ -8,7 +8,7 @@
 
 #include "Utilities/Main.h"
 
-void materials(Scene* &scene, Camera* &camera, QtFilm* &film) {
+void car(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
     scene->lights.push_back(new SkyLight(Spectrum(0xF0FAFF)));
@@ -17,11 +17,52 @@ void materials(Scene* &scene, Camera* &camera, QtFilm* &film) {
     AssimpImporter importer;
     importer.setDefaultMaterial(Main::matte);
     
+    importer.setMaterialCallback([] (const AssimpImporter::MaterialAttributes& attrs) {
+        Material* material = nullptr;
+        
+        if (attrs.name == "Avent_FELGE2") {
+            Metal* metal = new Metal();
+            metal->eta = 2.485f;
+            metal->k = 3.433f;
+            metal->color = Spectrum(0x525252);
+            metal->roughness = 0.2;
+            material = metal;
+        }
+        else if (!Spectrum(attrs.transparency).isBlack()) {
+            Glass* glass = new Glass();
+            glass->indexIn = 1.303f;
+            glass->indexOut = 1.003f;
+            glass->absorptionColor = attrs.transparency;
+            glass->absorptionCoeff = 0.0f;
+            glass->roughness = 0.1f;
+            material = glass;
+        } else if (attrs.shadingMode == AssimpImporter::Phong) {
+            Glossy* glossy = new Glossy();
+            glossy->indexIn = 1.3f;
+            glossy->indexOut = 1.003f;
+            glossy->color = attrs.color;
+            material = glossy;
+        } else {
+            Matte* matte = new Matte();
+            matte->setColor(attrs.color);
+            material = matte;
+        }
+        
+        return material;
+    });
+    
+    importer.setLightsCallback([&] (const AssimpImporter::LightAttributes& attrs) {
+        PointLight* light = new PointLight();
+        light->setPosition(attrs.position);
+        light->setIntensity(attrs.intensity*0.02f);
+        light->setSpectrum(Spectrum(attrs.color));
+        scene->lights.push_back(light);
+    });
+    
     Aggregate* model = new BVHAccelerator();
     
-    Main::startClock("Loading model...");
-    importer.importModel(model, "/Users/gael/Desktop/Courses/CSE_168/models/scenes/statues.dae", &camera);
-    Main::endClock("Model loaded in");
+    importer.importModel(model, "/Users/gael/Desktop/Courses/CSE_168/models/scenes/car.dae",
+                         &camera);
     
     Primitive* lightPrimitive = model->findPrimitive("areaLight");
     TransformedPrimitive* lightTransformed = nullptr;
@@ -34,22 +75,6 @@ void materials(Scene* &scene, Camera* &camera, QtFilm* &film) {
             lightShape = dynamic_cast<Mesh*>(lightGeometric->getShape());
         }
     }
-    
-    // Models
-    GeometricPrimitive* buddha = Main::findPrimitive<GeometricPrimitive*>(model, "buddha_body");
-    buddha->setMaterial(Main::gold);
-    GeometricPrimitive* dragon = Main::findPrimitive<GeometricPrimitive*>(model, "dragon_body");
-    dragon->setMaterial(Main::glass);
-    GeometricPrimitive* dragonStatue = Main::findPrimitive<GeometricPrimitive*>(model, "dragon_statue_body");
-    dragonStatue->setMaterial(Main::copper);
-    
-    // Stands
-    GeometricPrimitive* stand = Main::findPrimitive<GeometricPrimitive*>(model, "dragon_stand");
-    stand->setMaterial(Main::glossy);
-    stand = Main::findPrimitive<GeometricPrimitive*>(model, "buddha_stand");
-    stand->setMaterial(Main::glossy);
-    stand = Main::findPrimitive<GeometricPrimitive*>(model, "dragon_statue_stand");
-    stand->setMaterial(Main::glossy);
     
     // Create area light using model light shape
     if (lightShape) {
@@ -66,8 +91,14 @@ void materials(Scene* &scene, Camera* &camera, QtFilm* &film) {
         areaLight->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 1.0f)));
         areaLight->setIntensity(70.0f);
         lightGeometric->setAreaLight(areaLight);
-        areaLight->samplingConfig.count = 2;
+        areaLight->samplingConfig.count = 1;
         scene->lights.push_back(areaLight);
+    } else {
+        DirectionalLight* light = new DirectionalLight();
+        light->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 1.0f)));
+        light->setIntensity(2.0f);
+        light->setDirection(vec3(2.0f, -3.0f, -2.0f));
+        scene->lights.push_back(light);
     }
     
     // Build acceleration structures
@@ -89,10 +120,9 @@ void materials(Scene* &scene, Camera* &camera, QtFilm* &film) {
         }
     }
     
-    film = new QtFilm(vec2(1920.f, 1080.f)*4.0f);
+    film = new QtFilm(vec2(1920.f, 1080.f)/2.0f);
     perspectiveCamera->film = film;
     
-    //perspectiveCamera->setVFov(45.f);
     perspectiveCamera->setAspect(film->resolution.x/film->resolution.y);
     
     camera = perspectiveCamera;

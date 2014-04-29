@@ -26,17 +26,13 @@ void project2(Scene* &scene, Camera* &camera, QtFilm* &film) {
     
     Main::startClock("Importing model...");
     Aggregate* model = new BVHAccelerator();
-    importer.importModel(model, "/Users/gael/Desktop/Courses/CSE_168/models/dragon/dragon.ply");
+    importer.importModel(model, "/Users/gael/Desktop/Courses/CSE_168/models/dragon.ply");
     Main::endClock("Model imported in");
     
     // Add ground to model aggregate (cannot be directly added to the scene)
     *model << ground;
     
-    Main::startClock("Generating bvh...");
-    
-    model->preprocess();
-    
-    Main::endClock("Model bvh generated in");
+    Main::buildAccelerationStructures(model);
     
     *scene->aggregate << model;
     

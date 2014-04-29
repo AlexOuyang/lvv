@@ -47,6 +47,11 @@ void project2(Scene* &scene, Camera* &camera, QtFilm* &film);
 void instancing(Scene* &scene, Camera* &camera, QtFilm* &film);
 void cornellBox(Scene* &scene, Camera* &camera, QtFilm* &film);
 void materials(Scene* &scene, Camera* &camera, QtFilm* &film);
+void glassScene(Scene* &scene, Camera* &camera, QtFilm* &film);
+void car(Scene* &scene, Camera* &camera, QtFilm* &film);
+void weapon(Scene* &scene, Camera* &camera, QtFilm* &film);
+void colors(Scene* &scene, Camera* &camera, QtFilm* &film);
+void base(Scene* &scene, Camera* &camera, QtFilm* &film);
 
 class Main : public QObject {
     Q_OBJECT
@@ -73,6 +78,15 @@ public:
         }
         return dynamic_cast<T>(tp->getPrimitive());
     }
+    
+    static Matte* matte;
+    static Metal* gold;
+    static Metal* steel;
+    static Metal* copper;
+    static Glass* glass;
+    static Glossy* glossy;
+    
+    void initMaterials();
     
 public slots:
     void refresh();

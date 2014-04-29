@@ -27,7 +27,7 @@ WhittedIntegrator::~WhittedIntegrator() {
 
 Spectrum WhittedIntegrator::li(const Scene& scene, const Renderer& renderer, const Ray& ray,
                                const Intersection& intersection) const {
-    Spectrum l(0);
+    Spectrum l(0.f);
     
     // If primitive is an area light, simply return its emited light
     AreaLight* areaLight = intersection.primitive->getAreaLight();

@@ -8,7 +8,7 @@
 
 #include "Glossy.h"
 
-Glossy::Glossy() : Material() {
+Glossy::Glossy() : Material(), color(), indexIn(2.33f), indexOut(1.003f), roughness(0.2f) {
     
 }
 
@@ -22,7 +22,8 @@ Spectrum Glossy::evaluateBSDF(const vec3 &wo, const vec3 &wi,
     vec3 t;
     float fr = refracted(cosi, wo, intersection.normal, indexOut, indexIn, &t);
     float cookTorrance = cookTorranceReflection(wo, wi, intersection.normal, roughness, fr);
-    return (1.f - fr) * color + (cookTorrance*0.2f) * Spectrum(1.0f);
+
+    return (1.f - fr) * color + cookTorrance * Spectrum(1.0f);
 }
 
 Spectrum Glossy::sampleBSDF(const vec3 &wo, vec3 *wi, const Intersection &intersection,
@@ -34,6 +35,9 @@ Spectrum Glossy::sampleBSDF(const vec3 &wo, vec3 *wi, const Intersection &inters
     float cosi = glm::abs(glm::dot(wo, intersection.normal));
     vec3 t;
     float fr = refracted(cosi, wo, intersection.normal, indexOut, indexIn, &t);
+    if (fr < 0 || fr > 1) {
+        qDebug() << "FR2 !!" << fr;
+    }
     *wi = reflect(-wo, intersection.normal);
     return fr;
 }

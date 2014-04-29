@@ -11,16 +11,20 @@
 
 #include "AssimpImporter.h"
 
-#include "Core/GeometricPrimitive.h"
 #include "Core/TransformedPrimitive.h"
 #include "Shapes/Vertex.h"
 #include "Shapes/Mesh.h"
 #include "Materials/Matte.h"
+#include "Materials/Glass.h"
+#include "Materials/Glossy.h"
+#include "Materials/Metal.h"
 #include "Accelerators/BVHAccelerator.h"
 #include "Cameras/PerspectiveCamera.h"
 
-AssimpImporter::AssimpImporter()
-: _importer(), _defaultMaterial(), _materials(), _trianglesCount() {
+AssimpImporter::AssimpImporter() :
+_importer(), _materials(), _trianglesCount(),
+_materialCallback(nullptr), _defaultMaterial(),
+_primitivesCallback(nullptr), _lightsCallback(nullptr) {
     
 }
 
@@ -30,6 +34,18 @@ AssimpImporter::~AssimpImporter() {
 
 void AssimpImporter::setDefaultMaterial(Material *material) {
     _defaultMaterial = material;
+}
+
+void AssimpImporter::setMaterialCallback(MaterialCallback callback) {
+    _materialCallback = callback;
+}
+
+void AssimpImporter::setPrimitivesCallback(PrimitiveCallback callback) {
+    _primitivesCallback = callback;
+}
+
+void AssimpImporter::setLightsCallback(LightCallback callback) {
+    _lightsCallback = callback;
 }
 
 bool AssimpImporter::importModel(Aggregate* aggregate, const std::string& filename,
@@ -62,12 +78,43 @@ bool AssimpImporter::importAssimpMaterials(const aiScene* assimpScene) {
     _materials.clear();
     for (uint i = 0; i < assimpScene->mNumMaterials; ++i) {
         aiMaterial* assimpMaterial = assimpScene->mMaterials[i];
-        Matte* material = new Matte();
         
-        aiColor3D aiColor;
+        aiString nameStr;
+        aiColor3D color;
+        aiColor3D transparency;
+        int shadingModel = aiShadingMode_Gouraud;
         
-        if (assimpMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, aiColor) != -1) {
-            material->setColor(vec3(aiColor.r, aiColor.g, aiColor.b));
+        assimpMaterial->Get(AI_MATKEY_NAME, nameStr);
+        assimpMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+        assimpMaterial->Get(AI_MATKEY_COLOR_TRANSPARENT, transparency);
+        assimpMaterial->Get(AI_MATKEY_SHADING_MODEL, shadingModel);
+        
+        MaterialAttributes attrs;
+        attrs.name = nameStr.C_Str();
+        attrs.color = vec3(color.r, color.g, color.b);
+        attrs.transparency = vec3(transparency.r, transparency.g, transparency.b);
+        switch (shadingModel) {
+            case aiShadingMode_Phong:
+            case aiShadingMode_Blinn:
+            case aiShadingMode_CookTorrance:
+                attrs.shadingMode = Phong;
+                break;
+                
+            default:
+                attrs.shadingMode = Lambert;
+                break;
+        }
+        
+        Material* material = _defaultMaterial;
+        
+        if (_materialCallback) {
+            material = _materialCallback(attrs);
+        }
+        
+        if (!material) {
+            Matte* matte = new Matte();
+            matte->setColor(attrs.color);
+            material = matte;
         }
         
         _materials.push_back(material);
@@ -80,6 +127,9 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
                                       const mat4x4& parentMatrix) {
     
     std::string name = assimpNode->mName.C_Str();
+    std::string nameLowercase = name;
+    std::transform(name.begin(), name.end(), nameLowercase.begin(), ::tolower);
+
     aiMatrix4x4 t = assimpNode->mTransformation;
     
     mat4x4 matrix = mat4x4(
@@ -92,9 +142,9 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
     
     // Multiply matrix by parent matrix
     matrix = parentMatrix * matrix;
-    
+
     // Import camera
-    if (camera && name.find("camera") != std::string::npos) {
+    if (camera && nameLowercase.find("camera") != std::string::npos) {
         PerspectiveCamera* perspectiveCamera = new PerspectiveCamera();
         
         perspectiveCamera->setMatrix(matrix);
@@ -102,6 +152,23 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
         perspectiveCamera->setVFov(glm::degrees(assimpCamera->mHorizontalFOV)
                                    / assimpCamera->mAspect);
         *camera = perspectiveCamera;
+    } else if (_lightsCallback && nameLowercase.find("light") != std::string::npos) {
+        for (uint32_t i = 0; i < assimpScene->mNumLights; ++i) {
+            aiLight* light = assimpScene->mLights[i];
+            if (std::string(light->mName.C_Str()) == name) {
+                LightAttributes attrs;
+                
+                attrs.position = importAssimpVec3(light->mPosition);
+                attrs.position = vec3(matrix * vec4(attrs.position, 1.0f));
+                attrs.color = vec3(light->mColorDiffuse.r,
+                                   light->mColorDiffuse.g,
+                                   light->mColorDiffuse.b);
+                attrs.intensity = glm::length(attrs.color);
+                attrs.color = glm::normalize(attrs.color);
+
+                _lightsCallback(attrs);
+            }
+        }
     }
     
     // Load meshes
@@ -174,7 +241,10 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
             transformed->name = ss.str();
         }
         
-        qDebug() << transformed->name.c_str();
+        // Apply custom setup to primitive
+        if (_primitivesCallback) {
+            _primitivesCallback(transformed, primitive);
+        }
         
         // Add primitive to scene
         *aggregate << transformed;

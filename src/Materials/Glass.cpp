@@ -8,8 +8,9 @@
 
 #include "Glass.h"
 
-Glass::Glass() : Material(), indexIn(1.0f), indexOut(1.0f),
-absorptionColor(vec3(1.0f)), absorptionCoeff(0.0f) {
+Glass::Glass() : Material(),
+indexIn(1.0f), indexOut(1.0f),
+absorptionColor(vec3(1.0f)), absorptionCoeff(0.0f), roughness(0.2f) {
     
 }
 
@@ -22,8 +23,8 @@ Spectrum Glass::evaluateBSDF(const vec3& wo, const vec3 &wi,
     float cosi = glm::abs(glm::dot(wo, intersection.normal));
     vec3 t;
     float fr = refracted(cosi, wo, intersection.normal, indexOut, indexIn, &t);
-    float cookTorrance = cookTorranceReflection(wo, wi, intersection.normal, roughness, fr);
-    return (cookTorrance*0.3f) * Spectrum(1.0f);
+    float cookTorrance = cookTorranceReflection(wo, wi, intersection.normal, roughness, fr);    
+    return cookTorrance * Spectrum(1.0f);
 }
 
 Spectrum Glass::sampleBSDF(const vec3 &wo, vec3 *wi, const Intersection &intersection,

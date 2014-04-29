@@ -11,16 +11,61 @@
 QTime Main::clock = QTime();
 bool Main::clockActive = false;
 
+Matte* Main::matte = nullptr;
+Metal* Main::gold = nullptr;
+Metal* Main::steel = nullptr;
+Metal* Main::copper = nullptr;
+Glass* Main::glass = nullptr;
+Glossy* Main::glossy = nullptr;
+
+void Main::initMaterials() {
+    // Materials
+    Main::matte = new Matte();
+    
+    Main::gold = new Metal();
+    Main::gold->eta = 0.37f;
+    Main::gold->k = 2.82f;
+    Main::gold->color = Spectrum(vec3(212.f, 175.f, 55.f)/255.f);
+    Main::gold->roughness = 0.2;
+    
+    Main::steel = new Metal();
+    Main::steel->eta = 2.485f;
+    Main::steel->k = 3.433f;
+    Main::steel->color = Spectrum(0xF0F0F0);
+    Main::steel->roughness = 0.2;
+    
+    Main::copper = new Metal();
+    Main::copper->eta = 0.617f;
+    Main::copper->k = 2.63f;
+    Main::copper->color = Spectrum(vec3(184.f, 115.f, 51.f)/255.f);
+    Main::copper->roughness = 0.2;
+    
+    Main::glass = new Glass();
+    Main::glass->indexIn = 1.45f;
+    Main::glass->indexOut = 1.0003f;
+    Main::glass->absorptionColor = Spectrum(0x305C8C).getColor();
+    Main::glass->absorptionCoeff = 5.0f;
+    Main::glass->roughness = 0.2f;
+    
+    Main::glossy = new Glossy();
+    Main::glossy->color = Spectrum(0.f);
+    Main::glossy->indexIn = 2.3f;
+    Main::glossy->indexOut = 1.0003f;
+    Main::glossy->roughness = 0.2f;
+}
+
 Main::Main() : _scene(nullptr), _renderer(nullptr), _camera(nullptr), _film(nullptr) {
     // Setup timer
     _timer.setInterval(1000/24); // Refresh 24 times per second
     connect(&_timer, SIGNAL(timeout()), this, SLOT(refresh()));
     
-    materials(_scene, _camera, _film);
+    initMaterials();
+    
+    base(_scene, _camera, _film);
     
     RenderOptions options;
     options.maxThreadsCount = 0;
-    options.antialiasingSampling.count = 4;
+    options.antialiasingSampling.count = 6;
     options.antialiasingSampling.jittered = true;
     _renderer = new Renderer(options);
     

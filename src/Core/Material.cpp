@@ -31,7 +31,9 @@ float Material::fresnelConductor(float cosi, float eta, float k) {
 float Material::cookTorranceReflection(const vec3& wo, const vec3& wi, const vec3& n,
                                        float roughness, float fresnelTerm) {
     vec3 h = glm::normalize(wo + wi);
-    float nh = glm::abs(glm::dot(n, h));
+    // Clamp nh between 0 and 1 (because of float imprecision, higher values may arrise
+    // and cause acos being nan)
+    float nh = glm::min(1.f, glm::abs(glm::dot(n, h)));
     float vh = glm::abs(glm::dot(wo, h));
     float nv = glm::abs(glm::dot(n, wo));
     float nl = glm::abs(glm::dot(n, wi));
@@ -40,7 +42,7 @@ float Material::cookTorranceReflection(const vec3& wo, const vec3& wi, const vec
     float g = glm::min(1.0f, glm::min((2.f*nh*nv)/(vh), (2.f*nh*nl)/(vh)));
     float d = (1.0f / (m*m * pow(nh, 4.f))) * exp(-((pow(tan(acosf(nh)), 2.f))/(m*m)));
     
-    return (fresnelTerm*g*d)/(M_PI*nl*nv);
+    return (fresnelTerm*g*d)/(4.f*M_PI*nl*nv);
 }
 
 float Material::refracted(float cosi, const vec3 &wo, vec3 n,

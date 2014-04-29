@@ -56,7 +56,7 @@ void cornellBox(Scene* &scene, Camera* &camera, QtFilm* &film) {
         model->removePrimitive("rightSphere");
         
         dragonAggregate = new BVHAccelerator();
-        importer.importModel(dragonAggregate, "/Users/gael/Desktop/Courses/CSE_168/models/dragon/dragon.ply");
+        importer.importModel(dragonAggregate, "/Users/gael/Desktop/Courses/CSE_168/models/dragon.ply");
         
         Primitive* p = dragonAggregate->findPrimitive("Primitive 20");
         TransformedPrimitive* dragonInstance = dynamic_cast<TransformedPrimitive*>(p);
@@ -109,7 +109,7 @@ void cornellBox(Scene* &scene, Camera* &camera, QtFilm* &film) {
         areaLight->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 1.0f)));
         areaLight->setIntensity(3.0f);
         lightGeometric->setAreaLight(areaLight);
-        areaLight->samplingConfig.count = 4;
+        areaLight->samplingConfig.count = 1;
         scene->lights.push_back(areaLight);
     } else {
         PointLight* pointLight = new PointLight();
