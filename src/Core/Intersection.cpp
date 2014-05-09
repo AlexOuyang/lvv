@@ -10,6 +10,7 @@
 
 Intersection::Intersection() :
 t(INFINITY), rayEpsilon(Core::Epsilon), point(), normal(), uv(0),
+tangentU(0.f), tangentV(0.f),
 material(nullptr), primitive(nullptr) {
     
 }

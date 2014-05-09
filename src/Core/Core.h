@@ -12,6 +12,7 @@
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 using namespace glm;
 
@@ -30,5 +31,11 @@ namespace Core {
     
     int roundUpPow2(int n);
 }
+
+QDebug operator<<(QDebug dbg, const std::string& s);
+QDebug operator<<(QDebug dbg, const vec3& v);
+QDebug operator<<(QDebug dbg, const vec4& v);
+QDebug operator<<(QDebug dbg, const mat4x4& m);
+QDebug operator<<(QDebug dbg, const quat& q);
 
 #endif

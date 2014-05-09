@@ -35,9 +35,15 @@ Spectrum Glossy::sampleBSDF(const vec3 &wo, vec3 *wi, const Intersection &inters
     float cosi = glm::abs(glm::dot(wo, intersection.normal));
     vec3 t;
     float fr = refracted(cosi, wo, intersection.normal, indexOut, indexIn, &t);
-    if (fr < 0 || fr > 1) {
-        qDebug() << "FR2 !!" << fr;
+    
+    if ((float)rand()/RAND_MAX > fr) {
+        *wi = normalize(surfaceToWorld(cosineSampleHemisphere(), intersection));
+        return color;
+    } else {
+        *wi = reflect(-wo, intersection.normal);
+        return Spectrum(1.0f);
     }
+    
     *wi = reflect(-wo, intersection.normal);
     return fr;
 }

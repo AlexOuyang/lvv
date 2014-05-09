@@ -17,7 +17,7 @@ Triangle::Triangle() {
 Triangle::Triangle(Vertex* a, Vertex* b, Vertex* c) {
     vertices[0] = a;
     vertices[1] = b;
-    vertices[2] = c;
+    vertices[2] = c;    
 }
 
 Triangle::~Triangle() {
@@ -65,11 +65,19 @@ bool Triangle::intersect(const Ray& ray, Intersection* intersection) const {
     // Fill in intersection informations
     intersection->t = t;
     intersection->point = ray(t);
-    intersection->normal = normalize(normal);
+    intersection->normal = normal;
     intersection->uv = ((1-alpha-beta)*vertices[0]->texCoord
-                       + alpha*vertices[1]->texCoord
+                        + alpha*vertices[1]->texCoord
                         + beta*vertices[2]->texCoord);
     
+    if (abs(normal.y) > 1.0f-0.00001f) {
+        intersection->tangentU = vec3(1.0f, 0.0f, 0.0f);
+        intersection->tangentV = vec3(0.0f, 0.0f, 1.0f);
+    } else {
+        intersection->tangentU = normalize(cross(vec3(0.0f, 1.0f, 0.0f), normal));
+        intersection->tangentV = cross(normal, intersection->tangentU);
+    }
+
     intersection->rayEpsilon = 1e-3f * t;
     return true;
 }

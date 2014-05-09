@@ -22,6 +22,8 @@ public:
     vec3                point;
     vec3                normal;
     vec2                uv;
+    vec3                tangentU;
+    vec3                tangentV;
     Material*           material;
     const Primitive*    primitive;
 };

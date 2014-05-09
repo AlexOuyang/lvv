@@ -17,3 +17,32 @@ int Core::roundUpPow2(int n) {
     n |= n >> 16;
     return n+1;
 }
+
+QDebug operator<<(QDebug dbg, const std::string& s) {
+    return dbg << s.c_str();
+}
+
+QDebug operator<<(QDebug dbg, const vec3& v) {
+    dbg.nospace() << "(" << v.x << ", " << v.y << ", " << v.z << ")";
+    return dbg.space();
+}
+
+QDebug operator<<(QDebug dbg, const vec4& v) {
+    dbg.nospace() << "(" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")";
+    return dbg.space();
+}
+
+QDebug operator<<(QDebug dbg, const mat4x4& m) {
+    dbg << "(";
+    dbg << m[0];
+    dbg << m[1];
+    dbg << m[2];
+    dbg << m[3];
+    dbg << ")";
+    return dbg;
+}
+
+QDebug operator<<(QDebug dbg, const quat& q) {
+    dbg.nospace() << "(" << q.x << ", " << q.y << ", " << q.z << ", " << q.w << ")";
+    return dbg.space();
+}

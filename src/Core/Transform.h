@@ -21,8 +21,11 @@ public:
     Transform();
     Transform(const mat4x4& m);
     
-    vec3 applyToVector(const vec3& p) const;
-    vec3 operator()(const vec3& v) const;
+    void lookAt(const vec3& position, const vec3& target, const vec3& up=vec3(0, 1, 0));
+    
+    vec3 applyToVector(const vec3& v) const;
+    vec3 applyToNormal(const vec3& n) const;
+    vec3 operator()(const vec3& p) const;
     Ray operator()(const Ray& r) const;
     AABB operator()(const AABB& box) const;
     

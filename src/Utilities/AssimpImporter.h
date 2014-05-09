@@ -37,6 +37,7 @@ public:
     
     struct LightAttributes {
         vec3    position;
+        vec3    direction;
         vec3    color;
         float   intensity;
     };

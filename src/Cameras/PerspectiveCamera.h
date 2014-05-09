@@ -10,6 +10,7 @@
 #define __CSE168_Rendering__PerspectiveCamera__
 
 #include "Core/Camera.h"
+#include "Core/AnimatedTransform.h"
 
 class PerspectiveCamera : public Camera {
 public:
@@ -17,16 +18,23 @@ public:
     virtual ~PerspectiveCamera();
     
     virtual float generateRay(const CameraSample& sample, Ray* ray);
-    
-    void setMatrix(const mat4x4& matrix);
+
+    void setTransform(const AnimatedTransform& t);
+    void setTransform(const Transform& t);
     void lookAt(const vec3& position, const vec3& target, const vec3& up=vec3(0, 1, 0));
+    
     void setVFov(float vfov);
     void setAspect(float aspect);
+    void setFocusDistance(float d);
+    void setFocusPoint(const vec3& point);
+    void setApertureSize(float aperture);
   
 private:
-    mat4x4  _matrix;
-    float   _vfov;
-    float   _aspect;
+    AnimatedTransform   _transform;
+    float               _vfov;
+    float               _aspect;
+    float               _focusDistance;
+    float               _apertureSize;
 };
 
 #endif /* defined(__CSE168_Rendering__PerspectiveCamera__) */

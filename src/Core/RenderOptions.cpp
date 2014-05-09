@@ -9,6 +9,7 @@
 #include "RenderOptions.h"
 
 #include "Integrators/WhittedIntegrator.h"
+#include "Integrators/PathTracingIntegrator.h"
 
 RenderOptions::RenderOptions() :
 maxThreadsCount(-1),
@@ -22,5 +23,6 @@ RenderOptions::~RenderOptions() {
 }
 
 SurfaceIntegrator* RenderOptions::createSurfaceIntegrator() {
-    return new WhittedIntegrator();
+    return new PathTracingIntegrator();
+    //return new WhittedIntegrator();
 }

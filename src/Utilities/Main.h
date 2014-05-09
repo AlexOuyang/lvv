@@ -39,11 +39,13 @@
 #include "Materials/Metal.h"
 #include "Materials/Glass.h"
 #include "Materials/Glossy.h"
+#include "Materials/AshikhminMaterial.h"
 
 // Scenes
 void project1(Scene* &scene, Camera* &camera, QtFilm* &film);
 void randomSpheres(Scene* &scene, Camera* &camera, QtFilm* &film);
 void project2(Scene* &scene, Camera* &camera, QtFilm* &film);
+void project3(Scene* &scene, Camera* &camera, QtFilm* &film);
 void instancing(Scene* &scene, Camera* &camera, QtFilm* &film);
 void cornellBox(Scene* &scene, Camera* &camera, QtFilm* &film);
 void materials(Scene* &scene, Camera* &camera, QtFilm* &film);
@@ -90,6 +92,7 @@ public:
     
 public slots:
     void refresh();
+    void toggleRendering();
 
 private:
     Scene*      _scene;
@@ -99,6 +102,7 @@ private:
     
     QTimer          _timer;
     std::thread*    _thread;
+    bool            _continueRendering;
 };
 
 #endif /* defined(__CSE168_Rendering__Main__) */

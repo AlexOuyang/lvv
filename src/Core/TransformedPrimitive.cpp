@@ -12,11 +12,23 @@
 #include "Intersection.h"
 
 TransformedPrimitive::TransformedPrimitive(Primitive* primitive, const Transform& transform) :
-_primitive(primitive),
-_primitiveToWorld(transform),
-_worldToPrimitive(Transform::Inverse(transform)) {
-    
+_primitive(primitive), _material(nullptr),
+_worldToPrimitive() {
+    _worldToPrimitive.setTransform(Transform::Inverse(transform));
 }
+
+TransformedPrimitive::TransformedPrimitive(Primitive* primitive,
+                                           const AnimatedTransform& transform) :
+_primitive(primitive), _material(nullptr),
+_worldToPrimitive() {
+    if (transform.isActuallyAnimated()) {
+        _worldToPrimitive.setTransforms(Transform::Inverse(transform[0]),
+                                        Transform::Inverse(transform[1]));
+    } else {
+        _worldToPrimitive.setTransform(Transform::Inverse(transform[0]));
+    }
+}
+
 
 TransformedPrimitive::~TransformedPrimitive() {
 }
@@ -29,13 +41,21 @@ Primitive* TransformedPrimitive::getPrimitive() const {
     return _primitive;
 }
 
-void TransformedPrimitive::setTransform(const Transform& transform) {
-    _primitiveToWorld = transform;
-    _worldToPrimitive = Transform::Inverse(transform);
+void TransformedPrimitive::setMaterial(Material* material) {
+    _material = material;
 }
 
-const Transform& TransformedPrimitive::getTransform() const {
-    return _primitiveToWorld;
+void TransformedPrimitive::setTransform(const Transform& transform) {
+    _worldToPrimitive.setTransform(Transform::Inverse(transform));
+}
+
+void TransformedPrimitive::setTransform(const AnimatedTransform& transform) {
+    _worldToPrimitive.setTransforms(Transform::Inverse(transform[0]),
+                                    Transform::Inverse(transform[1]));
+}
+
+Transform TransformedPrimitive::getTransform() const {
+    return Transform::Inverse(_worldToPrimitive[0]);
 }
 
 bool TransformedPrimitive::canIntersect() const {
@@ -43,32 +63,42 @@ bool TransformedPrimitive::canIntersect() const {
 }
 
 bool TransformedPrimitive::intersect(const Ray& ray, Intersection* intersection) const {
-    Ray transformedRay = _worldToPrimitive(ray);
+    Transform worldToPrimitive = _worldToPrimitive.interpolate(ray.time);
+    Ray transformedRay = worldToPrimitive(ray);
     
     if (!_primitive->intersect(transformedRay, intersection)) {
         return false;
     }
     
     // Transform intersection
-    intersection->point = _primitiveToWorld(intersection->point);
+    Transform primitiveToWorld = Transform::Inverse(worldToPrimitive);
+    
+    intersection->point = primitiveToWorld(intersection->point);
     // Transform normal with inverse transpose of transformation matrix
-    mat4x4 normalMatrix = glm::inverse(glm::transpose(_primitiveToWorld.m));
-    intersection->normal = vec3(normalMatrix * vec4(intersection->normal, 0.0f));
-    intersection->normal = glm::normalize(intersection->normal);
+    mat4x4 normalMatrix = primitiveToWorld.m;
+    intersection->normal = normalize(vec3(normalMatrix * vec4(intersection->normal, 0.0f)));
+    intersection->tangentU = normalize(vec3(normalMatrix * vec4(intersection->tangentU, 0.0f)));
+    intersection->tangentV = normalize(vec3(normalMatrix * vec4(intersection->tangentV, 0.0f)));
     intersection->t = transformedRay.tmax;
     
     // Transform ray
     ray.tmax = intersection->t;
     
+    // Set material if specified
+    if (_material) {
+        intersection->material = _material;
+    }
+    
     return true;
 }
 
 bool TransformedPrimitive::intersectP(const Ray& ray) const {
-    Ray transformedRay = _worldToPrimitive(ray);
+    Transform worldToPrimitive = _worldToPrimitive.interpolate(ray.time);
+    Ray transformedRay = worldToPrimitive(ray);
     
     return _primitive->intersectP(transformedRay);
 }
 
 AABB TransformedPrimitive::getBoundingBox() const {
-    return _primitiveToWorld(_primitive->getBoundingBox());
+    return _worldToPrimitive.motionBounds(_primitive->getBoundingBox(), true);
 }

@@ -11,9 +11,11 @@
 #include <QPainter>
 #include <QFileDialog>
 #include <QDebug>
+#include <QKeyEvent>
 
-QtFilm::QtFilm(const vec2& res)
-: QMainWindow(), Film(res), _ui(), _image(res.x, res.y, QImage::Format_RGB32) {
+QtFilm::QtFilm(const vec2& res) :
+QMainWindow(), Film(res), _ui(), _image(res.x, res.y, QImage::Format_RGB32),
+_buffer(res.x*res.y, vec3(0.0f)) {
     _ui.setupUi(this);
     
     resize(resolution.x + 10, resolution.y + 30);
@@ -61,15 +63,31 @@ const QImage& QtFilm::getImage() const {
     return _image;
 }
 
-void QtFilm::addSample(const CameraSample &sample, const Spectrum &L) {
-    //vec3 filtered = vec3(1.0f) - glm::exp(L.getColor() * -1.0f);
-    vec3 filtered = L.getColor();
+void QtFilm::addSample(const CameraSample &sample, const Spectrum &L, float weight) {
+    vec3 prev = _buffer[sample.pixel.y*_image.width() + sample.pixel.x];
+    vec3 newValue = mix(prev, L.getColor(), weight);
+    _buffer[sample.pixel.y*_image.width() + sample.pixel.x] = newValue;
+    
+    // Apply tone mapping
+    vec3 filtered = newValue;
+    //filtered = vec3(1.0f) - glm::exp(filtered * -1.5f);
+    
     _image.setPixel(sample.pixel.x, sample.pixel.y, Spectrum(filtered).getIntColor());
 }
 
 void QtFilm::saveAction() {
     QString filename = QFileDialog::getSaveFileName();
     if (!filename.isEmpty()) {
-        _image.save(filename);
+        if (_image.save(filename)) {
+            qDebug() << "Image saved as" << filename;
+        } else {
+            qDebug() << "Error: cannot save image as" << filename;
+        }
+    }
+}
+
+void QtFilm::keyPressEvent(QKeyEvent* event) {
+    if (event->key() == 32) { // Spacebar
+        toggleRendering();
     }
 }

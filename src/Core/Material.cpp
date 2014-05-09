@@ -69,3 +69,18 @@ float Material::refracted(float cosi, const vec3 &wo, vec3 n,
     }
     return fr;
 }
+
+vec3 Material::cosineSampleHemisphere() {
+    // Sample hemisphere
+    float s = (float)rand()/RAND_MAX;
+    float t = (float)rand()/RAND_MAX;
+    float u = 2.0f*M_PI*s;
+    float v = sqrt(1.f - t);
+    
+    return vec3(v*cos(u), sqrt(t), v*sin(u));
+}
+
+vec3 Material::surfaceToWorld(const vec3& v, const Intersection& intersection) {
+    return (intersection.tangentU*v.x + intersection.tangentV*v.z
+            + intersection.normal*v.y);
+}

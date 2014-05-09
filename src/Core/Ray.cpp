@@ -8,7 +8,14 @@
 
 #include "Ray.h"
 
-Ray::Ray() : origin(), direction(), tmin(Core::Epsilon), tmax(INFINITY), depth(0) {
+Ray::Ray() :
+origin(), direction(), tmin(Core::Epsilon), tmax(INFINITY), depth(0), time(0) {
+    
+}
+
+Ray::Ray(const Ray& ray) :
+origin(ray.origin), direction(ray.direction),
+tmin(ray.tmin), tmax(ray.tmax), depth(ray.depth), time(ray.time) {
     
 }
 

@@ -53,7 +53,8 @@ bool AssimpImporter::importModel(Aggregate* aggregate, const std::string& filena
     // Read the scene from the file
     const aiScene* assimpScene = _importer.ReadFile(filename, 0
                                                     | aiProcess_Triangulate
-                                                    | aiProcess_GenSmoothNormals);
+                                                    | aiProcess_GenSmoothNormals
+                                                    | aiProcess_FindInvalidData);
     
     // If the import failed, report it
     if(!assimpScene) {
@@ -111,7 +112,7 @@ bool AssimpImporter::importAssimpMaterials(const aiScene* assimpScene) {
             material = _materialCallback(attrs);
         }
         
-        if (!material) {
+        if (!material || !_materialCallback) {
             Matte* matte = new Matte();
             matte->setColor(attrs.color);
             material = matte;
@@ -147,7 +148,7 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
     if (camera && nameLowercase.find("camera") != std::string::npos) {
         PerspectiveCamera* perspectiveCamera = new PerspectiveCamera();
         
-        perspectiveCamera->setMatrix(matrix);
+        perspectiveCamera->setTransform(Transform(matrix));
         aiCamera* assimpCamera = assimpScene->mCameras[0];
         perspectiveCamera->setVFov(glm::degrees(assimpCamera->mHorizontalFOV)
                                    / assimpCamera->mAspect);
@@ -163,6 +164,10 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
                 attrs.color = vec3(light->mColorDiffuse.r,
                                    light->mColorDiffuse.g,
                                    light->mColorDiffuse.b);
+                attrs.direction = vec3(light->mDirection.x,
+                                       light->mDirection.y,
+                                       light->mDirection.z);
+                attrs.direction = vec3(matrix * vec4(attrs.direction, 0.0f));
                 attrs.intensity = glm::length(attrs.color);
                 attrs.color = glm::normalize(attrs.color);
 

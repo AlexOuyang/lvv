@@ -15,8 +15,6 @@
 #include "Core/VisibilityTester.h"
 #include "Core/Renderer.h"
 
-#include <QDebug>
-
 WhittedIntegrator::WhittedIntegrator() {
     
 }
@@ -48,7 +46,7 @@ Spectrum WhittedIntegrator::li(const Scene& scene, const Renderer& renderer, con
             for (int j = 0; j < samplesCount; ++j) {
                 LightSample sample;
                 vec3 wi;
-                VisibilityTester vt;
+                VisibilityTester vt(ray);
                 
                 sample.u = (float)i/samplesCount;
                 sample.v = (float)j/samplesCount;

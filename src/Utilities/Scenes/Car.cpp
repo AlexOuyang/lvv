@@ -30,7 +30,7 @@ void car(Scene* &scene, Camera* &camera, QtFilm* &film) {
         }
         else if (!Spectrum(attrs.transparency).isBlack()) {
             Glass* glass = new Glass();
-            glass->indexIn = 1.303f;
+            glass->indexIn = 1.003f;
             glass->indexOut = 1.003f;
             glass->absorptionColor = attrs.transparency;
             glass->absorptionCoeff = 0.0f;
@@ -38,9 +38,10 @@ void car(Scene* &scene, Camera* &camera, QtFilm* &film) {
             material = glass;
         } else if (attrs.shadingMode == AssimpImporter::Phong) {
             Glossy* glossy = new Glossy();
-            glossy->indexIn = 1.3f;
+            glossy->indexIn = 1.1f;
             glossy->indexOut = 1.003f;
             glossy->color = attrs.color;
+            glossy->roughness = 0.9;
             material = glossy;
         } else {
             Matte* matte = new Matte();
@@ -120,7 +121,7 @@ void car(Scene* &scene, Camera* &camera, QtFilm* &film) {
         }
     }
     
-    film = new QtFilm(vec2(1920.f, 1080.f)/2.0f);
+    film = new QtFilm(vec2(1920.f, 1080.f)/5.0f);
     perspectiveCamera->film = film;
     
     perspectiveCamera->setAspect(film->resolution.x/film->resolution.y);

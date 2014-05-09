@@ -17,7 +17,9 @@ public:
     
     enum BxDFType {
         BSDFReflection      = 1 << 0,
-        BSDFTransmission    = 1 << 1
+        BSDFTransmission    = 1 << 1,
+        BSDFDiffuse         = 1 << 2,
+        BSDFAll             = BSDFReflection | BSDFTransmission | BSDFDiffuse
     };
     
     virtual ~Material() {};
@@ -37,6 +39,11 @@ public:
     
     static float refracted(float cosi, const vec3& wo, vec3 n,
                            float etai, float etat, vec3* t);
+    
+    // Sampling functions
+    static vec3 cosineSampleHemisphere();
+    
+    static vec3 surfaceToWorld(const vec3& v, const Intersection& intersection);
 };
 
 #endif

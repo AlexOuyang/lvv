@@ -34,7 +34,21 @@ Spectrum Glass::sampleBSDF(const vec3 &wo, vec3 *wi, const Intersection &interse
     vec3 t;
     float fr = refracted(cosi, wo, intersection.normal, indexOut, indexIn, &t);
     
-    if (type & BSDFReflection) {
+    if (type == BSDFAll) {
+        float u = (float)rand()/RAND_MAX;
+        if (u > fr) {
+            *wi = t;
+            // If going out of the object, add absorption
+            if (glm::dot(wo, n) < 0.0f) {
+                return Spectrum(1.0f) * transmittedLight(intersection.t);
+            }
+            return Spectrum(1.0f);
+        } else {
+            *wi = glm::reflect(-wo, n);
+            return Spectrum(1.0f);
+        }
+    }
+    else if (type & BSDFReflection) {
         *wi = glm::reflect(-wo, n);
         return Spectrum(fr);
     } else if (type & BSDFTransmission) {

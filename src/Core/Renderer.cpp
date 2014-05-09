@@ -46,7 +46,7 @@ void Renderer::Task::run() {
 }
 
 Renderer::Renderer(RenderOptions options)
-: options(options), _surfaceIntegrator(nullptr) {
+: options(options), _surfaceIntegrator(nullptr), _samplesCount(0) {
     _surfaceIntegrator = options.createSurfaceIntegrator();
 }
 
@@ -57,6 +57,8 @@ Renderer::~Renderer() {
 }
 
 void Renderer::render(const Scene& scene, Camera* camera) {
+    _samplesCount += 1;
+    
     // Determine number of tasks
      // Compute ideal task count
     int pixelsCount = camera->film->resolution.x * camera->film->resolution.y;
@@ -226,7 +228,7 @@ void Renderer::renderSample(const Scene& scene, Camera* camera, const CameraSamp
     }
     
     // Add sample contribution to camera film
-    camera->film->addSample(sample, ls);
+    camera->film->addSample(sample, ls, 1.0f/(float)_samplesCount);
 }
 
 Spectrum Renderer::li(const Scene &scene, const Ray &ray) const {

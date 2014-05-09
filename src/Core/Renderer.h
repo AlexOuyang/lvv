@@ -53,6 +53,7 @@ public:
     
 private:
     SurfaceIntegrator*  _surfaceIntegrator;
+    int                 _samplesCount;
 };
 
 #endif /* defined(__CSE168_Rendering__Renderer__) */

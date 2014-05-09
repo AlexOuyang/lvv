@@ -12,8 +12,8 @@
 
 #include <QDebug>
 
-VisibilityTester::VisibilityTester() : _ray() {
-    
+VisibilityTester::VisibilityTester(const Ray& ray) : _ray() {
+    _ray.time = ray.time;
 }
 
 VisibilityTester::~VisibilityTester() {
@@ -22,12 +22,10 @@ VisibilityTester::~VisibilityTester() {
 
 bool VisibilityTester::unoccluded(const Scene& scene) const {
     //return true;
-    //qDebug() << _ray.tmax;
     return !scene.intersectP(_ray);
 }
 
 void VisibilityTester::setSegment(const vec3& p1, float epsilon, const vec3& p2) {
-    _ray = Ray();
     _ray.origin = p1;
     _ray.direction = p2 - p1;
     _ray.tmin = epsilon;
@@ -37,7 +35,6 @@ void VisibilityTester::setSegment(const vec3& p1, float epsilon, const vec3& p2)
 }
 
 void VisibilityTester::setRay(const vec3& origin, float epsilon, const vec3& direction) {
-    _ray = Ray();
     _ray.origin = origin;
     _ray.direction = direction;
     _ray.tmin = epsilon;

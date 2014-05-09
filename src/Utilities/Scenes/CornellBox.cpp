@@ -31,8 +31,8 @@ void cornellBox(Scene* &scene, Camera* &camera, QtFilm* &film) {
     Glass* glass = new Glass();
     glass->indexIn = 1.45f;
     glass->indexOut = 1.0003f;
-    glass->absorptionColor = vec3(255.0f, 215.f, 0.0f)/255.f;
-    glass->absorptionCoeff = 10.0f;
+    glass->absorptionColor = Spectrum(0x2C7D18).getColor();
+    glass->absorptionCoeff = 5.0f;
     glass->roughness = 0.2f;
     
     Glossy* glossy = new Glossy();
@@ -88,8 +88,8 @@ void cornellBox(Scene* &scene, Camera* &camera, QtFilm* &film) {
             abort();
         }
         
-        leftSphere->setMaterial(gold);
-        rightSphere->setMaterial(glass);
+        //leftSphere->setMaterial(gold);
+        //rightSphere->setMaterial(glass);
     }
     
     Primitive* lightPrimitive = model->findPrimitive("light");
@@ -131,7 +131,7 @@ void cornellBox(Scene* &scene, Camera* &camera, QtFilm* &film) {
     PerspectiveCamera* perspectiveCamera = new PerspectiveCamera();
     
     perspectiveCamera->lookAt(vec3(0.0f, 0.75f, 3.0f), vec3(0.0f, 0.75f, 0.0f));
-    film = new QtFilm(vec2(1024.f, 768.f)/1.0f);
+    film = new QtFilm(vec2(800.f, 600.f)/1.0f);
     perspectiveCamera->film = film;
     
     perspectiveCamera->setVFov(40.0f);

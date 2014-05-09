@@ -14,6 +14,7 @@
 class Ray {
 public:
     Ray();
+    Ray(const Ray& ray);
     ~Ray();
     
     vec3 operator()(float t) const;
@@ -24,6 +25,7 @@ public:
     float           tmin;
     mutable float   tmax;
     int             depth;
+    float           time;
 };
 
 #endif

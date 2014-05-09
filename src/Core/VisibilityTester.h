@@ -16,7 +16,7 @@ class Scene;
 class VisibilityTester {
 public:
     
-    VisibilityTester();
+    VisibilityTester(const Ray& ray);
     ~VisibilityTester();
     
     bool unoccluded(const Scene& scene) const;

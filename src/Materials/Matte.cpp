@@ -21,7 +21,7 @@ Matte::~Matte() {
 }
 
 void Matte::setColor(const vec3& color) {
-    _color = color;
+    _color = Spectrum(color);
 }
 
 Spectrum Matte::evaluateBSDF(const vec3&, const vec3&,
@@ -29,6 +29,12 @@ Spectrum Matte::evaluateBSDF(const vec3&, const vec3&,
     return _color;
 }
 
-Spectrum Matte::sampleBSDF(const vec3&, vec3*, const Intersection&, BxDFType) const {
-    return Spectrum(0.0f);
+Spectrum Matte::sampleBSDF(const vec3&, vec3* wi, const Intersection& intersection,
+                           BxDFType type) const {
+    if (!(type & BSDFDiffuse)) {
+        return Spectrum(0.0f);
+    }
+    
+    *wi = normalize(surfaceToWorld(cosineSampleHemisphere(), intersection));
+    return _color;
 }

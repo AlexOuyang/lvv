@@ -25,14 +25,21 @@ public:
     
     const QImage& getImage() const;
     
-    virtual void addSample(const CameraSample &sample, const Spectrum &L);
+    virtual void addSample(const CameraSample &sample, const Spectrum &L, float weight=1.0f);
+    
+protected:
+    virtual void keyPressEvent(QKeyEvent * event);
     
 public slots:
     void saveAction();
     
+signals:
+    void toggleRendering();
+    
 private:
-    Ui_FilmWindow   _ui;
-    QImage          _image;
+    Ui_FilmWindow       _ui;
+    QImage              _image;
+    std::vector<vec3>   _buffer;
 };
 
 #endif /* defined(__CSE168_Rendering__QtFilm__) */

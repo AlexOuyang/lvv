@@ -8,6 +8,8 @@
 
 #include "Main.h"
 
+#include <unistd.h>
+
 QTime Main::clock = QTime();
 bool Main::clockActive = false;
 
@@ -54,7 +56,10 @@ void Main::initMaterials() {
     Main::glossy->roughness = 0.2f;
 }
 
-Main::Main() : _scene(nullptr), _renderer(nullptr), _camera(nullptr), _film(nullptr) {
+Main::Main() :
+_scene(nullptr), _renderer(nullptr), _camera(nullptr), _film(nullptr),
+_timer(), _thread(nullptr), _continueRendering(true) {
+    
     // Setup timer
     _timer.setInterval(1000/24); // Refresh 24 times per second
     connect(&_timer, SIGNAL(timeout()), this, SLOT(refresh()));
@@ -65,9 +70,11 @@ Main::Main() : _scene(nullptr), _renderer(nullptr), _camera(nullptr), _film(null
     
     RenderOptions options;
     options.maxThreadsCount = 0;
-    options.antialiasingSampling.count = 6;
+    options.antialiasingSampling.count = 1;
     options.antialiasingSampling.jittered = true;
     _renderer = new Renderer(options);
+    
+    connect(_film, SIGNAL(toggleRendering()), this, SLOT(toggleRendering()));
     
     _film->show();
     
@@ -87,9 +94,18 @@ Main::~Main() {
 
 void Main::renderThread() {
     startClock("Begin rendering...");
-    _renderer->render(*_scene, _camera);
-    endClock("Rendering done in");
-    //qApp->exit();
+    int sampleCount = 0;
+    QTime sampleClock;
+    while (true) {
+        if (_continueRendering) {
+            sampleClock.restart();
+            _renderer->render(*_scene, _camera);
+            qDebug() << "Rendered sample" << ++sampleCount
+            << "in" << ((float)sampleClock.elapsed()/1000.f) << "s";
+        } else {
+            usleep(10*1000);
+        }
+    }
 }
 
 void Main::refresh() {
@@ -98,6 +114,15 @@ void Main::refresh() {
     if (clockActive) {
         QString msg = "Ellapsed time: " + QString::number(elapsed) + "s";
         _film->statusBar()->showMessage(msg);
+    }
+}
+
+void Main::toggleRendering() {
+    _continueRendering = !_continueRendering;
+    if (_continueRendering) {
+        startClock("Rendering restarted...");
+    } else {
+        endClock("Rendering stopped...");
     }
 }
 

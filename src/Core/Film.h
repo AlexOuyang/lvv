@@ -19,7 +19,7 @@ public:
     Film(const vec2& res);
     virtual ~Film();
     
-    virtual void addSample(const CameraSample &sample, const Spectrum &L) = 0;
+    virtual void addSample(const CameraSample &sample, const Spectrum &L, float weight=1.0f) = 0;
     
     const vec2 resolution;
 };
