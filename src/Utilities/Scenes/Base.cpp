@@ -11,32 +11,49 @@
 void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
-    scene->lights.push_back(new SkyLight(Spectrum(0xF0FAFF)));
+    
+//    IntTexture* skyTexture = (IntTexture*)ImageLoading::LoadImage("/Users/gael/Desktop/Courses/CSE_168/models/textures/grace.jpg");
+//    skyTexture->setScaleFactor(vec3(1.0f));
+//    SkyLight* sky = new SkyLight(skyTexture);
+//    Transform t;
+//    t.m = glm::rotate(t.m, radians(178.f), vec3(0.f, 1.f, 0.f));
+//    sky->setTransform(t);
+//    scene->lights.push_back(sky);
+    scene->lights.push_back(new SkyLight(vec3(0.8f, 0.9f, 1.0f)));
 
     // Import cornel box
     AssimpImporter importer;
     importer.setDefaultMaterial(Main::matte);
     
-    Glass* glass = new Glass();
-    glass->indexIn = 1.3f;
-    glass->indexOut = 1.0003f;
-    glass->absorptionColor = Spectrum(1.f).getColor();
-    glass->absorptionCoeff = 5.0f;
-    glass->roughness = 0.2f;
-    
-    Glossy* plastic = new Glossy();
-    plastic->indexIn = 1.3f;
-    plastic->indexOut = 1.003f;
-    plastic->color = Spectrum(0xC7C7C7);
-    
-    Glossy* plastic2 = new Glossy();
-    plastic2->indexIn = 2.3f;
-    plastic2->indexOut = 1.003f;
-    
     importer.setMaterialCallback([&] (const AssimpImporter::MaterialAttributes& attrs) {
         Material* material = nullptr;
         
-        //qDebug() << attrs.name.c_str();
+        qDebug() << attrs.name.c_str();
+        if (attrs.name == "chess_blackSet1" || attrs.name == "chess_redSet1"
+            || attrs.name == "chess_whiteSet1") {
+            AshikhminMaterial* mtl = new AshikhminMaterial();
+            
+            if (!attrs.texturePath.empty()) {
+                IntTexture* t = dynamic_cast<IntTexture*>(ImageLoading::LoadImage(attrs.texturePath));
+                if (t) {
+                    t->setScaleFactor(vec3(1.3f));
+                    mtl->setDiffuseColor(t);
+                }
+            }
+            if (attrs.name == "chess_redSet1") {
+                mtl->setDiffuseColor(vec3(1.0f, 0.1f, 0.1f));
+                mtl->setDiffuseIntensity(0.8f);
+                mtl->setSpecularIntensity(0.2f);
+                mtl->setSpecularColor(vec3(1.0f, 1.0f, 1.0f));
+                mtl->setRoughness(1000.0f, 1000.0f);
+            } else {
+                mtl->setSpecularColor(vec3(1.0f, 1.0f, 1.0f));
+                mtl->setDiffuseIntensity(0.9f);
+                mtl->setSpecularIntensity(0.1f);
+                mtl->setRoughness(1000.0f, 1000.0f);
+            }
+            material = mtl;
+        }
         if (attrs.name == "water_material") {
             Glass* glass = new Glass();
             glass->indexIn = 1.33f;
@@ -53,7 +70,7 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
     importer.setLightsCallback([&] (const AssimpImporter::LightAttributes& attrs) {
         DirectionalLight* sunlgt = new DirectionalLight();
         sunlgt->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 0.9f)));
-        sunlgt->setIntensity(0.6f);
+        sunlgt->setIntensity(1.8f);
         sunlgt->setDirection(attrs.direction);
         scene->lights.push_back(sunlgt);
     });
@@ -62,6 +79,17 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
         const std::string& name = tp->name;
         
         qDebug() << name;
+        
+        if (name == "EU50_1_EU50Leaf4") {
+            Mesh* mesh = dynamic_cast<Mesh*>(p->getShape());
+            if (mesh) {
+                Texture* alphaTexture = ImageLoading::LoadFloatImage("/Users/gael/Downloads/EU50_Ostrya_carpinifolia_European_Hop_Hornbeam_maya/Models/EU50lef4_a.tif");
+                mesh->alphaTexture = alphaTexture;
+            }
+        } else if (name.find("envmap") != std::string::npos) {
+            return false;
+        }
+        
         if (name == "rotor") {
 //            Transform t1 = tp->getTransform(), t2 = t1;
 //            AnimatedTransform animated;
@@ -74,7 +102,7 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
             // Create area light
             Mesh* shape = dynamic_cast<Mesh*>(p->getShape());
             if (!shape) {
-                return;
+                return true;
             }
             
             // Transform light so its triangles are in world space
@@ -87,13 +115,14 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
             tp->setTransform(Transform());
             
             AreaLight* areaLight = new AreaLight(shape);
-            areaLight->setSpectrum(Spectrum(1.0f));
-            areaLight->setIntensity(5.0f);
+            areaLight->setSpectrum(Spectrum(1.5f));
+            areaLight->setIntensity(10.0f);
             p->setAreaLight(areaLight);
             areaLight->samplingConfig.count = 1;
             scene->lights.push_back(areaLight);
-
         }
+        
+        return true;
     });
     
     Aggregate* model = new BVHAccelerator();
@@ -118,6 +147,8 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
             qDebug() << "Wrong camera type";
             abort();
         }
+//        perspectiveCamera->setApertureSize(0.04f);
+//        perspectiveCamera->setFocusPoint(vec3(0.179f, 0.0f, 1.471f));
     }
     
     film = new QtFilm(vec2(1024.f, 768.f)/1.0f);

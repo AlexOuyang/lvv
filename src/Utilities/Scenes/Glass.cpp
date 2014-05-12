@@ -11,7 +11,7 @@
 void glassScene(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
-    scene->lights.push_back(new SkyLight(Spectrum(0xF0FAFF)));
+    scene->lights.push_back(new SkyLight(Spectrum(0xF0FAFF).getColor()));
     
     TransformedPrimitive* lightTransform = nullptr;
     GeometricPrimitive* lightGeometric = nullptr;
@@ -33,6 +33,7 @@ void glassScene(Scene* &scene, Camera* &camera, QtFilm* &film) {
             lightGeometric = p;
             lightShape = dynamic_cast<Mesh*>(p->getShape());
         }
+        return true;
     });
     
     Aggregate* model = new BVHAccelerator();

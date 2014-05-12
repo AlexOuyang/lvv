@@ -40,6 +40,8 @@
 #include "Materials/Glass.h"
 #include "Materials/Glossy.h"
 #include "Materials/AshikhminMaterial.h"
+#include "Core/Texture.h"
+#include "Utilities/ImageLoading.h"
 
 // Scenes
 void project1(Scene* &scene, Camera* &camera, QtFilm* &film);
@@ -53,6 +55,7 @@ void glassScene(Scene* &scene, Camera* &camera, QtFilm* &film);
 void car(Scene* &scene, Camera* &camera, QtFilm* &film);
 void weapon(Scene* &scene, Camera* &camera, QtFilm* &film);
 void colors(Scene* &scene, Camera* &camera, QtFilm* &film);
+void atrium(Scene* &scene, Camera* &camera, QtFilm* &film);
 void base(Scene* &scene, Camera* &camera, QtFilm* &film);
 
 class Main : public QObject {

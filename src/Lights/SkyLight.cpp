@@ -8,16 +8,35 @@
 
 #include "SkyLight.h"
 
-SkyLight::SkyLight(const Spectrum& spectrum) : Light(), _spectrum(spectrum) {
+SkyLight::SkyLight(const vec3& color) :
+Light(), _color(new UniformVec3Texture(color)), _transform() {
     
+}
+
+SkyLight::SkyLight(Texture* color) : Light(), _color(nullptr) {
+    if (color) {
+        _color = color;
+    } else {
+        _color = new UniformVec3Texture(vec3(1.f));
+    }
 }
 
 SkyLight::~SkyLight() {
     
 }
 
-Spectrum SkyLight::le(const Ray &) const {
-    return _spectrum;
+void SkyLight::setTransform(const Transform &t) {
+    _transform = t;
+}
+
+Spectrum SkyLight::le(const Ray & ray) const {
+    vec3 d = normalize(ray.direction);
+    d = _transform.applyToVector(d);
+    vec2 uv;
+    uv.s = ((atan2f(d.x, d.z) + M_PI)
+            / (2.f * M_PI));
+    uv.t = ((asin(d.y) + 0.5f*M_PI) / M_PI);
+    return Spectrum(_color->evaluateVec3(uv));
 }
 
 Spectrum SkyLight::sampleL(const vec3&, float, const LightSample&, vec3*, VisibilityTester*) const {

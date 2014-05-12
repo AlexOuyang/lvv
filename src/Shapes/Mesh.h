@@ -11,6 +11,7 @@
 
 #include "Core/Core.h"
 #include "Core/Shape.h"
+#include "Core/Texture.h"
 #include "Vertex.h"
 #include "Triangle.h"
 
@@ -32,6 +33,7 @@ public:
     int         trianglesCount;
     Vertex*     vertices;
     Triangle*   triangles;
+    Texture*    alphaTexture;
 };
 
 #endif /* defined(__CSE168_Rendering__Mesh__) */

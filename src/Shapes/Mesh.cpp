@@ -9,7 +9,8 @@
 #include "Mesh.h"
 
 Mesh::Mesh()
-: verticesCount(0), trianglesCount(0), vertices(nullptr), triangles(nullptr) {
+: verticesCount(0), trianglesCount(0), vertices(nullptr), triangles(nullptr),
+alphaTexture(nullptr) {
     
 }
 

@@ -13,6 +13,8 @@
 #include "Core/Shape.h"
 #include "Vertex.h"
 
+class Mesh;
+
 class Triangle : public Shape {
 public:
     
@@ -25,6 +27,7 @@ public:
     virtual AABB getBoundingBox() const;
     
     Vertex* vertices[3];
+    Mesh*   mesh;
 };
 
 #endif /* defined(__CSE168_Rendering__Triangle__) */

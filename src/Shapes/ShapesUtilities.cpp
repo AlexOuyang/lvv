@@ -20,6 +20,10 @@ Mesh* ShapesUtilities::CreateBox(float x, float y, float z) {
 	mesh->vertices = new Vertex[mesh->verticesCount];
 	mesh->triangles = new Triangle[mesh->trianglesCount];
     
+    for (int i = 0; i < mesh->trianglesCount; ++i) {
+        mesh->triangles[i].mesh = mesh;
+    }
+    
 	x *= 0.5f;
 	y *= 0.5f;
 	z *= 0.5f;

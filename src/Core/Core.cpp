@@ -22,6 +22,11 @@ QDebug operator<<(QDebug dbg, const std::string& s) {
     return dbg << s.c_str();
 }
 
+QDebug operator<<(QDebug dbg, const vec2& v) {
+    dbg.nospace() << "(" << v.x << ", " << v.y << ")";
+    return dbg.space();
+}
+
 QDebug operator<<(QDebug dbg, const vec3& v) {
     dbg.nospace() << "(" << v.x << ", " << v.y << ", " << v.z << ")";
     return dbg.space();

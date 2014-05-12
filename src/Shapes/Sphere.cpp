@@ -57,6 +57,20 @@ bool Sphere::intersect(const Ray& ray, Intersection* intersection) const {
     intersection->t = t;
     intersection->point = point;
     intersection->normal = normalize(point - _center);
+    
+    // Generate tangents
+    if (abs(intersection->normal.y) > 1.0f-0.00001f) {
+        intersection->tangentU = vec3(1.0f, 0.0f, 0.0f);
+        intersection->tangentV = vec3(0.0f, 0.0f, 1.0f);
+    } else {
+        intersection->tangentU = normalize(cross(vec3(0.0f, 1.0f, 0.0f), intersection->normal));
+        intersection->tangentV = cross(intersection->normal, intersection->tangentU);
+    }
+    
+    intersection->uv.s = ((atan2f(intersection->normal.x, intersection->normal.z) + M_PI)
+                          / (2.f * M_PI));
+    intersection->uv.t = ((asin(intersection->normal.y) + 0.5f*M_PI) / M_PI);
+    
     intersection->rayEpsilon = 5e-4f * t;
     return true;
 }

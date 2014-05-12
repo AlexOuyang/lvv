@@ -15,20 +15,25 @@ float RangeRand(float a, float b) {
 void randomSpheres(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
-    scene->lights.push_back(new SkyLight(Spectrum(vec3(0.8f, 0.8f, 1.0f))));
+    scene->lights.push_back(new SkyLight(vec3(0.8f, 0.8f, 1.0f)));
+    
+    Texture* spheresTexture = ImageLoading::LoadImage("/Users/gael/Desktop/Courses/CSE_168/models/textures/earth.jpg");
+    Texture* planeTexture = ImageLoading::LoadImage("/Users/gael/Desktop/Courses/CSE_168/models/textures/scale_brown.png");
     
     // Materials
-    Material* white = new Matte();
+    Matte* spheresMaterial = new Matte(spheresTexture);
+    Matte* planeMaterial = new Matte(planeTexture);
+    //white->setColor(vec3(0.6f));
     
     // Create ground plane
     Plane* groundShape = new Plane();
-    GeometricPrimitive* ground = new GeometricPrimitive(groundShape, white);
+    GeometricPrimitive* ground = new GeometricPrimitive(groundShape, planeMaterial);
     *scene->aggregate << ground;
     
     // Create spheres
     for(int i=0; i<20; ++i) {
         Sphere* sphereShape = new Sphere();
-        GeometricPrimitive* sphere = new GeometricPrimitive(sphereShape, white);
+        GeometricPrimitive* sphere = new GeometricPrimitive(sphereShape, spheresMaterial);
         float rad = RangeRand(0.25f,0.5f);
         vec3 pos(RangeRand(-5.0f,5.0f), rad, RangeRand(-5.0f,5.0f));
         sphereShape->setRadius(rad);

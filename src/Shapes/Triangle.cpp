@@ -9,12 +9,13 @@
 #include "Triangle.h"
 
 #include "Core/Ray.h"
+#include "Shapes/Mesh.h"
 
-Triangle::Triangle() {
+Triangle::Triangle() : vertices(), mesh(nullptr) {
     
 }
 
-Triangle::Triangle(Vertex* a, Vertex* b, Vertex* c) {
+Triangle::Triangle(Vertex* a, Vertex* b, Vertex* c) : vertices(), mesh(nullptr) {
     vertices[0] = a;
     vertices[1] = b;
     vertices[2] = c;    
@@ -54,6 +55,18 @@ bool Triangle::intersect(const Ray& ray, Intersection* intersection) const {
         return false;
     }
     
+    // Compute uv coords
+    vec2 uvs = ((1-alpha-beta)*vertices[0]->texCoord
+                + alpha*vertices[1]->texCoord
+                + beta*vertices[2]->texCoord);
+    
+    // Reject if we have an alpha texture
+    if (mesh && mesh->alphaTexture) {
+        if (mesh->alphaTexture->evaluateFloat(uvs) == 0.0f) {
+            return false;
+        }
+    }
+    
     // Compute smoothed normal
     normal = ((1-alpha-beta)*vertices[0]->normal
               + alpha*vertices[1]->normal
@@ -66,16 +79,22 @@ bool Triangle::intersect(const Ray& ray, Intersection* intersection) const {
     intersection->t = t;
     intersection->point = ray(t);
     intersection->normal = normal;
-    intersection->uv = ((1-alpha-beta)*vertices[0]->texCoord
-                        + alpha*vertices[1]->texCoord
-                        + beta*vertices[2]->texCoord);
+    intersection->uv = uvs;
     
-    if (abs(normal.y) > 1.0f-0.00001f) {
-        intersection->tangentU = vec3(1.0f, 0.0f, 0.0f);
-        intersection->tangentV = vec3(0.0f, 0.0f, 1.0f);
-    } else {
-        intersection->tangentU = normalize(cross(vec3(0.0f, 1.0f, 0.0f), normal));
+    // Generate tangents
+    if (dot(vertices[0]->tangentU, vertices[0]->tangentU) > 0.f) {
+        intersection->tangentU = ((1-alpha-beta)*vertices[0]->tangentU
+                                  + alpha*vertices[1]->tangentU
+                                  + beta*vertices[2]->tangentU);
         intersection->tangentV = cross(normal, intersection->tangentU);
+    } else {
+        if (abs(normal.y) > 1.0f-0.00001f) {
+            intersection->tangentU = vec3(1.0f, 0.0f, 0.0f);
+            intersection->tangentV = vec3(0.0f, 0.0f, 1.0f);
+        } else {
+            intersection->tangentU = normalize(cross(vec3(0.0f, 1.0f, 0.0f), normal));
+            intersection->tangentV = cross(normal, intersection->tangentU);
+        }
     }
 
     intersection->rayEpsilon = 1e-3f * t;
@@ -106,6 +125,18 @@ bool Triangle::intersectP(const Ray& ray) const {
     float t = dot(oa, normal) / det;
     if (t < ray.tmin || t > ray.tmax) {
         return false;
+    }
+    
+    // Compute uv coords
+    vec2 uvs = ((1-alpha-beta)*vertices[0]->texCoord
+                + alpha*vertices[1]->texCoord
+                + beta*vertices[2]->texCoord);
+    
+    // Reject if we have an alpha texture
+    if (mesh && mesh->alphaTexture) {
+        if (mesh->alphaTexture->evaluateFloat(uvs) == 0.0f) {
+            return false;
+        }
     }
     
     return true;

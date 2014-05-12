@@ -32,7 +32,7 @@ void cornellBox(Scene* &scene, Camera* &camera, QtFilm* &film) {
     glass->indexIn = 1.45f;
     glass->indexOut = 1.0003f;
     glass->absorptionColor = Spectrum(0x2C7D18).getColor();
-    glass->absorptionCoeff = 5.0f;
+    glass->absorptionCoeff = 0.0f;
     glass->roughness = 0.2f;
     
     Glossy* glossy = new Glossy();
@@ -51,7 +51,7 @@ void cornellBox(Scene* &scene, Camera* &camera, QtFilm* &film) {
     
     // Import dragon
     Aggregate* dragonAggregate = nullptr;
-    if (true) {
+    if (false) {
         model->removePrimitive("leftSphere");
         model->removePrimitive("rightSphere");
         
@@ -88,8 +88,8 @@ void cornellBox(Scene* &scene, Camera* &camera, QtFilm* &film) {
             abort();
         }
         
-        //leftSphere->setMaterial(gold);
-        //rightSphere->setMaterial(glass);
+        leftSphere->setMaterial(gold);
+        rightSphere->setMaterial(glass);
     }
     
     Primitive* lightPrimitive = model->findPrimitive("light");

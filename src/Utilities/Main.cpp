@@ -43,7 +43,7 @@ void Main::initMaterials() {
     Main::copper->roughness = 0.2;
     
     Main::glass = new Glass();
-    Main::glass->indexIn = 1.45f;
+    Main::glass->indexIn = 1.33f;
     Main::glass->indexOut = 1.0003f;
     Main::glass->absorptionColor = Spectrum(0x305C8C).getColor();
     Main::glass->absorptionCoeff = 5.0f;
@@ -66,10 +66,11 @@ _timer(), _thread(nullptr), _continueRendering(true) {
     
     initMaterials();
     
-    base(_scene, _camera, _film);
+    cornellBox(_scene, _camera, _film);
     
     RenderOptions options;
-    options.maxThreadsCount = 0;
+    options.maxThreadsCount = -1;
+    options.maxRayDepth = 5;
     options.antialiasingSampling.count = 1;
     options.antialiasingSampling.jittered = true;
     _renderer = new Renderer(options);
@@ -96,12 +97,18 @@ void Main::renderThread() {
     startClock("Begin rendering...");
     int sampleCount = 0;
     QTime sampleClock;
+    float avgSampleTime = 0.f;
     while (true) {
         if (_continueRendering) {
             sampleClock.restart();
             _renderer->render(*_scene, _camera);
-            qDebug() << "Rendered sample" << ++sampleCount
-            << "in" << ((float)sampleClock.elapsed()/1000.f) << "s";
+            float ellapsed = ((float)sampleClock.elapsed()/1000.f);
+            ++sampleCount;
+            avgSampleTime = (sampleCount > 1)
+            ? ((avgSampleTime*(sampleCount-1))+ellapsed)/sampleCount : ellapsed;
+            qDebug() << "Rendered sample" << sampleCount
+            << "in" << ellapsed << "s, avg"
+            << avgSampleTime << "s";
         } else {
             usleep(10*1000);
         }

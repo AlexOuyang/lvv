@@ -18,15 +18,17 @@ public:
     virtual ~Plane();
     
     void setOrigin(const vec3& origin);
-    void setNormal(const vec3& normal);
+    void setNormal(const vec3& normal, float textureScaleX=1.f, float textureScaleY=1.f);
     
     virtual bool intersect(const Ray& ray, Intersection* intersection) const;
     virtual bool intersectP(const Ray& ray) const;
     virtual AABB getBoundingBox() const;
     
 private:
-    vec3   _origin;
-    vec3  _normal;
+    vec3    _origin;
+    vec3    _normal;
+    vec3    _s;
+    vec3    _t;
     float   _d;
 };
 

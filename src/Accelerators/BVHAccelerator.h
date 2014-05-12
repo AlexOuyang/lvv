@@ -16,8 +16,12 @@
 
 #include <vector>
 
+struct CompareToBucket;
+
 class BVHAccelerator : public Aggregate {
 public:
+    
+    friend CompareToBucket;
     
     enum SplitMethod {
         SplitMiddle,
@@ -25,12 +29,13 @@ public:
         SplitSAH
     };
     
-    BVHAccelerator(SplitMethod splitMethod=SplitMiddle);
+    BVHAccelerator(SplitMethod splitMethod=SplitSAH);
     ~BVHAccelerator();
     
-    virtual void addPrimitive(Primitive* primitive);
-    virtual void preprocess();
+    virtual void preprocess();    
     
+    virtual void addPrimitive(Primitive* primitive);
+
     virtual Primitive* findPrimitive(const std::string& name);
     virtual void removePrimitive(const std::string& name);
     virtual const std::vector<Primitive*> getPrimitives() const;

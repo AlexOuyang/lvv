@@ -29,8 +29,11 @@ void DirectionalLight::setSpectrum(const Spectrum &spectrum) {
     _spectrum = spectrum;
 }
 
-Spectrum DirectionalLight::le(const Ray&) const {
-    return Spectrum(0);
+Spectrum DirectionalLight::le(const Ray& ray) const {
+    if (ray.tmax == INFINITY) {
+        return Spectrum(0.f);
+    }
+    return (_spectrum * _intensity);
 }
 
 Spectrum DirectionalLight::sampleL(const vec3& point, float rayEpsilon,

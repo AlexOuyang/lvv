@@ -70,7 +70,7 @@ void QtFilm::addSample(const CameraSample &sample, const Spectrum &L, float weig
     
     // Apply tone mapping
     vec3 filtered = newValue;
-    //filtered = vec3(1.0f) - glm::exp(filtered * -1.5f);
+    //filtered = vec3(1.0f) - glm::exp(filtered * -1.3f);
     
     _image.setPixel(sample.pixel.x, sample.pixel.y, Spectrum(filtered).getIntColor());
 }

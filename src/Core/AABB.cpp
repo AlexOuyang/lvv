@@ -12,12 +12,28 @@
 
 #include "Core/Ray.h"
 
-AABB AABB::Union(const AABB &box, const vec3 &point) {
-    return AABB(glm::min(box.min, point), glm::max(box.max, point));
+AABB AABB::Union(const AABB &b, const vec3 &p) {
+    AABB ret = b;
+
+    ret.min.x = glm::min(b.min.x, p.x);
+    ret.min.y = glm::min(b.min.y, p.y);
+    ret.min.z = glm::min(b.min.z, p.z);
+    ret.max.x = glm::max(b.max.x, p.x);
+    ret.max.y = glm::max(b.max.y, p.y);
+    ret.max.z = glm::max(b.max.z, p.z);
+    return ret;
 }
 
-AABB AABB::Union(const AABB &b1, const AABB &b2) {
-    return AABB(glm::min(b1.min, b2.min), glm::max(b1.max, b2.max));
+AABB AABB::Union(const AABB &b, const AABB &b2) {
+    AABB ret;
+
+    ret.min.x = glm::min(b.min.x, b2.min.x);
+    ret.min.y = glm::min(b.min.y, b2.min.y);
+    ret.min.z = glm::min(b.min.z, b2.min.z);
+    ret.max.x = glm::max(b.max.x, b2.max.x);
+    ret.max.y = glm::max(b.max.y, b2.max.y);
+    ret.max.z = glm::max(b.max.z, b2.max.z);
+    return ret;
 }
 
 
@@ -78,4 +94,9 @@ int AABB::getMaxDimension() const {
     } else {
         return 2;
     }
+}
+
+float AABB::surfaceArea() const {
+    vec3 delta = max - min;
+    return 2.f * (delta.x * delta.y + delta.x * delta.z + delta.y * delta.z);
 }

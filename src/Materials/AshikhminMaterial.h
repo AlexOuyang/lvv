@@ -10,12 +10,19 @@
 #define __CSE168_Rendering__AshikhminMaterial__
 
 #include "Core/Material.h"
+#include "Core/Texture.h"
 
 class AshikhminMaterial : public Material {
 public:
     
     AshikhminMaterial();
     virtual ~AshikhminMaterial();
+    
+    void setDiffuseColor(Texture* t);
+    void setSpecularColor(Texture* t);
+    void setDiffuseIntensity(Texture* t);
+    void setSpecularIntensity(Texture* t);
+    void setRoughness(Texture* tu, Texture* tv);
     
     void setDiffuseColor(const vec3& color);
     void setSpecularColor(const vec3& color);
@@ -29,12 +36,12 @@ public:
                                 BxDFType type) const;
     
 private:
-    Spectrum    _diffuseColor;
-    Spectrum    _specularColor;
-    float       _diffuseIntensity;
-    float       _specularIntensity;
-    float       _roughnessU;
-    float       _roughnessV;
+    Texture*    _diffuseColor;
+    Texture*    _specularColor;
+    Texture*    _diffuseIntensity;
+    Texture*    _specularIntensity;
+    Texture*    _roughnessU;
+    Texture*    _roughnessV;
 };
 
 #endif /* defined(__CSE168_Rendering__AshikhminMaterial__) */

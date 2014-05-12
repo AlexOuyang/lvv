@@ -81,6 +81,7 @@ bool AssimpImporter::importAssimpMaterials(const aiScene* assimpScene) {
         aiMaterial* assimpMaterial = assimpScene->mMaterials[i];
         
         aiString nameStr;
+        aiString texturePath;
         aiColor3D color;
         aiColor3D transparency;
         int shadingModel = aiShadingMode_Gouraud;
@@ -89,9 +90,11 @@ bool AssimpImporter::importAssimpMaterials(const aiScene* assimpScene) {
         assimpMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, color);
         assimpMaterial->Get(AI_MATKEY_COLOR_TRANSPARENT, transparency);
         assimpMaterial->Get(AI_MATKEY_SHADING_MODEL, shadingModel);
+        assimpMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &texturePath);
         
         MaterialAttributes attrs;
         attrs.name = nameStr.C_Str();
+        attrs.texturePath = texturePath.C_Str();
         attrs.color = vec3(color.r, color.g, color.b);
         attrs.transparency = vec3(transparency.r, transparency.g, transparency.b);
         switch (shadingModel) {
@@ -113,8 +116,20 @@ bool AssimpImporter::importAssimpMaterials(const aiScene* assimpScene) {
         }
         
         if (!material || !_materialCallback) {
-            Matte* matte = new Matte();
-            matte->setColor(attrs.color);
+            Matte* matte;
+            if (!attrs.texturePath.empty()) {
+                Texture* t = ImageLoading::LoadImage(attrs.texturePath);
+                if (!t) {
+                    std::cerr << "AssimImporter Error: couldn't load texture " << attrs.texturePath << std::endl;
+                    matte = new Matte();
+                    matte->setColor(attrs.color);
+                } else {
+                    matte = new Matte(t);
+                }
+            } else {
+                matte = new Matte();
+                matte->setColor(attrs.color);
+            }
             material = matte;
         }
         
@@ -200,17 +215,16 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
         mesh->verticesCount = assimpMesh->mNumVertices;
         mesh->vertices = new Vertex[mesh->verticesCount];
         for (uint j = 0; j < assimpMesh->mNumVertices; ++j) {
-            mesh->vertices[j].position = vec3(assimpMesh->mVertices[j].x,
-                                               assimpMesh->mVertices[j].y,
-                                               assimpMesh->mVertices[j].z);
+            mesh->vertices[j].position = importAssimpVec3(assimpMesh->mVertices[j]);
             if (assimpMesh->mNormals) {
-                mesh->vertices[j].normal = vec3(assimpMesh->mNormals[j].x,
-                                                  assimpMesh->mNormals[j].y,
-                                                  assimpMesh->mNormals[j].z);
+                mesh->vertices[j].normal = importAssimpVec3(assimpMesh->mNormals[j]);
             }
             if (assimpMesh->mTextureCoords[0]) {
                 mesh->vertices[j].texCoord = vec2(assimpMesh->mTextureCoords[0][j].x,
                                                   assimpMesh->mTextureCoords[0][j].y);
+            }
+            if (assimpMesh->mTangents) {
+                mesh->vertices[j].tangentU = importAssimpVec3(assimpMesh->mTangents[j]);
             }
         }
         
@@ -230,6 +244,7 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
                 Vertex* b = &mesh->vertices[assimpMesh->mFaces[j].mIndices[1]];
                 Vertex* c = &mesh->vertices[assimpMesh->mFaces[j].mIndices[2]];
                 mesh->triangles[faceId] = Triangle(a, b, c);
+                mesh->triangles[faceId].mesh = mesh;
                 ++faceId;
             }
         }
@@ -248,7 +263,9 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
         
         // Apply custom setup to primitive
         if (_primitivesCallback) {
-            _primitivesCallback(transformed, primitive);
+            if (!_primitivesCallback(transformed, primitive)) {
+                continue;
+            }
         }
         
         // Add primitive to scene

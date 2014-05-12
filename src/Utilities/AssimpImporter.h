@@ -19,6 +19,7 @@
 #include "Core/Camera.h"
 #include "Core/TransformedPrimitive.h"
 #include "Core/GeometricPrimitive.h"
+#include "Utilities/ImageLoading.h"
 
 class AssimpImporter {
 public:
@@ -30,6 +31,7 @@ public:
     
     struct MaterialAttributes {
         std::string name;
+        std::string texturePath;
         vec3        color;
         vec3        transparency;
         ShadingMode shadingMode;
@@ -43,7 +45,7 @@ public:
     };
     
     typedef std::function<Material* (const MaterialAttributes&)> MaterialCallback;
-    typedef std::function<void (TransformedPrimitive*, GeometricPrimitive*)> PrimitiveCallback;
+    typedef std::function<bool (TransformedPrimitive*, GeometricPrimitive*)> PrimitiveCallback;
     typedef std::function<void (const LightAttributes&)> LightCallback;
     
     AssimpImporter();

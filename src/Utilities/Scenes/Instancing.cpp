@@ -11,7 +11,7 @@
 void instancing(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
-    scene->lights.push_back(new SkyLight(Spectrum(0xE8FBFF)));
+    scene->lights.push_back(new SkyLight(Spectrum(0xE8FBFF).getColor()));
     
     // Import model
     AssimpImporter importer;

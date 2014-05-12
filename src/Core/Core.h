@@ -25,6 +25,7 @@ class Scene;
 class Renderer;
 class Material;
 class Primitive;
+class Transform;
 
 namespace Core {
     const float Epsilon = 0.0001f;
@@ -33,6 +34,7 @@ namespace Core {
 }
 
 QDebug operator<<(QDebug dbg, const std::string& s);
+QDebug operator<<(QDebug dbg, const vec2& v);
 QDebug operator<<(QDebug dbg, const vec3& v);
 QDebug operator<<(QDebug dbg, const vec4& v);
 QDebug operator<<(QDebug dbg, const mat4x4& m);

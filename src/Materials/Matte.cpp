@@ -8,12 +8,16 @@
 
 #include "Matte.h"
 
-Matte::Matte() : _color(1.f) {
-    
+Matte::Matte(const vec3& color) : _color(new UniformVec3Texture(color)) {
+
 }
 
-Matte::Matte(const Spectrum& color) : _color(color) {
-
+Matte::Matte(Texture* color) : _color() {
+    if (color) {
+        _color = color;
+    } else {
+        _color = new UniformVec3Texture(vec3(1.f));
+    }
 }
 
 Matte::~Matte() {
@@ -21,12 +25,19 @@ Matte::~Matte() {
 }
 
 void Matte::setColor(const vec3& color) {
-    _color = Spectrum(color);
+    UniformVec3Texture* texture = dynamic_cast<UniformVec3Texture*>(_color);
+    if (texture) {
+        texture->setValue(color);
+    }
+}
+
+Texture* Matte::getColor() const {
+    return _color;
 }
 
 Spectrum Matte::evaluateBSDF(const vec3&, const vec3&,
-                             const Intersection&) const {
-    return _color;
+                             const Intersection& intersection) const {
+    return _color->evaluateVec3(intersection.uv);
 }
 
 Spectrum Matte::sampleBSDF(const vec3&, vec3* wi, const Intersection& intersection,
@@ -36,5 +47,5 @@ Spectrum Matte::sampleBSDF(const vec3&, vec3* wi, const Intersection& intersecti
     }
     
     *wi = normalize(surfaceToWorld(cosineSampleHemisphere(), intersection));
-    return _color;
+    return _color->evaluateVec3(intersection.uv);
 }

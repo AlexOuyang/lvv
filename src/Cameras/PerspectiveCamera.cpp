@@ -86,7 +86,7 @@ void PerspectiveCamera::setFocusDistance(float d) {
 }
 
 void PerspectiveCamera::setFocusPoint(const vec3& point) {
-    vec3 pos = vec3(_transform[0].m[3]);
+    vec3 pos = vec3(_transform[0].m[3]);    
     _focusDistance = glm::distance(pos, point);
 }
 

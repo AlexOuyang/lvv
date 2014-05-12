@@ -11,7 +11,7 @@
 void project1(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
-    scene->lights.push_back(new SkyLight(Spectrum(vec3(0.8f, 0.9f, 1.0f))));
+    scene->lights.push_back(new SkyLight(vec3(0.8f, 0.9f, 1.0f)));
     
     // Materials
     Material* white = new Matte();

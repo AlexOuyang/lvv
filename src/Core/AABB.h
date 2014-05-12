@@ -25,6 +25,7 @@ public:
     
     bool    intersectP(const Ray& ray, float* t0, float* t1);
     int     getMaxDimension() const;
+    float   surfaceArea() const;
     
     vec3 min;
     vec3 max;

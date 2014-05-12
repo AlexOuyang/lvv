@@ -23,7 +23,7 @@ Spectrum Glass::evaluateBSDF(const vec3& wo, const vec3 &wi,
     float cosi = glm::abs(glm::dot(wo, intersection.normal));
     vec3 t;
     float fr = refracted(cosi, wo, intersection.normal, indexOut, indexIn, &t);
-    float cookTorrance = cookTorranceReflection(wo, wi, intersection.normal, roughness, fr);    
+    float cookTorrance = cookTorranceReflection(wo, wi, intersection.normal, roughness, fr);
     return cookTorrance * Spectrum(1.0f);
 }
 

@@ -11,10 +11,14 @@
 void project2(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
-    scene->lights.push_back(new SkyLight(Spectrum(vec3(0.8f, 0.8f, 1.0f))));
+    scene->lights.push_back(new SkyLight(vec3(0.8f, 0.8f, 1.0f)));
     
     // Materials
-    Material* white = new Matte();
+    Matte* white = new Matte();
+    white->setColor(vec3(0.3f, 0.3f, 0.35f));
+    
+    Matte* white2 = new Matte();
+    white2->setColor(vec3(0.7f));
     
     // Create ground
     Mesh* groundShape = ShapesUtilities::CreateBox(5.0f, 0.1f, 5.0f);
@@ -22,7 +26,7 @@ void project2(Scene* &scene, Camera* &camera, QtFilm* &film) {
     
     // Create dragon
     AssimpImporter importer;
-    importer.setDefaultMaterial(white);
+    importer.setDefaultMaterial(white2);
     
     Main::startClock("Importing model...");
     Aggregate* model = new BVHAccelerator();

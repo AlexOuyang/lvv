@@ -31,8 +31,11 @@ const Spectrum& AreaLight::getSpectrum() const {
     return _spectrum;
 }
 
-Spectrum AreaLight::le(const Ray&) const {
-    return Spectrum(0.0f);
+Spectrum AreaLight::le(const Ray& ray) const {
+    if (ray.tmax == INFINITY) {
+        return Spectrum(0.f);
+    }
+    return (_spectrum * _intensity);
 }
 
 Spectrum AreaLight::sampleL(const vec3 &point, float rayEpsilon,

@@ -11,7 +11,7 @@
 void weapon(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
-    scene->lights.push_back(new SkyLight(Spectrum(0xF0FAFF)));
+    scene->lights.push_back(new SkyLight(Spectrum(0xF0FAFF).getColor()));
 
     // Import cornel box
     AssimpImporter importer;
