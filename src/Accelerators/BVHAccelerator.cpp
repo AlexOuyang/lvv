@@ -83,10 +83,17 @@ void BVHAccelerator::preprocess() {
     _primitives.swap(orderedPrimitives);
 }
 
+/*
+ * Structure used by SAH split
+ */
 struct CompareToBucket {
-    CompareToBucket(int split, int num, int d, const AABB &b)
-    : centroidBounds(b)
-    { splitBucket = split; nBuckets = num; dim = d; }
+    
+    CompareToBucket(int split, int num, int d, const AABB &b) : centroidBounds(b) {
+        splitBucket = split;
+        nBuckets = num;
+        dim = d;
+    }
+    
     bool operator()(const BVHAccelerator::BuildPrimitiveInfo &p) const;
     
     int splitBucket, nBuckets, dim;
@@ -174,58 +181,76 @@ BVHAccelerator::Node* BVHAccelerator::recursiveBuild(std::vector<BuildPrimitiveI
                                      &buildData[end-1]+1, ComparePoints(splitDimension));
                 }
                 else {
-                    // Allocate _BucketInfo_ for SAH partition buckets
                     const int nBuckets = 12;
-                    struct BucketInfo {
-                        BucketInfo() { count = 0; }
-                        int count;
-                        AABB bounds;
-                    };
-                    BucketInfo buckets[nBuckets];
                     
-                    // Initialize _BucketInfo_ for SAH partition buckets
-                    for (uint32_t i = start; i < end; ++i) {
-                        int b = nBuckets *
-                        ((buildData[i].centroid[splitDimension] - centroidsBB.min[splitDimension]) /
-                         (centroidsBB.max[splitDimension] - centroidsBB.min[splitDimension]));
-                        if (b == nBuckets) b = nBuckets-1;
-                        buckets[b].count++;
-                        buckets[b].bounds = AABB::Union(buckets[b].bounds, buildData[i].boundingBox);
-                    }
+                    int bestDimension = -1;
+                    int bestSplit = 0;
+                    float bestSplitCost = 0.f;
                     
-                    // Compute costs for splitting after each bucket
-                    float cost[nBuckets-1];
-                    for (int i = 0; i < nBuckets-1; ++i) {
-                        AABB b0, b1;
-                        int count0 = 0, count1 = 0;
-                        for (int j = 0; j <= i; ++j) {
-                            b0 = AABB::Union(b0, buckets[j].bounds);
-                            count0 += buckets[j].count;
+                    // Test all possible split axis
+                    for (int testDim = 0; testDim < 3; ++testDim) {
+                        if ((centroidsBB.max[testDim] - centroidsBB.min[testDim]) == 0.f) {
+                            continue;
                         }
-                        for (int j = i+1; j < nBuckets; ++j) {
-                            b1 = AABB::Union(b1, buckets[j].bounds);
-                            count1 += buckets[j].count;
+                        
+                        // Allocate _BucketInfo_ for SAH partition buckets
+                        struct BucketInfo {
+                            BucketInfo() { count = 0; }
+                            int count;
+                            AABB bounds;
+                        };
+                        BucketInfo buckets[nBuckets];
+                        
+                        // Initialize _BucketInfo_ for SAH partition buckets
+                        for (uint32_t i = start; i < end; ++i) {
+                            int b = nBuckets *
+                            ((buildData[i].centroid[testDim] - centroidsBB.min[testDim]) /
+                             (centroidsBB.max[testDim] - centroidsBB.min[testDim]));
+                            if (b == nBuckets) b = nBuckets-1;
+                            buckets[b].count++;
+                            buckets[b].bounds = AABB::Union(buckets[b].bounds, buildData[i].boundingBox);
                         }
-                        cost[i] = .125f + ((count0*b0.surfaceArea() + count1*b1.surfaceArea())
-                                           / bbox.surfaceArea());
-                    }
-                    
-                    // Find bucket to split at that minimizes SAH metric
-                    float minCost = cost[0];
-                    uint32_t minCostSplit = 0;
-                    for (int i = 1; i < nBuckets-1; ++i) {
-                        if (cost[i] < minCost) {
-                            minCost = cost[i];
-                            minCostSplit = i;
+                        
+                        // Compute costs for splitting after each bucket
+                        float cost[nBuckets-1];
+                        for (int i = 0; i < nBuckets-1; ++i) {
+                            AABB b0, b1;
+                            int count0 = 0, count1 = 0;
+                            for (int j = 0; j <= i; ++j) {
+                                b0 = AABB::Union(b0, buckets[j].bounds);
+                                count0 += buckets[j].count;
+                            }
+                            for (int j = i+1; j < nBuckets; ++j) {
+                                b1 = AABB::Union(b1, buckets[j].bounds);
+                                count1 += buckets[j].count;
+                            }
+                            cost[i] = .125f + ((count0*b0.surfaceArea() + count1*b1.surfaceArea())
+                                               / bbox.surfaceArea());
+                        }
+                        
+                        // Find bucket to split at that minimizes SAH metric
+                        float minCost = cost[0];
+                        uint32_t minCostSplit = 0;
+                        for (int i = 1; i < nBuckets-1; ++i) {
+                            if (cost[i] < minCost) {
+                                minCost = cost[i];
+                                minCostSplit = i;
+                            }
+                        }
+                        if (bestDimension == -1 || minCost < bestSplitCost) {
+                            bestSplitCost = minCost;
+                            bestDimension = testDim;
+                            bestSplit = minCostSplit;
                         }
                     }
                     
                     // Either create leaf or split primitives at selected SAH bucket
                     if (primitivesCount > 10 ||
-                        minCost < primitivesCount) {
+                        bestSplitCost < primitivesCount) {
                         BuildPrimitiveInfo *pmid = std::partition(&buildData[start],
                                                                   &buildData[end-1]+1,
-                                                                  CompareToBucket(minCostSplit, nBuckets, splitDimension, centroidsBB));
+                                                                  CompareToBucket(bestSplit, nBuckets,
+                                                                                  bestDimension, centroidsBB));
                         mid = pmid - &buildData[0];
                     }
                     else {
@@ -262,7 +287,7 @@ Primitive* BVHAccelerator::findPrimitive(const std::string& name) {
     for (Primitive* p : _primitives) {
         Aggregate* child;
         
-        if (p->name == name) {
+        if (p->getName() == name) {
             return p;
         } else if ((child = dynamic_cast<Aggregate*>(p))) {
             Primitive* res = child->findPrimitive(name);
@@ -276,7 +301,7 @@ Primitive* BVHAccelerator::findPrimitive(const std::string& name) {
 
 void BVHAccelerator::removePrimitive(const std::string& name) {
     std::remove_if(_primitives.begin(), _primitives.end(), [name] (Primitive* p) {
-        return p->name == name;
+        return p->getName() == name;
     });
 }
 
