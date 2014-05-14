@@ -61,7 +61,7 @@ void Renderer::render(const Scene& scene, Camera* camera) {
     
     // Determine number of tasks
      // Compute ideal task count
-    int pixelsCount = camera->film->resolution.x * camera->film->resolution.y;
+    int pixelsCount = camera->getFilm()->resolution.x * camera->getFilm()->resolution.y;
     int tasksCount = glm::max(32 * Task::NumSystemCores(), pixelsCount / (16 * 16));
     tasksCount = Core::roundUpPow2(tasksCount);
     
@@ -104,7 +104,7 @@ void Renderer::render(const Scene& scene, Camera* camera) {
 }
 
 CameraSample* Renderer::getSamples(Renderer::Task *task, int* samplesCount) const {
-    const vec2& resolution = task->camera->film->resolution;
+    const vec2& resolution = task->camera->getFilm()->resolution;
     
     // Compute divisions size
     int countLog = glm::log2((float)task->tasksCount);
@@ -187,14 +187,14 @@ void Renderer::renderSample(const Scene& scene, Camera* camera, const CameraSamp
             }
 
             switch (options.antialiasingSampling.distribution) {
-                case GaussDistribution: {
+                case SamplingConfig::GaussDistribution: {
                     float a = 0.4f * sqrt(-2*log(subSampleDelta.x));
                     float b = 2.0f * M_PI * subSampleDelta.y;
                     subSampleDelta.x = 0.5f + a * sin(b);
                     subSampleDelta.y = 0.5f + a * cos(b);
                     break;
                 }
-                case ShirleyDistribution: {
+                case SamplingConfig::ShirleyDistribution: {
                     if (subSampleDelta.x < 0.5f) {
                         subSampleDelta.x = -0.5f + sqrt(2*subSampleDelta.x);
                     } else {
@@ -228,7 +228,7 @@ void Renderer::renderSample(const Scene& scene, Camera* camera, const CameraSamp
     }
     
     // Add sample contribution to camera film
-    camera->film->addSample(sample, ls, 1.0f/(float)_samplesCount);
+    camera->getFilm()->addSample(sample, ls, 1.0f/(float)_samplesCount);
 }
 
 Spectrum Renderer::li(const Scene &scene, const Ray &ray) const {
@@ -239,7 +239,7 @@ Spectrum Renderer::li(const Scene &scene, const Ray &ray) const {
         li = _surfaceIntegrator->li(scene, *this, ray, intersection);
     } else {
         // Handle ray that doesn't intersect any geometry
-        for (Light* light : scene.lights) {
+        for (Light* light : scene.getLights()) {
             li += light->le(ray);
         }
     }

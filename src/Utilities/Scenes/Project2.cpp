@@ -11,7 +11,7 @@
 void project2(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
-    scene->lights.push_back(new SkyLight(vec3(0.8f, 0.8f, 1.0f)));
+    *scene << new SkyLight(vec3(0.8f, 0.8f, 1.0f));
     
     // Materials
     Matte* white = new Matte();
@@ -38,23 +38,23 @@ void project2(Scene* &scene, Camera* &camera, QtFilm* &film) {
     
     Main::buildAccelerationStructures(model);
     
-    *scene->aggregate << model;
+    *scene << model;
     
     TransformedPrimitive* inst;
     Transform t;
     
-    t.m = glm::rotate(t.m, (float)M_PI, vec3(0.0f, 0.1f, 0.0f));
-    t.m[3] = vec4(-0.05f, 0.0f, -0.1f, 1.0f);
+    t.rotate((float)M_PI, vec3(0.0f, 0.1f, 0.0f));
+    t.setTranslation(vec3(-0.05f, 0.0f, -0.1f));
     inst = new TransformedPrimitive(model, t);
     
-    *scene->aggregate << inst;
+    *scene << inst;
     
     // Create lights
     DirectionalLight* sunlgt = new DirectionalLight();
     sunlgt->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 0.9f)));
     sunlgt->setIntensity(1.0f);
     sunlgt->setDirection(vec3(2.0f, -3.0f, -2.0f));
-    scene->lights.push_back(sunlgt);
+    *scene << sunlgt;
     
     PointLight* light;
     
@@ -62,13 +62,13 @@ void project2(Scene* &scene, Camera* &camera, QtFilm* &film) {
     light->setSpectrum(Spectrum(vec3(1.f, 0.2f, 0.2f)));
     light->setIntensity(0.02f);
     light->setPosition(vec3(-0.2f, 0.2f, 0.2f));
-    scene->lights.push_back(light);
+    *scene << light;
     
     light = new PointLight();
     light->setSpectrum(Spectrum(vec3(0.2f, 0.2f, 1.0f)));
     light->setIntensity(0.02f);
     light->setPosition(vec3(0.1f, 0.1f, 0.3f));
-    scene->lights.push_back(light);
+    *scene << light;
     
     // Create camera
     PerspectiveCamera* perspectiveCamera = new PerspectiveCamera();
@@ -76,7 +76,7 @@ void project2(Scene* &scene, Camera* &camera, QtFilm* &film) {
     perspectiveCamera->lookAt(vec3(-0.1f, 0.1f, 0.2f), vec3(-0.05f, 0.12f, 0.0f));
     
     film = new QtFilm(vec2(800.0, 600));
-    perspectiveCamera->film = film;
+    perspectiveCamera->setFilm(film);
     
     perspectiveCamera->setVFov(40.0f);
     perspectiveCamera->setAspect(film->resolution.x/film->resolution.y);

@@ -12,7 +12,7 @@
 
 int Primitive::nextPrimitiveId = 1;
 
-Primitive::Primitive() : primitiveId(nextPrimitiveId++), name() {
+Primitive::Primitive() : _primitiveId(nextPrimitiveId++), _name() {
 }
 
 Primitive::~Primitive() {

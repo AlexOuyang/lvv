@@ -13,7 +13,7 @@
 void colors(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
-    scene->lights.push_back(new SkyLight(Spectrum(0xF0FAFF).getColor()));
+    *scene << new SkyLight(Spectrum(0xF0FAFF).getColor());
 
     // Import cornel box
     AssimpImporter importer;
@@ -39,18 +39,18 @@ void colors(Scene* &scene, Camera* &camera, QtFilm* &film) {
     Glossy* materials[numMaterials];
     for (int i = 0; i < numMaterials; ++i) {
         materials[i] = new Glossy();
-        materials[i]->indexIn = 2.3f;
-        materials[i]->indexOut = 1.0003f;
-        materials[i]->roughness = 0.2f;
+        materials[i]->setIndexIn(2.3f);
+        materials[i]->setIndexOut(1.0003f);
+        materials[i]->setRoughness(0.2f);
     }
     
-    materials[0]->color = Spectrum(0xFF3D98);
-    materials[1]->color = Spectrum(0xABFF3D);
-    materials[2]->color = Spectrum(0x3DAEFF);
-    materials[3]->color = Spectrum(0xFFA13D);
-    materials[4]->color = Spectrum(0x3DDFFF);
-    materials[5]->color = Spectrum(0xFF3D3D);
-    materials[6]->color = Spectrum(0x3DFFCF);
+    materials[0]->setColor(Spectrum(0xFF3D98).getColor());
+    materials[1]->setColor(Spectrum(0xABFF3D).getColor());
+    materials[2]->setColor(Spectrum(0x3DAEFF).getColor());
+    materials[3]->setColor(Spectrum(0xFFA13D).getColor());
+    materials[4]->setColor(Spectrum(0x3DDFFF).getColor());
+    materials[5]->setColor(Spectrum(0xFF3D3D).getColor());
+    materials[6]->setColor(Spectrum(0x3DFFCF).getColor());
     
     // Models
     for (int i = 0; i <= 47; ++i) {
@@ -66,31 +66,24 @@ void colors(Scene* &scene, Camera* &camera, QtFilm* &film) {
     if (lightShape) {
         // Transform light so its triangles are in world space
         const Transform& t = lightTransformed->getTransform();
-        for (int i = 0; i < lightShape->verticesCount; ++i) {
-            lightShape->vertices[i].position = t(lightShape->vertices[i].position);
-            lightShape->vertices[i].normal = -t.applyToVector(lightShape->vertices[i].normal);
-        }
-        // Reset light transform to identity
-        lightTransformed->setTransform(Transform());
         
-        AreaLight* areaLight = new AreaLight(lightShape);
+        AreaLight* areaLight = AreaLight::CreateFromMesh(lightShape, t);
         areaLight->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 1.0f)));
         areaLight->setIntensity(50.0f);
         lightGeometric->setAreaLight(areaLight);
-        areaLight->samplingConfig.count = 4;
-        scene->lights.push_back(areaLight);
+        *scene << areaLight;
     } else {
         DirectionalLight* light = new DirectionalLight();
         light->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 1.0f)));
         light->setIntensity(2.0f);
         light->setDirection(vec3(2.0f, -3.0f, -2.0f));
-        scene->lights.push_back(light);
+        *scene << light;
     }
     
     // Build acceleration structures
     Main::buildAccelerationStructures(model);
     
-    *scene->aggregate << model;
+    *scene << model;
     
     // Create camera
     PerspectiveCamera* perspectiveCamera = nullptr;
@@ -107,7 +100,7 @@ void colors(Scene* &scene, Camera* &camera, QtFilm* &film) {
     }
     
     film = new QtFilm(vec2(1280.f, 720.f)/1.0f);
-    perspectiveCamera->film = film;
+    perspectiveCamera->setFilm(film);
     
     //perspectiveCamera->setVFov(45.f);
     perspectiveCamera->setAspect(film->resolution.x/film->resolution.y);

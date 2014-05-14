@@ -21,7 +21,6 @@ VisibilityTester::~VisibilityTester() {
 }
 
 bool VisibilityTester::unoccluded(const Scene& scene) const {
-    //return true;
     return !scene.intersectP(_ray);
 }
 

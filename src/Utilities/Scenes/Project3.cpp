@@ -11,7 +11,7 @@
 void project3(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
-    scene->lights.push_back(new SkyLight(vec3(0.8f, 0.9f, 1.0f)));
+    *scene << new SkyLight(vec3(0.8f, 0.9f, 1.0f));
     
     // Materials
     const int nummtls = 4;
@@ -71,7 +71,8 @@ void project3(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create dragon instances
     Transform t;
     for(int i = 0; i < nummtls; ++i) {
-        t.m[3] = vec4(0.0f, 0.0f, -0.1f*float(i), 1.0f);
+        //t.m[3] = vec4(0.0f, 0.0f, -0.1f*float(i), 1.0f);
+        t.setTranslation(vec3(0.0f, 0.0f, -0.1f*float(i)));
         TransformedPrimitive* inst;
         inst = new TransformedPrimitive(dragon, t);
         inst->setMaterial(mtl[i]);
@@ -88,14 +89,14 @@ void project3(Scene* &scene, Camera* &camera, QtFilm* &film) {
     
     // Add aggregate to scene
     aggregate->preprocess();
-    *scene->aggregate << aggregate;
+    *scene << aggregate;
     
     // Create lights
     DirectionalLight* sunlgt = new DirectionalLight();
     sunlgt->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 0.9f)));
     sunlgt->setIntensity(1.0f);
     sunlgt->setDirection(vec3(2.0f, -3.0f, -2.0f));
-    scene->lights.push_back(sunlgt);
+    *scene << sunlgt;
     
     // Create camera
     PerspectiveCamera* perspectiveCamera = new PerspectiveCamera();
@@ -106,7 +107,7 @@ void project3(Scene* &scene, Camera* &camera, QtFilm* &film) {
 //    perspectiveCamera->setFocusDistance(0.29f);
     
     film = new QtFilm(vec2(800.0, 600));
-    perspectiveCamera->film = film;
+    perspectiveCamera->setFilm(film);
     
     perspectiveCamera->setVFov(40.0f);
     //perspectiveCamera->setAspect(film->resolution.x/film->resolution.y);

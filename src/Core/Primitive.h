@@ -34,8 +34,14 @@ public:
     
     virtual AreaLight* getAreaLight() const;
     
-    int         primitiveId;
-    std::string name;
+    int getPrimitiveId() const { return _primitiveId; }
+    
+    void setName(const std::string& name) { _name = name; }
+    const std::string& getName() const { return _name; }
+
+private:
+    int         _primitiveId;
+    std::string _name;
 };
 
 #endif

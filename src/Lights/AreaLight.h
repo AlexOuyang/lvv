@@ -9,15 +9,22 @@
 #ifndef __CSE168_Rendering__AreaLight__
 #define __CSE168_Rendering__AreaLight__
 
+#include "Core/Core.h"
 #include "Core/Light.h"
 #include "Shapes/Mesh.h"
+#include "Core/Transform.h"
 
 class AreaLight : public Light {
 public:
     
-    AreaLight(Mesh* mesh);
+    static AreaLight* CreateFromMesh(Mesh* mesh, const Transform& t=Transform(),
+                                     bool inverseNormal=false, int indexOffset=0);
+    
+    AreaLight();
     virtual ~AreaLight();
     
+    void setPoints(const vec3& p1, const vec3& p2, const vec3& p3);
+    void setNormal(const vec3& normal);
     void setIntensity(float intensity);
     void setSpectrum(const Spectrum& spectrum);
     
@@ -29,10 +36,10 @@ public:
                              vec3* wi, VisibilityTester* vt) const;
     
 private:
-    Mesh*       _mesh;
+    vec3        _points[3];
+    vec3        _normal;
     float       _intensity;
     Spectrum    _spectrum;
-    bool        _inverseNormal;
 };
 
 #endif /* defined(__CSE168_Rendering__AreaLight__) */

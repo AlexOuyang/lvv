@@ -11,7 +11,7 @@
 void materials(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
-    scene->lights.push_back(new SkyLight(Spectrum(0xF0FAFF).getColor()));
+    *scene << new SkyLight(Spectrum(0xF0FAFF).getColor());
 
     // Import cornel box
     AssimpImporter importer;
@@ -55,25 +55,18 @@ void materials(Scene* &scene, Camera* &camera, QtFilm* &film) {
     if (lightShape) {
         // Transform light so its triangles are in world space
         const Transform& t = lightTransformed->getTransform();
-        for (int i = 0; i < lightShape->verticesCount; ++i) {
-            lightShape->vertices[i].position = t(lightShape->vertices[i].position);
-            lightShape->vertices[i].normal = -t.applyToVector(lightShape->vertices[i].normal);
-        }
-        // Reset light transform to identity
-        lightTransformed->setTransform(Transform());
         
-        AreaLight* areaLight = new AreaLight(lightShape);
+        AreaLight* areaLight = AreaLight::CreateFromMesh(lightShape, t);
         areaLight->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 1.0f)));
         areaLight->setIntensity(70.0f);
         lightGeometric->setAreaLight(areaLight);
-        areaLight->samplingConfig.count = 2;
-        scene->lights.push_back(areaLight);
+        *scene << areaLight;
     }
     
     // Build acceleration structures
     Main::buildAccelerationStructures(model);
     
-    *scene->aggregate << model;
+    *scene << model;
     
     // Create camera
     PerspectiveCamera* perspectiveCamera = nullptr;
@@ -90,7 +83,7 @@ void materials(Scene* &scene, Camera* &camera, QtFilm* &film) {
     }
     
     film = new QtFilm(vec2(1920.f, 1080.f)*4.0f);
-    perspectiveCamera->film = film;
+    perspectiveCamera->setFilm(film);
     
     //perspectiveCamera->setVFov(45.f);
     perspectiveCamera->setAspect(film->resolution.x/film->resolution.y);

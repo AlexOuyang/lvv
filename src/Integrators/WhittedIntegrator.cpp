@@ -39,9 +39,10 @@ Spectrum WhittedIntegrator::li(const Scene& scene, const Renderer& renderer, con
     vec3 wo = -ray.direction;
     
     // Add contribution of each light source
-    for (Light* light : scene.lights) {
+    for (Light* light : scene.getLights()) {
         // Sample light
-        int samplesCount = light->samplingConfig.count;
+        const SamplingConfig& sampling = light->getSamplingConfig();
+        int samplesCount = sampling.count;
         for (int i = 0; i < samplesCount; ++i) {
             for (int j = 0; j < samplesCount; ++j) {
                 LightSample sample;
@@ -51,7 +52,7 @@ Spectrum WhittedIntegrator::li(const Scene& scene, const Renderer& renderer, con
                 sample.u = (float)i/samplesCount;
                 sample.v = (float)j/samplesCount;
                 
-                if (light->samplingConfig.jittered) {
+                if (sampling.jittered) {
                     sample.u += ((float)rand()/RAND_MAX) / samplesCount;
                     sample.v += ((float)rand()/RAND_MAX) / samplesCount;
                 } else {

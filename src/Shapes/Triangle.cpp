@@ -11,22 +11,36 @@
 #include "Core/Ray.h"
 #include "Shapes/Mesh.h"
 
-Triangle::Triangle() : vertices(), mesh(nullptr) {
+Triangle::Triangle() : _vertices(), _mesh(nullptr) {
     
 }
 
-Triangle::Triangle(Vertex* a, Vertex* b, Vertex* c) : vertices(), mesh(nullptr) {
-    vertices[0] = a;
-    vertices[1] = b;
-    vertices[2] = c;    
+Triangle::Triangle(Vertex* a, Vertex* b, Vertex* c) : _vertices(), _mesh(nullptr) {
+    _vertices[0] = a;
+    _vertices[1] = b;
+    _vertices[2] = c;    
 }
 
 Triangle::~Triangle() {
     
 }
 
+void Triangle::setMesh(Mesh* mesh) {
+    _mesh = mesh;
+}
+
+void Triangle::setVertices(Vertex* v1, Vertex* v2, Vertex* v3) {
+    _vertices[0] = v1;
+    _vertices[1] = v2;
+    _vertices[2] = v3;
+}
+
+Vertex* Triangle::getVertex(int num) const {
+    return _vertices[num];
+}
+
 bool Triangle::intersect(const Ray& ray, Intersection* intersection) const {
-    const vec3 &a = vertices[0]->position, &b = vertices[1]->position, &c = vertices[2]->position;
+    const vec3 &a = _vertices[0]->position, &b = _vertices[1]->position, &c = _vertices[2]->position;
     vec3 oa = ray.origin - a, ca = c - a, ba = b - a;
     vec3 normal = cross(ba, ca);
     float det = dot(-ray.direction, normal);
@@ -56,21 +70,21 @@ bool Triangle::intersect(const Ray& ray, Intersection* intersection) const {
     }
     
     // Compute uv coords
-    vec2 uvs = ((1-alpha-beta)*vertices[0]->texCoord
-                + alpha*vertices[1]->texCoord
-                + beta*vertices[2]->texCoord);
+    vec2 uvs = ((1-alpha-beta)*_vertices[0]->texCoord
+                + alpha*_vertices[1]->texCoord
+                + beta*_vertices[2]->texCoord);
     
     // Reject if we have an alpha texture
-    if (mesh && mesh->alphaTexture) {
-        if (mesh->alphaTexture->evaluateFloat(uvs) == 0.0f) {
+    if (_mesh && _mesh->_alphaTexture) {
+        if (_mesh->_alphaTexture->evaluateFloat(uvs) == 0.0f) {
             return false;
         }
     }
     
     // Compute smoothed normal
-    normal = ((1-alpha-beta)*vertices[0]->normal
-              + alpha*vertices[1]->normal
-              + beta*vertices[2]->normal);
+    normal = ((1-alpha-beta)*_vertices[0]->normal
+              + alpha*_vertices[1]->normal
+              + beta*_vertices[2]->normal);
     
     // Update the ray
     ray.tmax = t;
@@ -82,10 +96,10 @@ bool Triangle::intersect(const Ray& ray, Intersection* intersection) const {
     intersection->uv = uvs;
     
     // Generate tangents
-    if (dot(vertices[0]->tangentU, vertices[0]->tangentU) > 0.f) {
-        intersection->tangentU = ((1-alpha-beta)*vertices[0]->tangentU
-                                  + alpha*vertices[1]->tangentU
-                                  + beta*vertices[2]->tangentU);
+    if (dot(_vertices[0]->tangentU, _vertices[0]->tangentU) > 0.f) {
+        intersection->tangentU = ((1-alpha-beta)*_vertices[0]->tangentU
+                                  + alpha*_vertices[1]->tangentU
+                                  + beta*_vertices[2]->tangentU);
         intersection->tangentV = cross(normal, intersection->tangentU);
     } else {
         if (abs(normal.y) > 1.0f-0.00001f) {
@@ -102,7 +116,7 @@ bool Triangle::intersect(const Ray& ray, Intersection* intersection) const {
 }
 
 bool Triangle::intersectP(const Ray& ray) const {
-    const vec3 &a = vertices[0]->position, &b = vertices[1]->position, &c = vertices[2]->position;
+    const vec3 &a = _vertices[0]->position, &b = _vertices[1]->position, &c = _vertices[2]->position;
     vec3 oa = ray.origin - a, ca = c - a, ba = b - a;
     vec3 normal = cross(ba, ca);
     float det = dot(-ray.direction, normal);
@@ -128,13 +142,13 @@ bool Triangle::intersectP(const Ray& ray) const {
     }
     
     // Compute uv coords
-    vec2 uvs = ((1-alpha-beta)*vertices[0]->texCoord
-                + alpha*vertices[1]->texCoord
-                + beta*vertices[2]->texCoord);
+    vec2 uvs = ((1-alpha-beta)*_vertices[0]->texCoord
+                + alpha*_vertices[1]->texCoord
+                + beta*_vertices[2]->texCoord);
     
     // Reject if we have an alpha texture
-    if (mesh && mesh->alphaTexture) {
-        if (mesh->alphaTexture->evaluateFloat(uvs) == 0.0f) {
+    if (_mesh && _mesh->_alphaTexture) {
+        if (_mesh->_alphaTexture->evaluateFloat(uvs) == 0.0f) {
             return false;
         }
     }
@@ -143,5 +157,5 @@ bool Triangle::intersectP(const Ray& ray) const {
 }
 
 AABB Triangle::getBoundingBox() const {
-    return AABB::Union(AABB(vertices[0]->position, vertices[1]->position), vertices[2]->position);
+    return AABB::Union(AABB(_vertices[0]->position, _vertices[1]->position), _vertices[2]->position);
 }

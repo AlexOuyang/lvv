@@ -9,25 +9,47 @@
 #include "Mesh.h"
 
 Mesh::Mesh()
-: verticesCount(0), trianglesCount(0), vertices(nullptr), triangles(nullptr),
-alphaTexture(nullptr) {
+: _verticesCount(0), _trianglesCount(0), _vertices(nullptr), _triangles(nullptr),
+_alphaTexture(nullptr) {
     
 }
 
 Mesh::~Mesh() {
-    if (vertices) {
-        delete[] vertices;
+    if (_vertices) {
+        delete[] _vertices;
     }
-    if (triangles) {
-        delete[] triangles;
+    if (_triangles) {
+        delete[] _triangles;
     }
+}
+
+void Mesh::setVertices(int count, Vertex* vertices) {
+    _verticesCount = count;
+    _vertices = vertices;
+}
+
+void Mesh::setTriangles(int count, Triangle* triangles) {
+    _trianglesCount = count;
+    _triangles = triangles;
+}
+
+void Mesh::setAlphaTexture(Texture* texture) {
+    _alphaTexture = texture;
+}
+
+int Mesh::getTrianglesCount() const {
+    return _trianglesCount;
+}
+
+Triangle* Mesh::getTriangles() const {
+    return _triangles;
 }
 
 AABB Mesh::getBoundingBox() const {
     AABB bound;
     
-    for (int i = 0; i < verticesCount; ++i) {
-        bound = AABB::Union(bound, vertices[i].position);
+    for (int i = 0; i < _verticesCount; ++i) {
+        bound = AABB::Union(bound, _vertices[i].position);
     }
     return bound;
 }
@@ -37,8 +59,8 @@ bool Mesh::canIntersect() const {
 }
 
 void Mesh::refine(std::vector<Shape*> &refined) const {
-    refined.reserve(trianglesCount);
-    for (int i = 0; i < trianglesCount; ++i) {
-        refined.push_back(&triangles[i]);
+    refined.reserve(_trianglesCount);
+    for (int i = 0; i < _trianglesCount; ++i) {
+        refined.push_back(&_triangles[i]);
     }
 }

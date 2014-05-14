@@ -16,6 +16,12 @@ public:
     
     Glass();
     ~Glass();
+
+    void setIndexIn(float index);
+    void setIndexOut(float index);
+    void setAbsorptionColor(const vec3& color);
+    void setAbsorptionCoeff(float coeff);
+    void setRoughness(float roughness);
     
     virtual Spectrum evaluateBSDF(const vec3& wo, const vec3& wi,
                                   const Intersection& intersection) const;
@@ -23,12 +29,13 @@ public:
                                 BxDFType type) const;
     
     virtual Spectrum transmittedLight(float distance) const;
-    
-    float       indexIn;
-    float       indexOut;
-    vec3        absorptionColor;
-    float       absorptionCoeff;
-    float       roughness;
+
+private:
+    float   _indexIn;
+    float   _indexOut;
+    vec3    _absorptionColor;
+    float   _absorptionCoeff;
+    float   _roughness;
 };
 
 #endif /* defined(__CSE168_Rendering__Glass__) */

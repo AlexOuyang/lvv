@@ -33,7 +33,7 @@ void ListAggregate::preprocess() {
 
 Primitive* ListAggregate::findPrimitive(const std::string& name) {
     for (Primitive* p : _primitives) {
-        if (p->name == name) {
+        if (p->getName() == name) {
             return p;
         }
     }
@@ -42,7 +42,7 @@ Primitive* ListAggregate::findPrimitive(const std::string& name) {
 
 void ListAggregate::removePrimitive(const std::string& name) {
     std::remove_if(_primitives.begin(), _primitives.end(), [name] (Primitive* p) {
-        return p->name == name;
+        return p->getName() == name;
     });
 }
 

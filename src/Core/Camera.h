@@ -19,7 +19,11 @@ public:
     
     virtual float generateRay(const CameraSample& sample, Ray* ray) = 0;
     
-    Film*   film;
+    void setFilm(Film* film) { _film = film; }
+    Film* getFilm() const { return _film; }    
+    
+private:
+    Film*   _film;
 };
 
 #endif

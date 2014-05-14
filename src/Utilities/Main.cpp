@@ -25,35 +25,32 @@ void Main::initMaterials() {
     Main::matte = new Matte();
     
     Main::gold = new Metal();
-    Main::gold->eta = 0.37f;
-    Main::gold->k = 2.82f;
-    Main::gold->color = Spectrum(vec3(212.f, 175.f, 55.f)/255.f);
-    Main::gold->roughness = 0.2;
+    Main::gold->setIndices(0.37f, 2.82f);
+    Main::gold->setColor(vec3(212.f, 175.f, 55.f)/255.f);
+    Main::gold->setRoughness(0.2f);
     
     Main::steel = new Metal();
-    Main::steel->eta = 2.485f;
-    Main::steel->k = 3.433f;
-    Main::steel->color = Spectrum(0xF0F0F0);
-    Main::steel->roughness = 0.2;
+    Main::steel->setIndices(2.485f, 3.433f);
+    Main::steel->setColor(Spectrum(0xF0F0F0).getColor());
+    Main::steel->setRoughness(0.2f);
     
     Main::copper = new Metal();
-    Main::copper->eta = 0.617f;
-    Main::copper->k = 2.63f;
-    Main::copper->color = Spectrum(vec3(184.f, 115.f, 51.f)/255.f);
-    Main::copper->roughness = 0.2;
+    Main::copper->setIndices(0.617f, 2.63f);
+    Main::copper->setColor(vec3(184.f, 115.f, 51.f)/255.f);
+    Main::copper->setRoughness(0.2f);
     
     Main::glass = new Glass();
-    Main::glass->indexIn = 1.33f;
-    Main::glass->indexOut = 1.0003f;
-    Main::glass->absorptionColor = Spectrum(0x305C8C).getColor();
-    Main::glass->absorptionCoeff = 5.0f;
-    Main::glass->roughness = 0.2f;
+    Main::glass->setIndexIn(1.33f);
+    Main::glass->setIndexOut(1.0003f);
+    Main::glass->setAbsorptionColor(Spectrum(0x305C8C).getColor());
+    Main::glass->setAbsorptionCoeff(5.0f);
+    Main::glass->setRoughness(0.2f);
     
     Main::glossy = new Glossy();
-    Main::glossy->color = Spectrum(0.f);
-    Main::glossy->indexIn = 2.3f;
-    Main::glossy->indexOut = 1.0003f;
-    Main::glossy->roughness = 0.2f;
+    Main::glossy->setColor(Spectrum(0.f).getColor());
+    Main::glossy->setIndexIn(2.3f);
+    Main::glossy->setIndexOut(1.0003f);
+    Main::glossy->setRoughness(0.2f);
 }
 
 Main::Main() :

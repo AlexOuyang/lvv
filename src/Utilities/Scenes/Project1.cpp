@@ -11,7 +11,7 @@
 void project1(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
-    scene->lights.push_back(new SkyLight(vec3(0.8f, 0.9f, 1.0f)));
+    *scene << new SkyLight(vec3(0.8f, 0.9f, 1.0f));
     
     // Materials
     Material* white = new Matte();
@@ -26,7 +26,7 @@ void project1(Scene* &scene, Camera* &camera, QtFilm* &film) {
     box = new GeometricPrimitive(boxShape, white);
     *aggregate << box;
     aggregate->preprocess();
-    *scene->aggregate << aggregate;
+    *scene << aggregate;
     
     // Box 2
     boxShape = ShapesUtilities::CreateBox(1.0f, 1.0f, 1.0f);
@@ -38,35 +38,35 @@ void project1(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Instances
     TransformedPrimitive* inst;
     Transform t;
-    t.m = rotate(t.m, 0.5f, vec3(1.0f, 0.0f, 0.0f));
-    t.m[3].y = 1.0f;
+    t.rotate(0.5f, vec3(1.0f, 0.0f, 0.0f));
+    t.setTranslation(vec3(0.f, 1.f, 0.f));
     inst = new TransformedPrimitive(aggregate, t);
-    *scene->aggregate << inst;
+    *scene << inst;
     
     t = Transform();
-    t.m = rotate(t.m, 1.0f, vec3(0.0f, 1.0f, 0.0f));
-    t.m[3] = vec4(vec3(-1.0f, 0.0f, 1.0f), 1.0f);
+    t.rotate(1.0f, vec3(0.0f, 1.0f, 0.0f));
+    t.setTranslation(vec3(-1.0f, 0.0f, 1.0f));
     inst = new TransformedPrimitive(aggregate, t);
-    *scene->aggregate << inst;
+    *scene << inst;
     
     DirectionalLight* sunlgt = new DirectionalLight();
     sunlgt->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 0.9f)));
     sunlgt->setIntensity(0.5f);
     sunlgt->setDirection(vec3(-0.5f, -1.0f, -0.5f));
-    scene->lights.push_back(sunlgt);
+    *scene << sunlgt;
     
     PointLight* redlgt = new PointLight();
     redlgt->setSpectrum(Spectrum(vec3(1.0f, 0.2f, 0.2f)));
     redlgt->setIntensity(2.0f);
     redlgt->setPosition(vec3(2.0f, 2.0f, 0.0f));
-    scene->lights.push_back(redlgt);
+    *scene << redlgt;
     
     // Create camera
     PerspectiveCamera* perspectiveCamera = new PerspectiveCamera();
     
     perspectiveCamera->lookAt(vec3(2.0f, 2.0f, 5.0f), vec3(0.0f, 0.0f, 0.0f));
     film = new QtFilm(vec2(800, 600));
-    perspectiveCamera->film = film;
+    perspectiveCamera->setFilm(film);
     
     perspectiveCamera->setVFov(40.0f);
     perspectiveCamera->setAspect(1.33f);

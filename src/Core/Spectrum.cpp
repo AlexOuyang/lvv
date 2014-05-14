@@ -8,7 +8,7 @@
 
 #include "Spectrum.h"
 
-const float Spectrum::Epsilon = 1.0 / (256*2);
+const float Spectrum::Epsilon = 1.0f / (256.f*2.f);
 
 Spectrum::Spectrum(float value) : _color(value, value, value) {
 }

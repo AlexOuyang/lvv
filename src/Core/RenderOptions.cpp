@@ -13,7 +13,7 @@
 
 RenderOptions::RenderOptions() :
 maxThreadsCount(-1),
-antialiasingSampling(1, true, ShirleyDistribution),
+antialiasingSampling(1, true, SamplingConfig::ShirleyDistribution),
 maxRayDepth(5) {
     
 }

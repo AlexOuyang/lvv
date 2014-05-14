@@ -9,8 +9,8 @@
 #include "Glass.h"
 
 Glass::Glass() : Material(),
-indexIn(1.0f), indexOut(1.0f),
-absorptionColor(vec3(1.0f)), absorptionCoeff(0.0f), roughness(0.2f) {
+_indexIn(1.0f), _indexOut(1.0f),
+_absorptionColor(vec3(1.0f)), _absorptionCoeff(0.0f), _roughness(0.2f) {
     
 }
 
@@ -18,12 +18,32 @@ Glass::~Glass() {
     
 }
 
+void Glass::setIndexIn(float index) {
+    _indexIn = index;
+}
+
+void Glass::setIndexOut(float index) {
+    _indexOut = index;
+}
+
+void Glass::setAbsorptionColor(const vec3& color) {
+    _absorptionColor = color;
+}
+
+void Glass::setAbsorptionCoeff(float coeff) {
+    _absorptionCoeff = coeff;
+}
+
+void Glass::setRoughness(float roughness) {
+    _roughness = roughness;
+}
+
 Spectrum Glass::evaluateBSDF(const vec3& wo, const vec3 &wi,
                              const Intersection& intersection) const {
     float cosi = glm::abs(glm::dot(wo, intersection.normal));
     vec3 t;
-    float fr = refracted(cosi, wo, intersection.normal, indexOut, indexIn, &t);
-    float cookTorrance = cookTorranceReflection(wo, wi, intersection.normal, roughness, fr);
+    float fr = refracted(cosi, wo, intersection.normal, _indexOut, _indexIn, &t);
+    float cookTorrance = cookTorranceReflection(wo, wi, intersection.normal, _roughness, fr);
     return cookTorrance * Spectrum(1.0f);
 }
 
@@ -32,7 +52,7 @@ Spectrum Glass::sampleBSDF(const vec3 &wo, vec3 *wi, const Intersection &interse
     const vec3& n = intersection.normal;
     float cosi = glm::abs(glm::dot(wo, n));
     vec3 t;
-    float fr = refracted(cosi, wo, intersection.normal, indexOut, indexIn, &t);
+    float fr = refracted(cosi, wo, intersection.normal, _indexOut, _indexIn, &t);
     
     if (type == BSDFAll) {
         float u = (float)rand()/RAND_MAX;
@@ -60,6 +80,6 @@ Spectrum Glass::sampleBSDF(const vec3 &wo, vec3 *wi, const Intersection &interse
 }
 
 Spectrum Glass::transmittedLight(float distance) const {
-    vec3 alpha = (vec3(1.0) - absorptionColor)*absorptionCoeff;
+    vec3 alpha = (vec3(1.0) - _absorptionColor)*_absorptionCoeff;
     return Spectrum(glm::exp(-1.0f * alpha * distance));
 }

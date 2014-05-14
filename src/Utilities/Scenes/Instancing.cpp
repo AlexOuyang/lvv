@@ -11,7 +11,7 @@
 void instancing(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
-    scene->lights.push_back(new SkyLight(Spectrum(0xE8FBFF).getColor()));
+    *scene << new SkyLight(Spectrum(0xE8FBFF).getColor());
     
     // Import model
     AssimpImporter importer;
@@ -40,9 +40,8 @@ void instancing(Scene* &scene, Camera* &camera, QtFilm* &film) {
             TransformedPrimitive* instance;
             
             Transform t;
-            t.m = glm::scale(t.m, vec3(1.0f, 1.0f, 1.0f)*20.f);
-            t.m[3].x = -200.0f + ((float)i/100)*400.0f;
-            t.m[3].z = 10-(((float)j/100)*800.0f);
+            t.scale(vec3(1.0f, 1.0f, 1.0f)*20.f);
+            t.setTranslation(vec3(-200.0f + ((float)i/100)*400.0f, 0.f, 10-(((float)j/100)*800.0f)));
             instance = new TransformedPrimitive(aggregate, t);
             
             *grid << instance;
@@ -51,31 +50,31 @@ void instancing(Scene* &scene, Camera* &camera, QtFilm* &film) {
     
     grid->preprocess();
     
-    *scene->aggregate << grid;
+    *scene << grid;
     
     Plane* groundShape = new Plane();
     GeometricPrimitive* ground = new GeometricPrimitive(groundShape, Main::matte);
-    *scene->aggregate << ground;
+    *scene << ground;
     
     // Create lights
     DirectionalLight* sunlgt = new DirectionalLight();
     sunlgt->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 1.0f)));
     sunlgt->setIntensity(0.6f);
     sunlgt->setDirection(vec3(2.0f, -3.0f, -2.0f));
-    scene->lights.push_back(sunlgt);
+    *scene << sunlgt;
     
     sunlgt = new DirectionalLight();
     sunlgt->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 1.0f)));
     sunlgt->setIntensity(0.6f);
     sunlgt->setDirection(vec3(-2.0f, -3.0f, -2.0f));
-    scene->lights.push_back(sunlgt);
+    *scene << sunlgt;
     
     // Create camera
     PerspectiveCamera* perspectiveCamera = new PerspectiveCamera();
     
     perspectiveCamera->lookAt(vec3(0.0f, 8.0f, 20.0f), vec3(0.0f, 1.0f, 0.0f));
     film = new QtFilm(vec2(1280.0, 720.0));
-    perspectiveCamera->film = film;
+    perspectiveCamera->setFilm(film);
     
     perspectiveCamera->setVFov(40.0f);
     perspectiveCamera->setAspect(film->resolution.x/film->resolution.y);

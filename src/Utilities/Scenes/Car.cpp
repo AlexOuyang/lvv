@@ -11,7 +11,7 @@
 void car(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
-    scene->lights.push_back(new SkyLight(Spectrum(0xF0FAFF).getColor()));
+    *scene << new SkyLight(Spectrum(0xF0FAFF).getColor());
 
     // Import cornel box
     AssimpImporter importer;
@@ -22,26 +22,25 @@ void car(Scene* &scene, Camera* &camera, QtFilm* &film) {
         
         if (attrs.name == "Avent_FELGE2") {
             Metal* metal = new Metal();
-            metal->eta = 2.485f;
-            metal->k = 3.433f;
-            metal->color = Spectrum(0x525252);
-            metal->roughness = 0.2;
+            metal->setIndices(2.485f, 3.433f);
+            metal->setColor(Spectrum(0x525252).getColor());
+            metal->setRoughness(0.2f);
             material = metal;
         }
         else if (!Spectrum(attrs.transparency).isBlack()) {
             Glass* glass = new Glass();
-            glass->indexIn = 1.003f;
-            glass->indexOut = 1.003f;
-            glass->absorptionColor = attrs.transparency;
-            glass->absorptionCoeff = 0.0f;
-            glass->roughness = 0.1f;
+            glass->setIndexIn(1.003f);
+            glass->setIndexOut(1.003f);
+            glass->setAbsorptionColor(attrs.transparency);
+            glass->setAbsorptionCoeff(0.0f);
+            glass->setRoughness(0.1f);
             material = glass;
         } else if (attrs.shadingMode == AssimpImporter::Phong) {
             Glossy* glossy = new Glossy();
-            glossy->indexIn = 1.1f;
-            glossy->indexOut = 1.003f;
-            glossy->color = attrs.color;
-            glossy->roughness = 0.9;
+            glossy->setIndexIn(1.1f);
+            glossy->setIndexOut(1.003f);
+            glossy->setColor(attrs.color);
+            glossy->setRoughness(0.9f);
             material = glossy;
         } else {
             Matte* matte = new Matte();
@@ -55,9 +54,9 @@ void car(Scene* &scene, Camera* &camera, QtFilm* &film) {
     importer.setLightsCallback([&] (const AssimpImporter::LightAttributes& attrs) {
         PointLight* light = new PointLight();
         light->setPosition(attrs.position);
-        light->setIntensity(attrs.intensity*0.02f);
+        light->setIntensity(attrs.intensity);
         light->setSpectrum(Spectrum(attrs.color));
-        scene->lights.push_back(light);
+        *scene << light;
     });
     
     Aggregate* model = new BVHAccelerator();
@@ -81,31 +80,24 @@ void car(Scene* &scene, Camera* &camera, QtFilm* &film) {
     if (lightShape) {
         // Transform light so its triangles are in world space
         const Transform& t = lightTransformed->getTransform();
-        for (int i = 0; i < lightShape->verticesCount; ++i) {
-            lightShape->vertices[i].position = t(lightShape->vertices[i].position);
-            lightShape->vertices[i].normal = -t.applyToVector(lightShape->vertices[i].normal);
-        }
-        // Reset light transform to identity
-        lightTransformed->setTransform(Transform());
         
-        AreaLight* areaLight = new AreaLight(lightShape);
+        AreaLight* areaLight = AreaLight::CreateFromMesh(lightShape, t);
         areaLight->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 1.0f)));
-        areaLight->setIntensity(70.0f);
+        areaLight->setIntensity(170.0f);
         lightGeometric->setAreaLight(areaLight);
-        areaLight->samplingConfig.count = 1;
-        scene->lights.push_back(areaLight);
+        *scene << areaLight;
     } else {
         DirectionalLight* light = new DirectionalLight();
         light->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 1.0f)));
         light->setIntensity(2.0f);
         light->setDirection(vec3(2.0f, -3.0f, -2.0f));
-        scene->lights.push_back(light);
+        *scene << light;
     }
     
     // Build acceleration structures
     Main::buildAccelerationStructures(model);
     
-    *scene->aggregate << model;
+    *scene << model;
     
     // Create camera
     PerspectiveCamera* perspectiveCamera = nullptr;
@@ -122,7 +114,7 @@ void car(Scene* &scene, Camera* &camera, QtFilm* &film) {
     }
     
     film = new QtFilm(vec2(1920.f, 1080.f)/5.0f);
-    perspectiveCamera->film = film;
+    perspectiveCamera->setFilm(film);
     
     perspectiveCamera->setAspect(film->resolution.x/film->resolution.y);
     

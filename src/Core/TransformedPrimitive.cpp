@@ -75,7 +75,7 @@ bool TransformedPrimitive::intersect(const Ray& ray, Intersection* intersection)
     
     intersection->point = primitiveToWorld(intersection->point);
     // Transform normal with inverse transpose of transformation matrix
-    mat4x4 normalMatrix = primitiveToWorld.m;
+    mat4x4 normalMatrix = primitiveToWorld.getMatrix();
     intersection->normal = normalize(vec3(normalMatrix * vec4(intersection->normal, 0.0f)));
     intersection->tangentU = normalize(vec3(normalMatrix * vec4(intersection->tangentU, 0.0f)));
     intersection->tangentV = normalize(vec3(normalMatrix * vec4(intersection->tangentV, 0.0f)));

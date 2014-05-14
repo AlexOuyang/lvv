@@ -22,12 +22,18 @@ public:
     Triangle(Vertex* a, Vertex* b, Vertex* c);
     ~Triangle();
     
+    void setMesh(Mesh* mesh);
+    void setVertices(Vertex* v1, Vertex* v2, Vertex* v3);
+    
+    Vertex* getVertex(int num) const;
+    
     virtual bool intersect(const Ray& ray, Intersection* intersection) const;
     virtual bool intersectP(const Ray& ray) const;
     virtual AABB getBoundingBox() const;
-    
-    Vertex* vertices[3];
-    Mesh*   mesh;
+
+private:
+    Vertex* _vertices[3];
+    Mesh*   _mesh;
 };
 
 #endif /* defined(__CSE168_Rendering__Triangle__) */

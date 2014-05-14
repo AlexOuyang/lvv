@@ -21,7 +21,10 @@ float PerspectiveCamera::generateRay(const CameraSample& sample, Ray* ray) {
     float time = (float)rand()/RAND_MAX;
     
     Transform t = _transform.interpolate(time);
-    vec3 a(t.m[0]), b(t.m[1]), c(t.m[2]), d(t.m[3]);
+    vec3
+        a(t.getMatrixColumn(0)), b(t.getMatrixColumn(1)),
+        c(t.getMatrixColumn(2)), d(t.getMatrixColumn(3))
+    ;
     
     float planeHeight = 2*tanf(_vfov/2);
     float planeWidth = planeHeight * _aspect;
@@ -86,7 +89,7 @@ void PerspectiveCamera::setFocusDistance(float d) {
 }
 
 void PerspectiveCamera::setFocusPoint(const vec3& point) {
-    vec3 pos = vec3(_transform[0].m[3]);    
+    vec3 pos = vec3(_transform[0].getMatrixColumn(3));
     _focusDistance = glm::distance(pos, point);
 }
 

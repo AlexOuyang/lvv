@@ -13,15 +13,15 @@
 Transform Transform::Inverse(const Transform& t) {
     Transform result;
     
-    result.m = glm::inverse(t.m);
+    result._matrix = glm::inverse(t._matrix);
     return result;
 }
 
-Transform::Transform() : m() {
+Transform::Transform() : _matrix() {
     
 }
 
-Transform::Transform(const mat4x4& m) : m(m) {
+Transform::Transform(const mat4x4& m) : _matrix(m) {
     
 }
 
@@ -30,23 +30,39 @@ void Transform::lookAt(const vec3& position, const vec3& target, const vec3& up)
     vec3 c = normalize(d - target);
     vec3 a = normalize(cross(up, c));
     vec3 b = cross(c, a);
-    m[0] = vec4(a, 0.0);
-    m[1] = vec4(b, 0.0);
-    m[2] = vec4(c, 0.0);
-    m[3] = vec4(d, 1.0);
+    _matrix[0] = vec4(a, 0.0);
+    _matrix[1] = vec4(b, 0.0);
+    _matrix[2] = vec4(c, 0.0);
+    _matrix[3] = vec4(d, 1.0);
+}
+
+void Transform::setTranslation(const vec3& v) {
+    _matrix[3] = vec4(v, 1.f);
+}
+
+void Transform::translate(const vec3& v) {
+    _matrix = glm::translate(_matrix, v);
+}
+
+void Transform::rotate(float angle, const vec3& axis) {
+    _matrix = glm::rotate(_matrix, angle, axis);
+}
+
+void Transform::scale(const vec3& scale) {
+    _matrix = glm::scale(_matrix, scale);
 }
 
 vec3 Transform::applyToVector(const vec3& v) const {
-    return vec3(m * vec4(v, 0.0f));
+    return vec3(_matrix * vec4(v, 0.0f));
 }
 
 vec3 Transform::applyToNormal(const vec3& n) const {
-    mat4x4 normalMatrix = inverse(transpose(m));
+    mat4x4 normalMatrix = inverse(transpose(_matrix));
     return vec3(normalMatrix * vec4(n, 0.0f));
 }
 
 vec3 Transform::operator()(const vec3& p) const {
-    return vec3(m * vec4(p, 1.0f));
+    return vec3(_matrix * vec4(p, 1.0f));
 }
 
 Ray Transform::operator()(const Ray& r) const {

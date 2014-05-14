@@ -11,13 +11,14 @@
 
 #include "Core.h"
 
-enum SamplingDistribution {
-    UniformDistribution,
-    GaussDistribution,
-    ShirleyDistribution
-};
-
 struct SamplingConfig {
+    
+    enum SamplingDistribution {
+        UniformDistribution,
+        GaussDistribution,
+        ShirleyDistribution
+    };
+    
     SamplingConfig(int sc, bool jit, SamplingDistribution dist);
     
     int                     count;

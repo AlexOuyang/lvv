@@ -22,10 +22,15 @@ public:
     virtual Spectrum sampleBSDF(const vec3& wo, vec3* wi, const Intersection& intersection,
                                 BxDFType type) const;
     
-    float       eta;
-    float       k;
-    float       roughness;
-    Spectrum    color;
+    void setIndices(float eta, float k);
+    void setRoughness(float roughness);
+    void setColor(const vec3& color);
+    
+private:
+    float       _eta;
+    float       _k;
+    float       _roughness;
+    vec3        _color;
 };
 
 #endif /* defined(__CSE168_Rendering__Metal__) */

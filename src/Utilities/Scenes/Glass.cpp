@@ -11,7 +11,7 @@
 void glassScene(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
-    scene->lights.push_back(new SkyLight(Spectrum(0xF0FAFF).getColor()));
+    *scene << new SkyLight(Spectrum(0xF0FAFF).getColor());
     
     TransformedPrimitive* lightTransform = nullptr;
     GeometricPrimitive* lightGeometric = nullptr;
@@ -22,7 +22,7 @@ void glassScene(Scene* &scene, Camera* &camera, QtFilm* &film) {
     importer.setDefaultMaterial(Main::matte);
     
     importer.setPrimitivesCallback([&] (TransformedPrimitive* tp, GeometricPrimitive* p) {
-        const std::string& name = tp->name;
+        const std::string& name = tp->getName();
         
         if (name == "glass") {
             p->setMaterial(Main::glass);
@@ -44,31 +44,24 @@ void glassScene(Scene* &scene, Camera* &camera, QtFilm* &film) {
     if (lightShape) {
         // Transform light so its triangles are in world space
         const Transform& t = lightTransform->getTransform();
-        for (int i = 0; i < lightShape->verticesCount; ++i) {
-            lightShape->vertices[i].position = t(lightShape->vertices[i].position);
-            lightShape->vertices[i].normal = -t.applyToVector(lightShape->vertices[i].normal);
-        }
-        // Reset light transform to identity
-        lightTransform->setTransform(Transform());
         
-        AreaLight* areaLight = new AreaLight(lightShape);
+        AreaLight* areaLight = AreaLight::CreateFromMesh(lightShape, t);
         areaLight->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 1.0f)));
         areaLight->setIntensity(70.0f);
         lightGeometric->setAreaLight(areaLight);
-        areaLight->samplingConfig.count = 1;
-        scene->lights.push_back(areaLight);
+        *scene << areaLight;
     } else {
         DirectionalLight* light = new DirectionalLight();
         light->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 1.0f)));
         light->setIntensity(2.0f);
         light->setDirection(vec3(2.0f, -3.0f, -2.0f));
-        scene->lights.push_back(light);
+        *scene << light;
     }
     
     // Build acceleration structures
     Main::buildAccelerationStructures(model);
     
-    *scene->aggregate << model;
+    *scene << model;
     
     // Create camera
     PerspectiveCamera* perspectiveCamera = nullptr;
@@ -85,7 +78,7 @@ void glassScene(Scene* &scene, Camera* &camera, QtFilm* &film) {
     }
     
     film = new QtFilm(vec2(1280.f, 1024.f)/1.0f);
-    perspectiveCamera->film = film;
+    perspectiveCamera->setFilm(film);
     
     perspectiveCamera->setAspect(film->resolution.x/film->resolution.y);
     

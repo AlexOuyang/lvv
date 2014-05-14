@@ -19,7 +19,7 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
 //    t.m = glm::rotate(t.m, radians(178.f), vec3(0.f, 1.f, 0.f));
 //    sky->setTransform(t);
 //    scene->lights.push_back(sky);
-    scene->lights.push_back(new SkyLight(vec3(0.8f, 0.9f, 1.0f)));
+    *scene << new SkyLight(vec3(0.8f, 0.9f, 1.0f));
 
     // Import cornel box
     AssimpImporter importer;
@@ -56,9 +56,9 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
         }
         if (attrs.name == "water_material") {
             Glass* glass = new Glass();
-            glass->indexIn = 1.33f;
-            glass->indexOut = 1.0003f;
-            glass->roughness = 0.1f;
+            glass->setIndexIn(1.33f);
+            glass->setIndexOut(1.0003f);
+            glass->setRoughness(0.1f);
             material = glass;
         } else if (attrs.name == "Mach2_chrome1") {
             material = Main::steel;
@@ -72,11 +72,11 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
         sunlgt->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 0.9f)));
         sunlgt->setIntensity(1.8f);
         sunlgt->setDirection(attrs.direction);
-        scene->lights.push_back(sunlgt);
+        *scene << sunlgt;
     });
     
     importer.setPrimitivesCallback([&] (TransformedPrimitive* tp, GeometricPrimitive* p) {
-        const std::string& name = tp->name;
+        const std::string& name = tp->getName();
         
         qDebug() << name;
         
@@ -84,7 +84,7 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
             Mesh* mesh = dynamic_cast<Mesh*>(p->getShape());
             if (mesh) {
                 Texture* alphaTexture = ImageLoading::LoadFloatImage("/Users/gael/Downloads/EU50_Ostrya_carpinifolia_European_Hop_Hornbeam_maya/Models/EU50lef4_a.tif");
-                mesh->alphaTexture = alphaTexture;
+                mesh->setAlphaTexture(alphaTexture);
             }
         } else if (name.find("envmap") != std::string::npos) {
             return false;
@@ -107,19 +107,12 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
             
             // Transform light so its triangles are in world space
             const Transform& t = tp->getTransform();
-            for (int i = 0; i < shape->verticesCount; ++i) {
-                shape->vertices[i].position = t(shape->vertices[i].position);
-                shape->vertices[i].normal = t.applyToVector(shape->vertices[i].normal);
-            }
-            // Reset light transform to identity
-            tp->setTransform(Transform());
             
-            AreaLight* areaLight = new AreaLight(shape);
+            AreaLight* areaLight = AreaLight::CreateFromMesh(shape, t);
             areaLight->setSpectrum(Spectrum(1.5f));
             areaLight->setIntensity(10.0f);
             p->setAreaLight(areaLight);
-            areaLight->samplingConfig.count = 1;
-            scene->lights.push_back(areaLight);
+            *scene << areaLight;
         }
         
         return true;
@@ -133,7 +126,7 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Build acceleration structures
     Main::buildAccelerationStructures(model);
     
-    *scene->aggregate << model;
+    *scene << model;
     
     // Create camera
     PerspectiveCamera* perspectiveCamera = nullptr;
@@ -152,7 +145,7 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
     }
     
     film = new QtFilm(vec2(1024.f, 768.f)/1.0f);
-    perspectiveCamera->film = film;
+    perspectiveCamera->setFilm(film);
     
     perspectiveCamera->setAspect(film->resolution.x/film->resolution.y);
     

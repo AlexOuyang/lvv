@@ -85,7 +85,7 @@ public:
     virtual vec3 evaluateVec3(const vec2& pos) const;
     
 private:
-    uint32_t*    _data;
+    uint32_t*   _data;
     int         _width;
     int         _height;
     vec3        _scaleFactor;

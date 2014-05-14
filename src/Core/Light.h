@@ -18,7 +18,7 @@
 
 class Light {
 public:
-    Light() : samplingConfig(1, true, UniformDistribution) {};
+    Light() : _samplingConfig(1, true, SamplingConfig::UniformDistribution) {};
     virtual ~Light() {};
     
     virtual Spectrum le(const Ray& ray) const = 0;
@@ -26,7 +26,11 @@ public:
                              const LightSample& lightSample,
                              vec3* wi, VisibilityTester* vt) const = 0;
     
-    SamplingConfig  samplingConfig;
+    const SamplingConfig& getSamplingConfig() const { return _samplingConfig; }
+    void setSamplingConfig(const SamplingConfig& sc) { _samplingConfig = sc; }
+    
+private:
+    SamplingConfig  _samplingConfig;
 };
 
 #endif /* defined(__CSE168_Rendering__Light__) */

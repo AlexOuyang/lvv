@@ -12,7 +12,7 @@ void atrium(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
     
-    scene->lights.push_back(new SkyLight(vec3(0.8f, 0.9f, 1.0f)*2.f));
+    *scene << new SkyLight(vec3(0.8f, 0.9f, 1.0f)*2.f);
 
     // Import cornel box
     AssimpImporter importer;
@@ -23,11 +23,11 @@ void atrium(Scene* &scene, Camera* &camera, QtFilm* &film) {
         sunlgt->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 0.9f)));
         sunlgt->setIntensity(2.0f);
         sunlgt->setDirection(attrs.direction);
-        scene->lights.push_back(sunlgt);
+        *scene << sunlgt;
     });
     
     importer.setPrimitivesCallback([&] (TransformedPrimitive* tp, GeometricPrimitive* p) {
-        const std::string& name = tp->name;
+        const std::string& name = tp->getName();
         
         //qDebug() << name;
         if (name == "envmap") {
@@ -45,7 +45,7 @@ void atrium(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Build acceleration structures
     Main::buildAccelerationStructures(model);
     
-    *scene->aggregate << model;
+    *scene << model;
     
     // Create camera
     PerspectiveCamera* perspectiveCamera = nullptr;
@@ -64,7 +64,7 @@ void atrium(Scene* &scene, Camera* &camera, QtFilm* &film) {
     }
     
     film = new QtFilm(vec2(1024.f, 768.f)/1.5f);
-    perspectiveCamera->film = film;
+    perspectiveCamera->setFilm(film);
     
     perspectiveCamera->setAspect(film->resolution.x/film->resolution.y);
     

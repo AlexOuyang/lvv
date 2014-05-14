@@ -33,6 +33,10 @@ namespace Core {
     int roundUpPow2(int n);
 }
 
+/*
+ * Debug utilities
+ */
+
 QDebug operator<<(QDebug dbg, const std::string& s);
 QDebug operator<<(QDebug dbg, const vec2& v);
 QDebug operator<<(QDebug dbg, const vec3& v);

@@ -189,7 +189,7 @@ BVHAccelerator::Node* BVHAccelerator::recursiveBuild(std::vector<BuildPrimitiveI
                     
                     // Test all possible split axis
                     for (int testDim = 0; testDim < 3; ++testDim) {
-                        if ((centroidsBB.max[testDim] - centroidsBB.min[testDim]) == 0.f) {
+                        if (centroidsBB.max[testDim] == centroidsBB.min[testDim]) {
                             continue;
                         }
                         

@@ -212,53 +212,56 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
         GeometricPrimitive* primitive = new GeometricPrimitive(mesh, material);
 
         // Load vertices
-        mesh->verticesCount = assimpMesh->mNumVertices;
-        mesh->vertices = new Vertex[mesh->verticesCount];
+        int verticesCount = assimpMesh->mNumVertices;
+        Vertex* vertices = new Vertex[verticesCount];
         for (uint j = 0; j < assimpMesh->mNumVertices; ++j) {
-            mesh->vertices[j].position = importAssimpVec3(assimpMesh->mVertices[j]);
+            vertices[j].position = importAssimpVec3(assimpMesh->mVertices[j]);
             if (assimpMesh->mNormals) {
-                mesh->vertices[j].normal = importAssimpVec3(assimpMesh->mNormals[j]);
+                vertices[j].normal = importAssimpVec3(assimpMesh->mNormals[j]);
             }
             if (assimpMesh->mTextureCoords[0]) {
-                mesh->vertices[j].texCoord = vec2(assimpMesh->mTextureCoords[0][j].x,
+                vertices[j].texCoord = vec2(assimpMesh->mTextureCoords[0][j].x,
                                                   assimpMesh->mTextureCoords[0][j].y);
             }
             if (assimpMesh->mTangents) {
-                mesh->vertices[j].tangentU = importAssimpVec3(assimpMesh->mTangents[j]);
+                vertices[j].tangentU = importAssimpVec3(assimpMesh->mTangents[j]);
             }
         }
         
         // Load triangles
-        mesh->trianglesCount = 0;
+        int trianglesCount = 0;
         for (uint j = 0; j < assimpMesh->mNumFaces; ++j) {
             if (assimpMesh->mFaces[j].mNumIndices == 3) {
-                mesh->trianglesCount += 1;
+                trianglesCount += 1;
                 _trianglesCount += 1;
             }
         }
-        mesh->triangles = new Triangle[mesh->trianglesCount];
+        Triangle* triangles = new Triangle[trianglesCount];
         uint faceId = 0;
         for (uint j = 0; j < assimpMesh->mNumFaces; ++j) {
             if (assimpMesh->mFaces[j].mNumIndices == 3) {
-                Vertex* a = &mesh->vertices[assimpMesh->mFaces[j].mIndices[0]];
-                Vertex* b = &mesh->vertices[assimpMesh->mFaces[j].mIndices[1]];
-                Vertex* c = &mesh->vertices[assimpMesh->mFaces[j].mIndices[2]];
-                mesh->triangles[faceId] = Triangle(a, b, c);
-                mesh->triangles[faceId].mesh = mesh;
+                Vertex* a = &vertices[assimpMesh->mFaces[j].mIndices[0]];
+                Vertex* b = &vertices[assimpMesh->mFaces[j].mIndices[1]];
+                Vertex* c = &vertices[assimpMesh->mFaces[j].mIndices[2]];
+                triangles[faceId] = Triangle(a, b, c);
+                triangles[faceId].setMesh(mesh);
                 ++faceId;
             }
         }
+        
+        mesh->setVertices(verticesCount, vertices);
+        mesh->setTriangles(trianglesCount, triangles);
         
         // Create transformed primitive
         Transform transform(matrix);
         TransformedPrimitive* transformed = new TransformedPrimitive(primitive, transform);
 
         if (!name.empty()) {
-            transformed->name = name;
+            transformed->setName(name);
         } else {
             std::stringstream ss;
-            ss << "Primitive " << primitive->primitiveId;
-            transformed->name = ss.str();
+            ss << "Primitive " << primitive->getPrimitiveId();
+            transformed->setName(ss.str());
         }
         
         // Apply custom setup to primitive

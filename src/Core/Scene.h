@@ -21,11 +21,20 @@ public:
     Scene(Aggregate* aggregate);
     ~Scene();
     
+    void addLight(Light* light);
+    void addPrimitive(Primitive* primitive);
+    
+    Scene& operator<<(Light* light);
+    Scene& operator<<(Primitive* primitive);
+    
+    const std::vector<Light*>   getLights() const;
+    
     bool intersect(const Ray& ray, Intersection* intersection) const;
     bool intersectP(const Ray& ray) const;
     
-    std::vector<Light*> lights;
-    Aggregate*          aggregate;
+private:
+    std::vector<Light*> _lights;
+    Aggregate*          _aggregate;
 };
 
 #endif /* defined(__CSE168_Rendering__Scene__) */

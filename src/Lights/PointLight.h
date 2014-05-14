@@ -27,8 +27,7 @@ public:
                              const LightSample& lightSample,
                              vec3* wi, VisibilityTester* vt) const;
     
-private:
-    
+private:    
     vec3        _position;
     float       _intensity;
     Spectrum    _spectrum;

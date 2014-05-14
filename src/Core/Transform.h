@@ -22,6 +22,10 @@ public:
     Transform(const mat4x4& m);
     
     void lookAt(const vec3& position, const vec3& target, const vec3& up=vec3(0, 1, 0));
+    void setTranslation(const vec3& v);
+    void translate(const vec3& v);
+    void rotate(float angle, const vec3& axis);
+    void scale(const vec3& scale);
     
     vec3 applyToVector(const vec3& v) const;
     vec3 applyToNormal(const vec3& n) const;
@@ -29,7 +33,11 @@ public:
     Ray operator()(const Ray& r) const;
     AABB operator()(const AABB& box) const;
     
-    mat4x4 m;
+    mat4x4  getMatrix() const { return _matrix; }
+    vec4    getMatrixColumn(int col) const { return _matrix[col]; }
+    
+private:
+    mat4x4 _matrix;
 };
 
 #endif /* defined(__CSE168_Rendering__Transform__) */

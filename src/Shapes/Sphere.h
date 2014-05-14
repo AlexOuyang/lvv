@@ -25,7 +25,7 @@ public:
     virtual AABB getBoundingBox() const;
     
 private:
-    vec3   _center;
+    vec3    _center;
     float   _radius;
 };
 

@@ -19,21 +19,31 @@
 
 class Mesh : public Shape {
 public:
+
+    friend class Triangle;
     
     Mesh();
     virtual ~Mesh();
+    
+    void setVertices(int count, Vertex* vertices);
+    void setTriangles(int count, Triangle* triangles);
+    void setAlphaTexture(Texture* texture);
+    
+    int         getTrianglesCount() const;
+    Triangle*   getTriangles() const;
     
     virtual AABB getBoundingBox() const;
     
     virtual bool canIntersect() const;
 
     virtual void refine(std::vector<Shape*> &refined) const;
-    
-    int         verticesCount;
-    int         trianglesCount;
-    Vertex*     vertices;
-    Triangle*   triangles;
-    Texture*    alphaTexture;
+
+private:
+    int         _verticesCount;
+    int         _trianglesCount;
+    Vertex*     _vertices;
+    Triangle*   _triangles;
+    Texture*    _alphaTexture;
 };
 
 #endif /* defined(__CSE168_Rendering__Mesh__) */

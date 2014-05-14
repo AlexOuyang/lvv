@@ -27,7 +27,7 @@ public:
                              vec3* wi, VisibilityTester* vt) const;
     
 private:
-    vec3      _direction;
+    vec3        _direction;
     float       _intensity;
     Spectrum    _spectrum;
 };

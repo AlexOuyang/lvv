@@ -20,10 +20,10 @@ public:
     TransformedPrimitive(Primitive* primitive, const AnimatedTransform& transform);
     ~TransformedPrimitive();
     
-    void setPrimitive(Primitive* primitive);
-    Primitive* getPrimitive() const;
+    void        setPrimitive(Primitive* primitive);
+    Primitive*  getPrimitive() const;
     
-    void setMaterial(Material* material);
+    void        setMaterial(Material* material);
     
     void        setTransform(const Transform& transform);
     void        setTransform(const AnimatedTransform& transform);
