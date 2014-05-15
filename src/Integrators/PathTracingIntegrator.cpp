@@ -30,7 +30,7 @@ Spectrum PathTracingIntegrator::li(const Scene& scene, const Renderer& renderer,
     // If primitive is an area light, simply return its emited light
     AreaLight* areaLight = intersection.primitive->getAreaLight();
     if (areaLight) {
-        return areaLight->le(ray);
+        return areaLight->le(ray, &intersection);
     }
     
     // Initialize common variables

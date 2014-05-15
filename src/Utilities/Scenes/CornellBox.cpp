@@ -104,7 +104,7 @@ void cornellBox(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create area light using model light shape
     if (lightShape) {
         AreaLight* areaLight = AreaLight::CreateFromMesh(lightShape, Transform(), true, 1);
-        areaLight->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 1.0f)));
+        areaLight->setColor(vec3(1.0f, 1.0f, 1.0f));
         areaLight->setIntensity(3.0f);
         lightGeometric->setAreaLight(areaLight);
         *scene << areaLight;

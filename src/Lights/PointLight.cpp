@@ -29,7 +29,7 @@ void PointLight::setSpectrum(const Spectrum& spectrum) {
     _spectrum = spectrum;
 }
 
-Spectrum PointLight::le(const Ray&) const {
+Spectrum PointLight::le(const Ray&, const Intersection*) const {
     return Spectrum(0.0f);
 }
 

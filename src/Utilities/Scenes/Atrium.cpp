@@ -29,7 +29,7 @@ void atrium(Scene* &scene, Camera* &camera, QtFilm* &film) {
     importer.setPrimitivesCallback([&] (TransformedPrimitive* tp, GeometricPrimitive* p) {
         const std::string& name = tp->getName();
         
-        //qDebug() << name;
+        qDebug() << name;
         if (name == "envmap") {
             return false;
         }

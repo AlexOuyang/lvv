@@ -22,18 +22,15 @@ void DirectionalLight::setDirection(const vec3 &direction) {
 }
 
 void DirectionalLight::setIntensity(float intensity) {
-    _intensity = intensity;
+    _intensity = intensity * M_PI;
 }
 
 void DirectionalLight::setSpectrum(const Spectrum &spectrum) {
     _spectrum = spectrum;
 }
 
-Spectrum DirectionalLight::le(const Ray& ray) const {
-    if (ray.tmax == INFINITY) {
-        return Spectrum(0.f);
-    }
-    return (_spectrum * _intensity);
+Spectrum DirectionalLight::le(const Ray&, const Intersection*) const {
+    return Spectrum(0.f);
 }
 
 Spectrum DirectionalLight::sampleL(const vec3& point, float rayEpsilon,

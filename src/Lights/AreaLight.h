@@ -26,11 +26,10 @@ public:
     void setPoints(const vec3& p1, const vec3& p2, const vec3& p3);
     void setNormal(const vec3& normal);
     void setIntensity(float intensity);
-    void setSpectrum(const Spectrum& spectrum);
+    void setColor(const vec3& color);
+    void setColor(Texture* texture);
     
-    const Spectrum& getSpectrum() const;
-    
-    virtual Spectrum le(const Ray& ray) const;
+    virtual Spectrum le(const Ray& ray, const Intersection* intersection=nullptr) const;
     virtual Spectrum sampleL(const vec3& point, float rayEpsilon,
                              const LightSample& lightSample,
                              vec3* wi, VisibilityTester* vt) const;
@@ -39,7 +38,7 @@ private:
     vec3        _points[3];
     vec3        _normal;
     float       _intensity;
-    Spectrum    _spectrum;
+    Texture*    _color;
 };
 
 #endif /* defined(__CSE168_Rendering__AreaLight__) */

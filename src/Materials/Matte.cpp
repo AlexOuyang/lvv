@@ -37,7 +37,7 @@ Texture* Matte::getColor() const {
 
 Spectrum Matte::evaluateBSDF(const vec3&, const vec3&,
                              const Intersection& intersection) const {
-    return _color->evaluateVec3(intersection.uv);
+    return Spectrum(_color->evaluateVec3(intersection.uv) / (float)M_PI);
 }
 
 Spectrum Matte::sampleBSDF(const vec3&, vec3* wi, const Intersection& intersection,

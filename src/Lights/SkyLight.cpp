@@ -29,7 +29,7 @@ void SkyLight::setTransform(const Transform &t) {
     _transform = t;
 }
 
-Spectrum SkyLight::le(const Ray & ray) const {
+Spectrum SkyLight::le(const Ray & ray, const Intersection*) const {
     vec3 d = normalize(ray.direction);
     d = _transform.applyToVector(d);
     vec2 uv;

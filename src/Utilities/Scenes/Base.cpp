@@ -12,14 +12,14 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
     
-//    IntTexture* skyTexture = (IntTexture*)ImageLoading::LoadImage("/Users/gael/Desktop/Courses/CSE_168/models/textures/grace.jpg");
-//    skyTexture->setScaleFactor(vec3(1.0f));
-//    SkyLight* sky = new SkyLight(skyTexture);
-//    Transform t;
-//    t.m = glm::rotate(t.m, radians(178.f), vec3(0.f, 1.f, 0.f));
-//    sky->setTransform(t);
-//    scene->lights.push_back(sky);
-    *scene << new SkyLight(vec3(0.8f, 0.9f, 1.0f));
+    IntTexture* skyTexture = (IntTexture*)ImageLoading::LoadImage("/Users/gael/Desktop/Courses/CSE_168/models/textures/grace.jpg");
+    skyTexture->setScaleFactor(vec3(1.0f));
+    SkyLight* sky = new SkyLight(skyTexture);
+    Transform t;
+    t.rotate(radians(178.f), vec3(0.f, 1.f, 0.f));
+    sky->setTransform(t);
+    *scene << sky;
+//    *scene << new SkyLight(vec3(0.8f, 0.9f, 1.0f)*0.5f);
 
     // Import cornel box
     AssimpImporter importer;
@@ -29,6 +29,16 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
         Material* material = nullptr;
         
         qDebug() << attrs.name.c_str();
+        if (attrs.name == "water") {
+            Glass* glass = new Glass();
+            glass->setIndexIn(1.33f);
+            glass->setIndexOut(1.0003f);
+            glass->setAbsorptionColor(Spectrum(0x3A93C9).getColor());
+            glass->setAbsorptionCoeff(1.5f);
+            glass->setRoughness(0.2f);
+            material = glass;
+        }
+    
         if (attrs.name == "chess_blackSet1" || attrs.name == "chess_redSet1"
             || attrs.name == "chess_whiteSet1") {
             AshikhminMaterial* mtl = new AshikhminMaterial();
@@ -70,7 +80,7 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
     importer.setLightsCallback([&] (const AssimpImporter::LightAttributes& attrs) {
         DirectionalLight* sunlgt = new DirectionalLight();
         sunlgt->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 0.9f)));
-        sunlgt->setIntensity(1.8f);
+        sunlgt->setIntensity(0.6f);
         sunlgt->setDirection(attrs.direction);
         *scene << sunlgt;
     });
@@ -80,14 +90,23 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
         
         qDebug() << name;
         
-        if (name == "EU50_1_EU50Leaf4") {
+        if (name == "pCube1") {
             Mesh* mesh = dynamic_cast<Mesh*>(p->getShape());
             if (mesh) {
-                Texture* alphaTexture = ImageLoading::LoadFloatImage("/Users/gael/Downloads/EU50_Ostrya_carpinifolia_European_Hop_Hornbeam_maya/Models/EU50lef4_a.tif");
+                Texture* alphaTexture = ImageLoading::LoadFloatImage("/Users/gael/Desktop/Courses/CSE_168/models/textures/stripes.jpg");
                 mesh->setAlphaTexture(alphaTexture);
             }
         } else if (name.find("envmap") != std::string::npos) {
             return false;
+        }
+        
+        if (name == "pPipe1") {
+            AshikhminMaterial* mtl = new AshikhminMaterial();
+            mtl->setDiffuseIntensity(0.0f);
+            mtl->setSpecularIntensity(1.0f);
+            mtl->setSpecularColor(vec3(0.95f, 0.7f, 0.3f));
+            mtl->setRoughness(10000.0f, 10000.0f);
+            p->setMaterial(mtl);
         }
         
         if (name == "rotor") {
@@ -106,11 +125,13 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
             }
             
             // Transform light so its triangles are in world space
-            const Transform& t = tp->getTransform();
+            Transform t = tp->getTransform();
             
-            AreaLight* areaLight = AreaLight::CreateFromMesh(shape, t);
-            areaLight->setSpectrum(Spectrum(1.5f));
-            areaLight->setIntensity(10.0f);
+            AreaLight* areaLight = AreaLight::CreateFromMesh(shape, t, true, 1);
+            Texture* texture = ImageLoading::LoadImage("/Users/gael/Desktop/ironman.jpg");
+            areaLight->setColor(texture);
+            //areaLight->setColor(vec3(1.0f));
+            areaLight->setIntensity(2.0f);
             p->setAreaLight(areaLight);
             *scene << areaLight;
         }
@@ -120,7 +141,7 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
     
     Aggregate* model = new BVHAccelerator();
     
-    importer.importModel(model, "/Users/gael/Desktop/Courses/CSE_168/models/scenes/test.dae",
+    importer.importModel(model, "/Users/gael/Desktop/Courses/CSE_168/models/scenes/chess.dae",
                          &camera);
     
     // Build acceleration structures
@@ -140,8 +161,8 @@ void base(Scene* &scene, Camera* &camera, QtFilm* &film) {
             qDebug() << "Wrong camera type";
             abort();
         }
-//        perspectiveCamera->setApertureSize(0.04f);
-//        perspectiveCamera->setFocusPoint(vec3(0.179f, 0.0f, 1.471f));
+        perspectiveCamera->setApertureSize(0.04f);
+        perspectiveCamera->setFocusPoint(vec3(0.179f, 0.0f, 1.471f));
     }
     
     film = new QtFilm(vec2(1024.f, 768.f)/1.0f);

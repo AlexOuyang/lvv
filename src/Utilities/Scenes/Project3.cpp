@@ -71,10 +71,16 @@ void project3(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create dragon instances
     Transform t;
     for(int i = 0; i < nummtls; ++i) {
-        //t.m[3] = vec4(0.0f, 0.0f, -0.1f*float(i), 1.0f);
         t.setTranslation(vec3(0.0f, 0.0f, -0.1f*float(i)));
         TransformedPrimitive* inst;
-        inst = new TransformedPrimitive(dragon, t);
+        if (i == 2) {
+            AnimatedTransform anim;
+            Transform t2 = t;
+            t2.translate(vec3(0.f, 0.02f, 0.0f));
+            anim.setTransforms(t, t2);
+            inst = new TransformedPrimitive(dragon, anim);
+        } else
+            inst = new TransformedPrimitive(dragon, t);
         inst->setMaterial(mtl[i]);
         *aggregate << inst;
     }

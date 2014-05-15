@@ -57,7 +57,7 @@ void materials(Scene* &scene, Camera* &camera, QtFilm* &film) {
         const Transform& t = lightTransformed->getTransform();
         
         AreaLight* areaLight = AreaLight::CreateFromMesh(lightShape, t);
-        areaLight->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 1.0f)));
+        areaLight->setColor(vec3(1.0f, 1.0f, 1.0f));
         areaLight->setIntensity(70.0f);
         lightGeometric->setAreaLight(areaLight);
         *scene << areaLight;

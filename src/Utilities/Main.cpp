@@ -63,7 +63,7 @@ _timer(), _thread(nullptr), _continueRendering(true) {
     
     initMaterials();
     
-    cornellBox(_scene, _camera, _film);
+    base(_scene, _camera, _film);
     
     RenderOptions options;
     options.maxThreadsCount = -1;

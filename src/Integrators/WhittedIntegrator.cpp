@@ -30,7 +30,7 @@ Spectrum WhittedIntegrator::li(const Scene& scene, const Renderer& renderer, con
     // If primitive is an area light, simply return its emited light
     AreaLight* areaLight = intersection.primitive->getAreaLight();
     if (areaLight) {
-        return areaLight->getSpectrum();
+        return areaLight->le(ray, &intersection);
     }
     
     // Initialize common variables

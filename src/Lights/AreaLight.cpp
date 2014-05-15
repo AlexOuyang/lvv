@@ -32,7 +32,7 @@ AreaLight* AreaLight::CreateFromMesh(Mesh* mesh, const Transform& t, bool invers
 
 AreaLight::AreaLight() : Light(),
 _points(), _normal(),
-_intensity(1.0f), _spectrum() {
+_intensity(1.0f), _color(new UniformVec3Texture()) {
 }
 
 AreaLight::~AreaLight() {
@@ -50,22 +50,29 @@ void AreaLight::setNormal(const vec3 &normal) {
 }
 
 void AreaLight::setIntensity(float intensity) {
-    _intensity = intensity;
+    _intensity = intensity * M_PI;
 }
 
-void AreaLight::setSpectrum(const Spectrum &spectrum) {
-    _spectrum = spectrum;
+void AreaLight::setColor(const vec3 &color) {
+    UniformVec3Texture* texture = dynamic_cast<UniformVec3Texture*>(_color);
+    if (texture) {
+        texture->setValue(color);
+    }
 }
 
-const Spectrum& AreaLight::getSpectrum() const {
-    return _spectrum;
+void AreaLight::setColor(Texture* texture) {
+    _color = texture;
 }
 
-Spectrum AreaLight::le(const Ray& ray) const {
+Spectrum AreaLight::le(const Ray& ray, const Intersection* intersection) const {
     if (ray.tmax == INFINITY) {
         return Spectrum(0.f);
     }
-    return (_spectrum * _intensity);
+    vec2 uv;
+    if (intersection) {
+        uv = intersection->uv;
+    }
+    return Spectrum(_color->evaluateVec3(uv) * _intensity);
 }
 
 Spectrum AreaLight::sampleL(const vec3 &point, float rayEpsilon,
@@ -94,12 +101,13 @@ Spectrum AreaLight::sampleL(const vec3 &point, float rayEpsilon,
     vec3 dist = sampledPosition - point;
     float distLength = glm::length(dist);
     dist = dist / distLength;
+    vec3 color = _color->evaluateVec3(vec2(lightSample.u, lightSample.v));
 
     *wi = dist;
     
     vt->setSegment(point, rayEpsilon, sampledPosition);
-    return (
-            (_spectrum * _intensity)
+    return Spectrum(
+            (color * _intensity)
             * dot(dist, _normal)
-            * (1.0 / (distLength*distLength)));
+            * (1.0f / (distLength*distLength)));
 }
