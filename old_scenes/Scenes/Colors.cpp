@@ -1,5 +1,5 @@
 //
-//  Materials.cpp
+//  Glass.cpp
 //  CSE168_Rendering
 //
 //  Created by Gael Jochaud du Plessix on 4/24/14.
@@ -8,7 +8,9 @@
 
 #include "Utilities/Main.h"
 
-void materials(Scene* &scene, Camera* &camera, QtFilm* &film) {
+#include <sstream>
+
+void colors(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Create scene
     scene = new Scene(new ListAggregate());
     *scene << new SkyLight(Spectrum(0xF0FAFF).getColor());
@@ -19,37 +21,46 @@ void materials(Scene* &scene, Camera* &camera, QtFilm* &film) {
     
     Aggregate* model = new BVHAccelerator();
     
-    Main::startClock("Loading model...");
-    importer.importModel(model, "/Users/gael/Desktop/Courses/CSE_168/models/scenes/statues.dae", &camera);
-    Main::endClock("Model loaded in");
+    importer.importModel(model, "/Users/gael/Desktop/Courses/CSE_168/models/scenes/colors.dae", &camera);
     
-    Primitive* lightPrimitive = model->findPrimitive("areaLight");
+    std::shared_ptr<Primitive> lightPrimitive = model->findPrimitive("areaLight");
     TransformedPrimitive* lightTransformed = nullptr;
     GeometricPrimitive* lightGeometric = nullptr;
     Mesh* lightShape = nullptr;
     
-    if ((lightTransformed = dynamic_cast<TransformedPrimitive*>(lightPrimitive))) {
+    if ((lightTransformed = dynamic_cast<TransformedPrimitive*>(lightPrimitive.get()))) {
         if ((lightGeometric
-             = dynamic_cast<GeometricPrimitive*>(lightTransformed->getPrimitive())))  {
+             = dynamic_cast<GeometricPrimitive*>(lightTransformed->getPrimitive().get())))  {
             lightShape = dynamic_cast<Mesh*>(lightGeometric->getShape());
         }
     }
     
-    // Models
-    GeometricPrimitive* buddha = Main::findPrimitive<GeometricPrimitive*>(model, "buddha_body");
-    buddha->setMaterial(Main::gold);
-    GeometricPrimitive* dragon = Main::findPrimitive<GeometricPrimitive*>(model, "dragon_body");
-    dragon->setMaterial(Main::glass);
-    GeometricPrimitive* dragonStatue = Main::findPrimitive<GeometricPrimitive*>(model, "dragon_statue_body");
-    dragonStatue->setMaterial(Main::copper);
+    const int numMaterials = 7;
+    Glossy* materials[numMaterials];
+    for (int i = 0; i < numMaterials; ++i) {
+        materials[i] = new Glossy();
+        materials[i]->setIndexIn(2.3f);
+        materials[i]->setIndexOut(1.0003f);
+        materials[i]->setRoughness(0.2f);
+    }
     
-    // Stands
-    GeometricPrimitive* stand = Main::findPrimitive<GeometricPrimitive*>(model, "dragon_stand");
-    stand->setMaterial(Main::glossy);
-    stand = Main::findPrimitive<GeometricPrimitive*>(model, "buddha_stand");
-    stand->setMaterial(Main::glossy);
-    stand = Main::findPrimitive<GeometricPrimitive*>(model, "dragon_statue_stand");
-    stand->setMaterial(Main::glossy);
+    materials[0]->setColor(Spectrum(0xFF3D98).getColor());
+    materials[1]->setColor(Spectrum(0xABFF3D).getColor());
+    materials[2]->setColor(Spectrum(0x3DAEFF).getColor());
+    materials[3]->setColor(Spectrum(0xFFA13D).getColor());
+    materials[4]->setColor(Spectrum(0x3DDFFF).getColor());
+    materials[5]->setColor(Spectrum(0xFF3D3D).getColor());
+    materials[6]->setColor(Spectrum(0x3DFFCF).getColor());
+    
+    // Models
+    for (int i = 0; i <= 47; ++i) {
+        std::stringstream name;
+        
+        name << "stand" << i;
+        std::shared_ptr<GeometricPrimitive> cube = Main::findPrimitive<GeometricPrimitive>(model, name.str());
+        cube->setMaterial(materials[rand() % numMaterials]);
+    }    
+    
     
     // Create area light using model light shape
     if (lightShape) {
@@ -58,9 +69,15 @@ void materials(Scene* &scene, Camera* &camera, QtFilm* &film) {
         
         AreaLight* areaLight = AreaLight::CreateFromMesh(lightShape, t);
         areaLight->setColor(vec3(1.0f, 1.0f, 1.0f));
-        areaLight->setIntensity(70.0f);
+        areaLight->setIntensity(50.0f);
         lightGeometric->setAreaLight(areaLight);
         *scene << areaLight;
+    } else {
+        DirectionalLight* light = new DirectionalLight();
+        light->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 1.0f)));
+        light->setIntensity(2.0f);
+        light->setDirection(vec3(2.0f, -3.0f, -2.0f));
+        *scene << light;
     }
     
     // Build acceleration structures
@@ -82,7 +99,7 @@ void materials(Scene* &scene, Camera* &camera, QtFilm* &film) {
         }
     }
     
-    film = new QtFilm(vec2(1920.f, 1080.f)*4.0f);
+    film = new QtFilm(vec2(1280.f, 720.f)/1.0f);
     perspectiveCamera->setFilm(film);
     
     //perspectiveCamera->setVFov(45.f);

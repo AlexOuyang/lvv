@@ -16,18 +16,18 @@ void Aggregate::preprocess() {
     
 }
 
-Aggregate& Aggregate::operator<<(Primitive* primitive) {
+Aggregate& Aggregate::operator<<(const std::shared_ptr<Primitive>& primitive) {
     addPrimitive(primitive);
     return *this;
 }
 
-Primitive* Aggregate::findPrimitive(const std::string&) {
-    return nullptr;
+std::shared_ptr<Primitive> Aggregate::findPrimitive(const std::string&) {
+    return std::shared_ptr<Primitive>(nullptr);
 }
 
 void Aggregate::removePrimitive(const std::string&) {
 }
 
-const std::vector<Primitive*> Aggregate::getPrimitives() const {
-    return std::vector<Primitive*>();
+const std::vector<std::shared_ptr<Primitive>> Aggregate::getPrimitives() const {
+    return std::vector<std::shared_ptr<Primitive>>();
 }

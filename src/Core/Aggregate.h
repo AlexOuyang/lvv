@@ -17,14 +17,14 @@ public:
     
     virtual ~Aggregate();
     
-    Aggregate& operator<<(Primitive* primitive);
+    Aggregate& operator<<(const std::shared_ptr<Primitive>& primitive);
     
-    virtual void addPrimitive(Primitive* primitive) = 0;
+    virtual void addPrimitive(const std::shared_ptr<Primitive>& primitive) = 0;
     virtual void preprocess();
     
-    virtual Primitive* findPrimitive(const std::string& name);
+    virtual std::shared_ptr<Primitive> findPrimitive(const std::string& name);
     virtual void removePrimitive(const std::string& name);
-    virtual const std::vector<Primitive*> getPrimitives() const;
+    virtual const std::vector<std::shared_ptr<Primitive>> getPrimitives() const;
 };
 
 #endif /* defined(__CSE168_Rendering__Aggregate__) */

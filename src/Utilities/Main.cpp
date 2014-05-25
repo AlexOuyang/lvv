@@ -63,7 +63,7 @@ _timer(), _thread(nullptr), _continueRendering(true) {
     
     initMaterials();
     
-    cornellBox(_scene, _camera, _film);
+    //cornellBox(_scene, _camera, _film);
     
     RenderOptions options;
     options.maxThreadsCount = -1;
@@ -148,10 +148,10 @@ void Main::endClock(const std::string& message) {
 void Main::buildAccelerationStructures(Aggregate *model) {
     Main::startClock("Generating bvh...");
     
-    for (Primitive* p : model->getPrimitives()) {
-        TransformedPrimitive* transformed = dynamic_cast<TransformedPrimitive*>(p);
+    for (const std::shared_ptr<Primitive>& p : model->getPrimitives()) {
+        std::shared_ptr<TransformedPrimitive> transformed = std::dynamic_pointer_cast<TransformedPrimitive>(p);
         if (transformed && !transformed->getPrimitive()->canIntersect()) {
-            Aggregate* accelerator = new BVHAccelerator();
+            std::shared_ptr<Aggregate> accelerator = std::shared_ptr<Aggregate>(new BVHAccelerator());
             *accelerator << transformed->getPrimitive();
             accelerator->preprocess();
             transformed->setPrimitive(accelerator);

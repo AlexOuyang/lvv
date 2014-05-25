@@ -23,11 +23,11 @@ public:
     ~Scene();
     
     void addLight(Light* light);
-    void addPrimitive(Primitive* primitive);
+    void addPrimitive(const std::shared_ptr<Primitive>& primitive);
     void setVolume(Volume* volume);
     
     Scene& operator<<(Light* light);
-    Scene& operator<<(Primitive* primitive);
+    Scene& operator<<(const std::shared_ptr<Primitive>& primitive);
     
     const std::vector<Light*>&      getLights() const;
     Volume*                         getVolume() const;

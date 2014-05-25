@@ -16,12 +16,12 @@
 class TransformedPrimitive : public Primitive {
 public:
     
-    TransformedPrimitive(Primitive* primitive, const Transform& transform);
-    TransformedPrimitive(Primitive* primitive, const AnimatedTransform& transform);
+    TransformedPrimitive(const std::shared_ptr<Primitive>& primitive, const Transform& transform);
+    TransformedPrimitive(const std::shared_ptr<Primitive>& primitive, const AnimatedTransform& transform);
     ~TransformedPrimitive();
     
-    void        setPrimitive(Primitive* primitive);
-    Primitive*  getPrimitive() const;
+    void                        setPrimitive(const std::shared_ptr<Primitive>& primitive);
+    std::shared_ptr<Primitive>  getPrimitive() const;
     
     void        setMaterial(Material* material);
     
@@ -35,9 +35,9 @@ public:
     virtual AABB getBoundingBox() const;
     
 private:
-    Primitive*          _primitive;
-    Material*           _material;
-    AnimatedTransform   _worldToPrimitive;
+    std::shared_ptr<Primitive>  _primitive;
+    Material*                   _material;
+    AnimatedTransform           _worldToPrimitive;
 };
 
 

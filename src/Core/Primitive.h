@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-class Primitive {
+class Primitive : public std::enable_shared_from_this<Primitive> {
 public:
     
     static int nextPrimitiveId;
@@ -29,8 +29,8 @@ public:
     virtual bool intersect(const Ray& ray, Intersection* intersection) const = 0;
     virtual bool intersectP(const Ray& ray) const = 0;
     
-    virtual void refine(std::vector<Primitive*> &refined) const;
-    void fullyRefine(std::vector<Primitive*> &refined);
+    virtual void refine(std::vector<std::shared_ptr<Primitive>>& refined) const;
+    void fullyRefine(std::vector<std::shared_ptr<Primitive>>& refined);
     
     virtual AreaLight* getAreaLight() const;
     

@@ -40,7 +40,7 @@ void Scene::addLight(Light* light) {
     _lights.push_back(light);
 }
 
-void Scene::addPrimitive(Primitive* primitive) {
+void Scene::addPrimitive(const std::shared_ptr<Primitive>& primitive) {
     *_aggregate << primitive;
 }
 
@@ -53,7 +53,7 @@ Scene& Scene::operator<<(Light* light) {
     return *this;
 }
 
-Scene& Scene::operator<<(Primitive* primitive) {
+Scene& Scene::operator<<(const std::shared_ptr<Primitive>& primitive) {
     addPrimitive(primitive);
     return *this;
 }

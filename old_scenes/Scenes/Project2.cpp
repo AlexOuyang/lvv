@@ -34,7 +34,7 @@ void project2(Scene* &scene, Camera* &camera, QtFilm* &film) {
     Main::endClock("Model imported in");
     
     // Add ground to model aggregate (cannot be directly added to the scene)
-    *model << ground;
+    *model << std::shared_ptr<Primitive>(ground);
     
     Main::buildAccelerationStructures(model);
     
@@ -45,7 +45,7 @@ void project2(Scene* &scene, Camera* &camera, QtFilm* &film) {
     
     t.rotate((float)M_PI, vec3(0.0f, 0.1f, 0.0f));
     t.setTranslation(vec3(-0.05f, 0.0f, -0.1f));
-    inst = new TransformedPrimitive(model, t);
+    inst = new TransformedPrimitive(std::shared_ptr<Primitive>(model), t);
     
     *scene << inst;
     

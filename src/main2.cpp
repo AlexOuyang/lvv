@@ -11,7 +11,7 @@
 #include "Utilities/Main.h"
 
 int main(int argc, char* argv[]) {
-    for (;;) {
+    for (int i = 0; i < 1; ++i) {
         ImageFilm* film = new ImageFilm(vec2(800.f, 600.f));
         
         Scene* scene = nullptr;
@@ -39,13 +39,13 @@ int main(int argc, char* argv[]) {
         AssimpImporter importer;
         importer.setDefaultMaterial(white);
         
-        Aggregate* model = new BVHAccelerator();
+        std::shared_ptr<Aggregate> model = std::make_shared<BVHAccelerator>();
         
-        importer.importModel(model, "/Users/gael/Desktop/Courses/CSE_168/models/cornell-box/CornellBox-Sphere.obj");
+        importer.importModel(model.get(), "/Users/gael/Desktop/Courses/CSE_168/models/cornell-box/CornellBox-Sphere.obj");
 
         // Spheres materials
-        GeometricPrimitive* leftSphere = Main::findPrimitive<GeometricPrimitive*>(model, "leftSphere");
-        GeometricPrimitive* rightSphere = Main::findPrimitive<GeometricPrimitive*>(model, "rightSphere");
+        std::shared_ptr<GeometricPrimitive> leftSphere = Main::findPrimitive<GeometricPrimitive>(model.get(), "leftSphere");
+        std::shared_ptr<GeometricPrimitive> rightSphere = Main::findPrimitive<GeometricPrimitive>(model.get(), "rightSphere");
         if (!leftSphere || !rightSphere) {
             qDebug() << "Error: cannot find spheres in scene";
             abort();
@@ -54,13 +54,13 @@ int main(int argc, char* argv[]) {
         leftSphere->setMaterial(gold);
         rightSphere->setMaterial(glass);
             
-        Primitive* lightPrimitive = model->findPrimitive("light");
-        TransformedPrimitive* lightInstance = dynamic_cast<TransformedPrimitive*>(lightPrimitive);
-        GeometricPrimitive* lightGeometric = nullptr;
+        std::shared_ptr<Primitive> lightPrimitive = model->findPrimitive("light");
+        std::shared_ptr<TransformedPrimitive> lightInstance = std::dynamic_pointer_cast<TransformedPrimitive>(lightPrimitive);
+        std::shared_ptr<GeometricPrimitive> lightGeometric;
         Mesh* lightShape = nullptr;
         
         if (lightInstance) {
-            if ((lightGeometric = dynamic_cast<GeometricPrimitive*>(lightInstance->getPrimitive()))) {
+            if ((lightGeometric = std::dynamic_pointer_cast<GeometricPrimitive>(lightInstance->getPrimitive()))) {
                 lightShape = dynamic_cast<Mesh*>(lightGeometric->getShape());
             }
         }
@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
         }
         
         // Build acceleration structure
-        Main::buildAccelerationStructures(model);
+        Main::buildAccelerationStructures(model.get());
         
         *scene << model;
         
@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
         PerspectiveCamera* perspectiveCamera = new PerspectiveCamera();
         
         perspectiveCamera->lookAt(vec3(0.0f, 0.75f, 3.0f), vec3(0.0f, 0.75f, 0.0f));
-        film = new ImageFilm(vec2(800.f, 600.f)/4.0f);
+        film = new ImageFilm(vec2(800.f, 600.f)/1.0f);
         perspectiveCamera->setFilm(film);
         
         perspectiveCamera->setVFov(40.0f);
@@ -95,7 +95,7 @@ int main(int argc, char* argv[]) {
         Renderer* renderer = new Renderer();
         
         // Render image
-        //renderer->render(*scene, camera);
+        renderer->render(*scene, camera);
         
         // Save rendered image
         film->saveToFile("/Users/gael/Desktop/render.bmp");

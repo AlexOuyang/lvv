@@ -46,12 +46,12 @@ AABB GeometricPrimitive::getBoundingBox() const {
     return _shape->getBoundingBox();
 }
 
-void GeometricPrimitive::refine(std::vector<Primitive*> &refined) const {
+void GeometricPrimitive::refine(std::vector<std::shared_ptr<Primitive>> &refined) const {
     std::vector<Shape*> refinedShapes;
     _shape->refine(refinedShapes);
     
     for (Shape* s : refinedShapes) {
-        refined.push_back(new GeometricPrimitive(s, _material, _areaLight));
+        refined.push_back(std::make_shared<GeometricPrimitive>(s, _material, _areaLight));
     }
 }
 

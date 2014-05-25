@@ -24,7 +24,7 @@ void project1(Scene* &scene, Camera* &camera, QtFilm* &film) {
     // Box 1
     boxShape = ShapesUtilities::CreateBox(5.0f, 0.1f, 5.0f);
     box = new GeometricPrimitive(boxShape, white);
-    *aggregate << box;
+    *aggregate << std::shared_ptr<Primitive>(box);
     aggregate->preprocess();
     *scene << aggregate;
     
@@ -32,7 +32,7 @@ void project1(Scene* &scene, Camera* &camera, QtFilm* &film) {
     boxShape = ShapesUtilities::CreateBox(1.0f, 1.0f, 1.0f);
     box = new GeometricPrimitive(boxShape, white);
     aggregate = new BVHAccelerator();
-    *aggregate << box;
+    *aggregate << std::shared_ptr<Primitive>(box);
     aggregate->preprocess();
     
     // Instances
@@ -40,13 +40,13 @@ void project1(Scene* &scene, Camera* &camera, QtFilm* &film) {
     Transform t;
     t.rotate(0.5f, vec3(1.0f, 0.0f, 0.0f));
     t.setTranslation(vec3(0.f, 1.f, 0.f));
-    inst = new TransformedPrimitive(aggregate, t);
+    inst = new TransformedPrimitive(std::shared_ptr<Primitive>(aggregate), t);
     *scene << inst;
     
     t = Transform();
     t.rotate(1.0f, vec3(0.0f, 1.0f, 0.0f));
     t.setTranslation(vec3(-1.0f, 0.0f, 1.0f));
-    inst = new TransformedPrimitive(aggregate, t);
+    inst = new TransformedPrimitive(std::shared_ptr<Primitive>(aggregate), t);
     *scene << inst;
     
     DirectionalLight* sunlgt = new DirectionalLight();

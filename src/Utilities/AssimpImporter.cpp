@@ -215,7 +215,7 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
             material = _materials[assimpMesh->mMaterialIndex];
         }
         
-        GeometricPrimitive* primitive = new GeometricPrimitive(mesh, material);
+        std::shared_ptr<GeometricPrimitive> primitive = std::make_shared<GeometricPrimitive>(mesh, material);
 
         // Load vertices
         int verticesCount = assimpMesh->mNumVertices;
@@ -260,7 +260,7 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
         
         // Create transformed primitive
         Transform transform(matrix);
-        TransformedPrimitive* transformed = new TransformedPrimitive(primitive, transform);
+        std::shared_ptr<TransformedPrimitive> transformed = std::make_shared<TransformedPrimitive>(primitive, transform);
 
         if (!name.empty()) {
             transformed->setName(name);
@@ -272,7 +272,7 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
         
         // Apply custom setup to primitive
         if (_primitivesCallback) {
-            if (!_primitivesCallback(transformed, primitive)) {
+            if (!_primitivesCallback(transformed.get(), primitive.get())) {
                 continue;
             }
         }

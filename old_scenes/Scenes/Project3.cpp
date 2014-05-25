@@ -73,9 +73,9 @@ void project3(Scene* &scene, Camera* &camera, QtFilm* &film) {
     for(int i = 0; i < nummtls; ++i) {
         t.setTranslation(vec3(0.0f, 0.0f, -0.1f*float(i)));
         TransformedPrimitive* inst;
-        inst = new TransformedPrimitive(dragon, t);
+        inst = new TransformedPrimitive(std::shared_ptr<Primitive>(dragon), t);
         inst->setMaterial(mtl[i]);
-        *aggregate << inst;
+        *aggregate << std::shared_ptr<Primitive>(inst);
     }
     
     // Create ground
@@ -84,7 +84,7 @@ void project3(Scene* &scene, Camera* &camera, QtFilm* &film) {
     Mesh* groundShape = ShapesUtilities::CreateBox(2.0f, 0.11f, 2.0f);
     GeometricPrimitive* ground = new GeometricPrimitive(groundShape, lambert);
     
-    *aggregate << ground;
+    *aggregate << std::shared_ptr<Primitive>(ground);
     
     // Add aggregate to scene
     aggregate->preprocess();

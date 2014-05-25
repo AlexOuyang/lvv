@@ -21,14 +21,14 @@ void weapon(Scene* &scene, Camera* &camera, QtFilm* &film) {
     
     importer.importModel(model, "/Users/gael/Desktop/Courses/CSE_168/models/scenes/weapon.dae", &camera);
     
-    Primitive* lightPrimitive = model->findPrimitive("areaLight");
+    std::shared_ptr<Primitive> lightPrimitive = model->findPrimitive("areaLight");
     TransformedPrimitive* lightTransformed = nullptr;
     GeometricPrimitive* lightGeometric = nullptr;
     Mesh* lightShape = nullptr;
     
-    if ((lightTransformed = dynamic_cast<TransformedPrimitive*>(lightPrimitive))) {
+    if ((lightTransformed = dynamic_cast<TransformedPrimitive*>(lightPrimitive.get()))) {
         if ((lightGeometric
-             = dynamic_cast<GeometricPrimitive*>(lightTransformed->getPrimitive())))  {
+             = dynamic_cast<GeometricPrimitive*>(lightTransformed->getPrimitive().get())))  {
             lightShape = dynamic_cast<Mesh*>(lightGeometric->getShape());
         }
     }
@@ -38,21 +38,21 @@ void weapon(Scene* &scene, Camera* &camera, QtFilm* &film) {
     Main::glossy->setColor(Spectrum(0x00000).getColor());
     
     // Models
-    GeometricPrimitive* body = Main::findPrimitive<GeometricPrimitive*>(model, "body");
+    std::shared_ptr<GeometricPrimitive> body = Main::findPrimitive<GeometricPrimitive>(model, "body");
     body->setMaterial(Main::gold);
-    GeometricPrimitive* magazine = Main::findPrimitive<GeometricPrimitive*>(model, "magazine");
+    std::shared_ptr<GeometricPrimitive> magazine = Main::findPrimitive<GeometricPrimitive>(model, "magazine");
     magazine->setMaterial(Main::gold);
-    GeometricPrimitive* bullet = Main::findPrimitive<GeometricPrimitive*>(model, "bullet_body_1");
+    std::shared_ptr<GeometricPrimitive> bullet = Main::findPrimitive<GeometricPrimitive>(model, "bullet_body_1");
     bullet->setMaterial(Main::steel);
-    bullet = Main::findPrimitive<GeometricPrimitive*>(model, "bullet_body_2");
+    bullet = Main::findPrimitive<GeometricPrimitive>(model, "bullet_body_2");
     bullet->setMaterial(Main::steel);
-    bullet = Main::findPrimitive<GeometricPrimitive*>(model, "bullet_head_1");
+    bullet = Main::findPrimitive<GeometricPrimitive>(model, "bullet_head_1");
     bullet->setMaterial(Main::copper);
-    bullet = Main::findPrimitive<GeometricPrimitive*>(model, "bullet_head_2");
+    bullet = Main::findPrimitive<GeometricPrimitive>(model, "bullet_head_2");
     bullet->setMaterial(Main::copper);
     
     // Stands
-    GeometricPrimitive* stand = Main::findPrimitive<GeometricPrimitive*>(model, "stand");
+    std::shared_ptr<GeometricPrimitive> stand = Main::findPrimitive<GeometricPrimitive>(model, "stand");
     stand->setMaterial(Main::glossy);
     
     // Create area light using model light shape

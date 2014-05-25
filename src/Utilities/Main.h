@@ -79,13 +79,13 @@ public:
     static void buildAccelerationStructures(Aggregate* model);
     
     template<class T>
-    static T findPrimitive(Aggregate* aggregate, const std::string& name) {
-        Primitive* p = aggregate->findPrimitive(name);
-        TransformedPrimitive* tp = dynamic_cast<TransformedPrimitive*>(p);
+    static std::shared_ptr<T> findPrimitive(Aggregate* aggregate, const std::string& name) {
+        std::shared_ptr<Primitive> p = aggregate->findPrimitive(name);
+        std::shared_ptr<TransformedPrimitive> tp = std::dynamic_pointer_cast<TransformedPrimitive>(p);
         if (!tp) {
-            return nullptr;
+            return std::shared_ptr<T>();
         }
-        return dynamic_cast<T>(tp->getPrimitive());
+        return std::dynamic_pointer_cast<T>(tp->getPrimitive());
     }
     
     static Matte* matte;

@@ -28,7 +28,7 @@ public:
     virtual bool intersectP(const Ray& ray) const;
     virtual AABB getBoundingBox() const;
     
-    virtual void refine(std::vector<Primitive*> &refined) const;
+    virtual void refine(std::vector<std::shared_ptr<Primitive>> &refined) const;
 
     void setAreaLight(AreaLight* areaLight);
     virtual AreaLight* getAreaLight() const;

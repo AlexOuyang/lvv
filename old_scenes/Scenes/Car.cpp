@@ -64,14 +64,14 @@ void car(Scene* &scene, Camera* &camera, QtFilm* &film) {
     importer.importModel(model, "/Users/gael/Desktop/Courses/CSE_168/models/scenes/car.dae",
                          &camera);
     
-    Primitive* lightPrimitive = model->findPrimitive("areaLight");
+    std::shared_ptr<Primitive> lightPrimitive = model->findPrimitive("areaLight");
     TransformedPrimitive* lightTransformed = nullptr;
     GeometricPrimitive* lightGeometric = nullptr;
     Mesh* lightShape = nullptr;
     
-    if ((lightTransformed = dynamic_cast<TransformedPrimitive*>(lightPrimitive))) {
+    if ((lightTransformed = dynamic_cast<TransformedPrimitive*>(lightPrimitive.get()))) {
         if ((lightGeometric
-             = dynamic_cast<GeometricPrimitive*>(lightTransformed->getPrimitive())))  {
+             = dynamic_cast<GeometricPrimitive*>(lightTransformed->getPrimitive().get())))  {
             lightShape = dynamic_cast<Mesh*>(lightGeometric->getShape());
         }
     }

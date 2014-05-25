@@ -21,7 +21,7 @@ void instancing(Scene* &scene, Camera* &camera, QtFilm* &film) {
     
     importer.importModel(aggregate, "/Users/gael/Desktop/Courses/CSE_168/models/dragon.ply");
     
-    GeometricPrimitive* dragon = Main::findPrimitive<GeometricPrimitive*>(aggregate, "Primitive 3");
+    std::shared_ptr<GeometricPrimitive> dragon = Main::findPrimitive<GeometricPrimitive>(aggregate, "Primitive 3");
     
     if (!dragon) {
         qDebug() << "Error: Cannot find model";
@@ -42,9 +42,9 @@ void instancing(Scene* &scene, Camera* &camera, QtFilm* &film) {
             Transform t;
             t.scale(vec3(1.0f, 1.0f, 1.0f)*20.f);
             t.setTranslation(vec3(-200.0f + ((float)i/100)*400.0f, 0.f, 10-(((float)j/100)*800.0f)));
-            instance = new TransformedPrimitive(aggregate, t);
+            instance = new TransformedPrimitive(std::shared_ptr<Primitive>(aggregate), t);
             
-            *grid << instance;
+            *grid << std::shared_ptr<Primitive>(instance);
         }
     }
     
@@ -52,7 +52,7 @@ void instancing(Scene* &scene, Camera* &camera, QtFilm* &film) {
     
     *scene << grid;
     
-    Plane* groundShape = new Plane();
+    std::shared_ptr<Plane> groundShape = std::make_shared<Plane>();
     GeometricPrimitive* ground = new GeometricPrimitive(groundShape, Main::matte);
     *scene << ground;
     

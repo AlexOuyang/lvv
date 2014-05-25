@@ -23,16 +23,16 @@ bool Primitive::canIntersect() const {
     return true;
 }
 
-void Primitive::refine(std::vector<Primitive*> &) const {
+void Primitive::refine(std::vector<std::shared_ptr<Primitive>> &) const {
     abort();
 }
 
-void Primitive::fullyRefine(std::vector<Primitive*> &refined) {
-    std::vector<Primitive*> todo;
+void Primitive::fullyRefine(std::vector<std::shared_ptr<Primitive>>& refined) {
+    std::vector<std::shared_ptr<Primitive>> todo;
 
-    todo.push_back(this);
+    todo.push_back(this->shared_from_this());
     while (todo.size()) {
-        Primitive* current = todo.back();
+        std::shared_ptr<Primitive> current = todo.back();
         todo.pop_back();
         
         if (current->canIntersect()) {

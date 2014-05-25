@@ -62,9 +62,6 @@ BVHAccelerator::BVHAccelerator(SplitMethod splitMethod)
 }
 
 BVHAccelerator::~BVHAccelerator() {
-    for (Primitive* p : _primitives) {
-        delete p;
-    }
     if (_root) {
         delete _root;
     }
@@ -72,10 +69,11 @@ BVHAccelerator::~BVHAccelerator() {
 
 void BVHAccelerator::preprocess() {
     // First refine the primitives
-    std::vector<Primitive*> refined;
-    for (Primitive* p : _primitives) {
+    std::vector<std::shared_ptr<Primitive>> refined;
+    for (const std::shared_ptr<Primitive>& p : _primitives) {
         p->fullyRefine(refined);
     }
+
     _primitives.swap(refined);
     
     if (!_primitives.size()) {
@@ -91,7 +89,7 @@ void BVHAccelerator::preprocess() {
     }
     
     // Recursively build BVH tree for primitives
-    std::vector<Primitive*> orderedPrimitives;
+    std::vector<std::shared_ptr<Primitive>> orderedPrimitives;
     orderedPrimitives.reserve(_primitives.size());
     _root = recursiveBuild(buildData, 0, _primitives.size(), orderedPrimitives);
     _primitives.swap(orderedPrimitives);
@@ -123,7 +121,7 @@ bool CompareToBucket::operator()(const BVHAccelerator::BuildPrimitiveInfo &p) co
 
 BVHAccelerator::Node* BVHAccelerator::recursiveBuild(std::vector<BuildPrimitiveInfo>& buildData,
                                                      uint32_t start, uint32_t end,
-                                                     std::vector<Primitive*>& orderedPrimitives) {
+                                                     std::vector<std::shared_ptr<Primitive>>& orderedPrimitives) {
     Node* node = new Node();
     
     // Compute bounding box of all primitives in current node
@@ -293,18 +291,18 @@ BVHAccelerator::Node* BVHAccelerator::recursiveBuild(std::vector<BuildPrimitiveI
     return node;
 }
 
-void BVHAccelerator::addPrimitive(Primitive* primitive) {
+void BVHAccelerator::addPrimitive(const std::shared_ptr<Primitive>& primitive) {
     _primitives.push_back(primitive);
 }
 
-Primitive* BVHAccelerator::findPrimitive(const std::string& name) {
-    for (Primitive* p : _primitives) {
-        Aggregate* child;
+std::shared_ptr<Primitive> BVHAccelerator::findPrimitive(const std::string& name) {
+    for (const std::shared_ptr<Primitive>& p : _primitives) {
+        std::shared_ptr<Aggregate> child;
         
         if (p->getName() == name) {
             return p;
-        } else if ((child = dynamic_cast<Aggregate*>(p))) {
-            Primitive* res = child->findPrimitive(name);
+        } else if ((child = std::dynamic_pointer_cast<Aggregate>(p))) {
+            std::shared_ptr<Primitive> res = child->findPrimitive(name);
             if (res) {
                 return res;
             }
@@ -314,12 +312,12 @@ Primitive* BVHAccelerator::findPrimitive(const std::string& name) {
 }
 
 void BVHAccelerator::removePrimitive(const std::string& name) {
-    std::remove_if(_primitives.begin(), _primitives.end(), [name] (Primitive* p) {
+    std::remove_if(_primitives.begin(), _primitives.end(), [name] (std::shared_ptr<Primitive> p) {
         return p->getName() == name;
     });
 }
 
-const std::vector<Primitive*> BVHAccelerator::getPrimitives() const {
+const std::vector<std::shared_ptr<Primitive>> BVHAccelerator::getPrimitives() const {
     return _primitives;
 }
 

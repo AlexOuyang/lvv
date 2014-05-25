@@ -11,13 +11,13 @@
 #include "Ray.h"
 #include "Intersection.h"
 
-TransformedPrimitive::TransformedPrimitive(Primitive* primitive, const Transform& transform) :
+TransformedPrimitive::TransformedPrimitive(const std::shared_ptr<Primitive>& primitive, const Transform& transform) :
 _primitive(primitive), _material(nullptr),
 _worldToPrimitive() {
     _worldToPrimitive.setTransform(Transform::Inverse(transform));
 }
 
-TransformedPrimitive::TransformedPrimitive(Primitive* primitive,
+TransformedPrimitive::TransformedPrimitive(const std::shared_ptr<Primitive>& primitive,
                                            const AnimatedTransform& transform) :
 _primitive(primitive), _material(nullptr),
 _worldToPrimitive() {
@@ -33,11 +33,11 @@ _worldToPrimitive() {
 TransformedPrimitive::~TransformedPrimitive() {
 }
 
-void TransformedPrimitive::setPrimitive(Primitive* primitive) {
+void TransformedPrimitive::setPrimitive(const std::shared_ptr<Primitive>& primitive) {
     _primitive = primitive;
 }
 
-Primitive* TransformedPrimitive::getPrimitive() const {
+std::shared_ptr<Primitive> TransformedPrimitive::getPrimitive() const {
     return _primitive;
 }
 

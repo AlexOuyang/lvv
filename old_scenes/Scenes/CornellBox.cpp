@@ -56,12 +56,12 @@ void cornellBox(Scene* &scene, Camera* &camera, QtFilm* &film) {
         dragonAggregate = new BVHAccelerator();
         importer.importModel(dragonAggregate, "/Users/gael/Desktop/Courses/CSE_168/models/dragon.ply");
         
-        Primitive* p = dragonAggregate->findPrimitive("Primitive 20");
-        TransformedPrimitive* dragonInstance = dynamic_cast<TransformedPrimitive*>(p);
+        std::shared_ptr<Primitive> p = dragonAggregate->findPrimitive("Primitive 20");
+        TransformedPrimitive* dragonInstance = dynamic_cast<TransformedPrimitive*>(p.get());
         GeometricPrimitive* dragon = nullptr;
         
         if (dragonInstance) {
-            dragon = dynamic_cast<GeometricPrimitive*>(dragonInstance->getPrimitive());
+            dragon = dynamic_cast<GeometricPrimitive*>(dragonInstance->getPrimitive().get());
         }
         
         if (!dragon) {
@@ -79,8 +79,8 @@ void cornellBox(Scene* &scene, Camera* &camera, QtFilm* &film) {
         *scene << dragonInstance;
     } else {
         // Spheres materials
-        GeometricPrimitive* leftSphere = Main::findPrimitive<GeometricPrimitive*>(model, "leftSphere");
-        GeometricPrimitive* rightSphere = Main::findPrimitive<GeometricPrimitive*>(model, "rightSphere");
+        std::shared_ptr<GeometricPrimitive> leftSphere = Main::findPrimitive<GeometricPrimitive>(model, "leftSphere");
+        std::shared_ptr<GeometricPrimitive> rightSphere = Main::findPrimitive<GeometricPrimitive>(model, "rightSphere");
         if (!leftSphere || !rightSphere) {
             qDebug() << "Error: cannot find spheres in scene";
             abort();
@@ -90,14 +90,14 @@ void cornellBox(Scene* &scene, Camera* &camera, QtFilm* &film) {
         rightSphere->setMaterial(glass);
     }
     
-    Primitive* lightPrimitive = model->findPrimitive("light");
-    TransformedPrimitive* lightInstance = dynamic_cast<TransformedPrimitive*>(lightPrimitive);
+    std::shared_ptr<Primitive> lightPrimitive = model->findPrimitive("light");
+    TransformedPrimitive* lightInstance = dynamic_cast<TransformedPrimitive*>(lightPrimitive.get());
     GeometricPrimitive* lightGeometric = nullptr;
-    Mesh* lightShape = nullptr;
+    std::shared_ptr<Mesh> lightShape = nullptr;
     
     if (lightInstance) {
-        if ((lightGeometric = dynamic_cast<GeometricPrimitive*>(lightInstance->getPrimitive()))) {
-            lightShape = dynamic_cast<Mesh*>(lightGeometric->getShape());
+        if ((lightGeometric = dynamic_cast<GeometricPrimitive*>(lightInstance->getPrimitive().get()))) {
+            lightShape = std::dynamic_pointer_cast<Mesh>(lightGeometric->getShape());
         }
     }
 

@@ -34,11 +34,11 @@ public:
     
     virtual void preprocess();    
     
-    virtual void addPrimitive(Primitive* primitive);
+    virtual void addPrimitive(const std::shared_ptr<Primitive>& primitive);
 
-    virtual Primitive* findPrimitive(const std::string& name);
+    virtual std::shared_ptr<Primitive> findPrimitive(const std::string& name);
     virtual void removePrimitive(const std::string& name);
-    virtual const std::vector<Primitive*> getPrimitives() const;
+    virtual const std::vector<std::shared_ptr<Primitive>> getPrimitives() const;
     
     virtual AABB getBoundingBox() const;
     
@@ -91,11 +91,11 @@ private:
     
     Node* recursiveBuild(std::vector<BuildPrimitiveInfo>& buildData,
                          uint32_t start, uint32_t end,
-                         std::vector<Primitive*>& orderedPrimitives);
+                         std::vector<std::shared_ptr<Primitive>>& orderedPrimitives);
     
-    SplitMethod             _splitMethod;
-    std::vector<Primitive*> _primitives;
-    Node*                   _root;
+    SplitMethod                             _splitMethod;
+    std::vector<std::shared_ptr<Primitive>> _primitives;
+    Node*                                   _root;
 };
 
 #endif /* defined(__CSE168_Rendering__BVHAccelerator__) */

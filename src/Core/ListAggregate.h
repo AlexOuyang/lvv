@@ -21,12 +21,12 @@ public:
     ListAggregate();
     ~ListAggregate();
     
-    virtual void addPrimitive(Primitive* primitive);
+    virtual void addPrimitive(const std::shared_ptr<Primitive>& primitive);
     virtual void preprocess();
     
-    virtual Primitive* findPrimitive(const std::string& name);
+    virtual std::shared_ptr<Primitive> findPrimitive(const std::string& name);
     virtual void removePrimitive(const std::string& name);
-    virtual const std::vector<Primitive*> getPrimitives() const;
+    virtual const std::vector<std::shared_ptr<Primitive>> getPrimitives() const;
     
     virtual AABB getBoundingBox() const;
     
@@ -34,7 +34,7 @@ public:
     virtual bool intersectP(const Ray& ray) const;
     
 private:
-    std::vector<Primitive*> _primitives;
+    std::vector<std::shared_ptr<Primitive>> _primitives;
 };
 
 #endif /* defined(__CSE168_Rendering__ListAggregate__) */
