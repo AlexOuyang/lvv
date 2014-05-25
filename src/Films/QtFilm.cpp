@@ -67,12 +67,7 @@ void QtFilm::addSample(const CameraSample &sample, const Spectrum &L, float weig
     vec3 prev = _buffer[sample.pixel.y*_image.width() + sample.pixel.x];
     vec3 newValue = mix(prev, L.getColor(), weight);
     _buffer[sample.pixel.y*_image.width() + sample.pixel.x] = newValue;
-    
-    // Apply tone mapping
-    vec3 filtered = newValue;
-    //filtered = vec3(1.0f) - glm::exp(filtered * -1.3f);
-    
-    _image.setPixel(sample.pixel.x, sample.pixel.y, Spectrum(filtered).getIntColor());
+    _image.setPixel(sample.pixel.x, sample.pixel.y, Spectrum(newValue).getIntColor());
 }
 
 void QtFilm::saveAction() {
@@ -89,5 +84,57 @@ void QtFilm::saveAction() {
 void QtFilm::keyPressEvent(QKeyEvent* event) {
     if (event->key() == 32) { // Spacebar
         toggleRendering();
+    }
+}
+
+void QtFilm::applyFilters() {
+    for (int x = 0; x < _image.width(); ++x) {
+        for (int y = 0; y < _image.height(); ++y) {
+            vec3 pixel = _buffer[y*_image.width() + x];
+            
+            // Apply tone mapping
+            vec3 filtered;
+            //filtered = vec3(1.0f) - glm::exp(filtered * -1.3f);
+            filtered = pixel;
+            _image.setPixel(x, y, Spectrum(filtered).getIntColor());
+            continue;
+            
+            // Compute gaussian blur
+            vec3 gaussian;
+            int kernelSizes[] = {5, 10, 20, 40};
+            int samples = 8;
+            for (uint32 i = 0; i < sizeof(kernelSizes)/sizeof(int); ++i) {
+                int kernelSize = kernelSizes[i];
+                for (int sampleX = 0; sampleX < samples; ++sampleX) {
+                    for (int sampleY = 0; sampleY < samples; ++sampleY) {
+                        float samplePixelX = ((float)sampleX/samples);
+                        float samplePixelY = ((float)sampleY/samples);
+                        // Jitter samples
+                        samplePixelX += ((float)rand()/RAND_MAX)*(1.f/samples);
+                        samplePixelY += ((float)rand()/RAND_MAX)*(1.f/samples);
+                        
+                        // Apply gaussian distribution
+                        float a = 0.4f * sqrt(-2*log(samplePixelX));
+                        float b = 2.0f * M_PI * samplePixelY;
+                        samplePixelX = 0.5f + a * sin(b);
+                        samplePixelY = 0.5f + a * cos(b);
+                        
+                        samplePixelX = samplePixelX*2.f - 1.f;
+                        samplePixelY = samplePixelY*2.f - 1.f;
+                        
+                        samplePixelX = glm::clamp(samplePixelX*kernelSize + x, 0.f, _image.width()-1.f);
+                        samplePixelY = glm::clamp(samplePixelY*kernelSize + y, 0.f, _image.height()-1.f);
+                        vec3 samplePixel = _buffer[(int)samplePixelY*_image.width() + (int)samplePixelX];
+                        samplePixel = (samplePixel.x+samplePixel.y+samplePixel.z)/3.f > 1.f ? samplePixel : vec3(0.f);
+                        samplePixel *= 0.3f;
+                        gaussian += samplePixel / (float)(samples*samples);
+                    }
+                }
+            }
+            
+            filtered = pixel + gaussian;
+            
+            _image.setPixel(x, y, Spectrum(filtered).getIntColor());
+        }
     }
 }

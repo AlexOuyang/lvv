@@ -20,6 +20,7 @@
 #include "Core/Renderer.h"
 #include "Core/Camera.h"
 #include "Films/QtFilm.h"
+#include "Films/ImageFilm.h"
 #include "Core/ListAggregate.h"
 #include "Accelerators/BVHAccelerator.h"
 #include "Lights/SkyLight.h"
@@ -42,6 +43,8 @@
 #include "Materials/AshikhminMaterial.h"
 #include "Core/Texture.h"
 #include "Utilities/ImageLoading.h"
+#include "Volumes/HomogeneousVolume.h"
+#include "Volumes/DensityVolume.h"
 
 // Scenes
 void project1(Scene* &scene, Camera* &camera, QtFilm* &film);
@@ -56,6 +59,7 @@ void car(Scene* &scene, Camera* &camera, QtFilm* &film);
 void weapon(Scene* &scene, Camera* &camera, QtFilm* &film);
 void colors(Scene* &scene, Camera* &camera, QtFilm* &film);
 void atrium(Scene* &scene, Camera* &camera, QtFilm* &film);
+void volume(Scene* &scene, Camera* &camera, QtFilm* &film);
 void base(Scene* &scene, Camera* &camera, QtFilm* &film);
 
 class Main : public QObject {
@@ -91,7 +95,7 @@ public:
     static Glass* glass;
     static Glossy* glossy;
     
-    void initMaterials();
+    static void initMaterials();
     
 public slots:
     void refresh();

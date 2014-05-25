@@ -51,6 +51,7 @@ private:
     
     struct Node {
         Node();
+        ~Node();
         
         AABB        boundingBox;
         Node*       children[2];

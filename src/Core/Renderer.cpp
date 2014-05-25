@@ -46,13 +46,17 @@ void Renderer::Task::run() {
 }
 
 Renderer::Renderer(RenderOptions options)
-: options(options), _surfaceIntegrator(nullptr), _samplesCount(0) {
+: options(options), _surfaceIntegrator(nullptr), _volumeIntegrator(nullptr), _samplesCount(0) {
     _surfaceIntegrator = options.createSurfaceIntegrator();
+    _volumeIntegrator = options.createVolumeIntegrator();
 }
 
 Renderer::~Renderer() {
     if (_surfaceIntegrator) {
         delete _surfaceIntegrator;
+    }
+    if (_volumeIntegrator) {
+        delete _volumeIntegrator;
     }
 }
 
@@ -235,6 +239,7 @@ Spectrum Renderer::li(const Scene &scene, const Ray &ray) const {
     Intersection intersection;
     Spectrum li(0);
     
+    // Intersect ray with scene geometry
     if (scene.intersect(ray, &intersection)) {
         li = _surfaceIntegrator->li(scene, *this, ray, intersection);
     } else {
@@ -244,5 +249,13 @@ Spectrum Renderer::li(const Scene &scene, const Ray &ray) const {
         }
     }
     
-    return li;
+    // Compute light coming from participating media
+    Spectrum t;
+    Spectrum lv = _volumeIntegrator->li(scene, *this, ray, &t);
+    
+    return t * li + lv;
+}
+
+Spectrum Renderer::transmittance(const Scene &scene, const Ray &ray) const {
+    return _volumeIntegrator->transmittance(scene, *this, ray);
 }

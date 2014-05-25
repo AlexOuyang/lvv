@@ -159,7 +159,7 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
     // Multiply matrix by parent matrix
     matrix = parentMatrix * matrix;
 
-    // Import camera
+    // Import camera and lights
     if (camera && nameLowercase.find("camera") != std::string::npos) {
         PerspectiveCamera* perspectiveCamera = new PerspectiveCamera();
         
@@ -173,6 +173,12 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
             aiLight* light = assimpScene->mLights[i];
             if (std::string(light->mName.C_Str()) == name) {
                 LightAttributes attrs;
+                
+                if (light->mType == aiLightSource_DIRECTIONAL) {
+                    attrs.type = DirectionalLight;
+                } else if (light->mType == aiLightSource_POINT) {
+                    attrs.type = PointLight;
+                }
                 
                 attrs.position = importAssimpVec3(light->mPosition);
                 attrs.position = vec3(matrix * vec4(attrs.position, 1.0f));

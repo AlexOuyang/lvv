@@ -27,7 +27,8 @@ public:
     
     virtual void addSample(const CameraSample &sample, const Spectrum &L, float weight=1.0f);
     
-protected:
+    void applyFilters();
+    
     virtual void keyPressEvent(QKeyEvent * event);
     
 public slots:

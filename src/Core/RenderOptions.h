@@ -9,7 +9,9 @@
 #ifndef CSE168_Rendering_RenderOptions_h
 #define CSE168_Rendering_RenderOptions_h
 
+#include "Core.h"
 #include "SurfaceIntegrator.h"
+#include "VolumeIntegrator.h"
 #include "Sampling.h"
 
 class RenderOptions {
@@ -19,6 +21,7 @@ public:
     ~RenderOptions();
     
     SurfaceIntegrator* createSurfaceIntegrator();
+    VolumeIntegrator* createVolumeIntegrator();
     
     int             maxThreadsCount;
     SamplingConfig  antialiasingSampling;

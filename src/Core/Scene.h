@@ -13,6 +13,7 @@
 
 #include "Core/Core.h"
 #include "Aggregate.h"
+#include "Volume.h"
 #include "Light.h"
 
 class Scene {
@@ -23,11 +24,13 @@ public:
     
     void addLight(Light* light);
     void addPrimitive(Primitive* primitive);
+    void setVolume(Volume* volume);
     
     Scene& operator<<(Light* light);
     Scene& operator<<(Primitive* primitive);
     
-    const std::vector<Light*>   getLights() const;
+    const std::vector<Light*>&      getLights() const;
+    Volume*                         getVolume() const;
     
     bool intersect(const Ray& ray, Intersection* intersection) const;
     bool intersectP(const Ray& ray) const;
@@ -35,6 +38,7 @@ public:
 private:
     std::vector<Light*> _lights;
     Aggregate*          _aggregate;
+    Volume*             _volume;
 };
 
 #endif /* defined(__CSE168_Rendering__Scene__) */

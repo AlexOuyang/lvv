@@ -122,6 +122,14 @@ void cornellBox(Scene* &scene, Camera* &camera, QtFilm* &film) {
         Main::buildAccelerationStructures(dragonAggregate);
     }
     
+    // Create volume
+//    HomogeneousVolume* volume = new HomogeneousVolume(model->getBoundingBox());
+//    volume->setSigmaA(Spectrum(vec3(0.1f)));
+//    volume->setSigmaS(Spectrum(vec3(0.5f)));
+//    volume->setLe(Spectrum(0.1f));
+//    
+//    scene->setVolume(volume);
+    
     *scene << model;
     
     // Create camera

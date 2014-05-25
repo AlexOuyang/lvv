@@ -70,6 +70,13 @@ Spectrum PathTracingIntegrator::li(const Scene& scene, const Renderer& renderer,
                     continue;
                 }
                 
+                // Apply attenuation from scene volumes
+                li *= vt.transmittance(scene, renderer);
+                
+                if (li.isBlack()) {
+                    continue;
+                }
+                
                 float cosine = dot(wi, n);
                 if (cosine < 0) {
                     continue;
@@ -99,6 +106,7 @@ Spectrum PathTracingIntegrator::li(const Scene& scene, const Renderer& renderer,
             reflectedRay.tmax = INFINITY;
             reflectedRay.depth = ray.depth + 1;
             Spectrum li = renderer.li(scene, reflectedRay);
+            
             l += f * li;
         }
         

@@ -28,9 +28,14 @@ public:
     bool isBlack() const;
     
     Spectrum& operator+=(const Spectrum& s);
+    Spectrum& operator*=(const Spectrum& s);
+    Spectrum operator-() const;
     Spectrum operator+(const Spectrum& s) const;
+    Spectrum operator-(const Spectrum& s) const;
     Spectrum operator*(const Spectrum& s) const;
     Spectrum operator*(float v) const;
+    
+    static Spectrum exp(const Spectrum& s);
     
 private:
     vec3    _color;

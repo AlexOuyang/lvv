@@ -23,7 +23,8 @@ public:
     
     ~AABB();
     
-    bool    intersectP(const Ray& ray, float* t0, float* t1);
+    bool    intersectP(const Ray& ray, float* t0, float* t1) const;
+    bool    intersectP(const vec3& point) const;
     int     getMaxDimension() const;
     float   surfaceArea() const;
     

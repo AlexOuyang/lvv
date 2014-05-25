@@ -63,7 +63,7 @@ _timer(), _thread(nullptr), _continueRendering(true) {
     
     initMaterials();
     
-    base(_scene, _camera, _film);
+    cornellBox(_scene, _camera, _film);
     
     RenderOptions options;
     options.maxThreadsCount = -1;
@@ -71,16 +71,15 @@ _timer(), _thread(nullptr), _continueRendering(true) {
     options.antialiasingSampling.count = 1;
     options.antialiasingSampling.jittered = true;
     _renderer = new Renderer(options);
-    
-    connect(_film, SIGNAL(toggleRendering()), this, SLOT(toggleRendering()));
-    
-    _film->show();
-    
-    // Launch timer
-    _timer.start();
-    
-    // Launch rendering thread
-    _thread = new std::thread(&Main::renderThread, this);
+//    connect(_film, SIGNAL(toggleRendering()), this, SLOT(toggleRendering()));
+//    
+//    _film->show();
+//    
+//    // Launch timer
+//    _timer.start();
+//    
+//    // Launch rendering thread
+//    _thread = new std::thread(&Main::renderThread, this);
 }
 
 Main::~Main() {
@@ -106,6 +105,10 @@ void Main::renderThread() {
             qDebug() << "Rendered sample" << sampleCount
             << "in" << ellapsed << "s, avg"
             << avgSampleTime << "s";
+//            startClock("Applying filters");
+//            if (sampleCount%20 == 0)
+//                _film->applyFilters();
+//            endClock("Filters applied in ");
         } else {
             usleep(10*1000);
         }

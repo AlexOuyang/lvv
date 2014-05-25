@@ -16,8 +16,11 @@
 
 using namespace glm;
 
+#include <memory>
+
 #include <QDebug>
 
+class Spectrum;
 class Ray;
 class Intersection;
 class AABB;

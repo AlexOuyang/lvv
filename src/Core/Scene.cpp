@@ -11,12 +11,21 @@
 #include "Intersection.h"
 #include "Ray.h"
 
-Scene::Scene(Aggregate* aggregate) : _lights(), _aggregate(aggregate) {
+Scene::Scene(Aggregate* aggregate) : _lights(), _aggregate(aggregate), _volume(nullptr) {
     
 }
 
 Scene::~Scene() {
-    
+    // Cleanup
+    if (_aggregate) {
+        delete _aggregate;
+    }
+    if (_volume) {
+        delete _volume;
+    }
+    for (Light* light : _lights) {
+        delete light;
+    }
 }
 
 bool Scene::intersect(const Ray& ray, Intersection* intersection) const {
@@ -35,6 +44,10 @@ void Scene::addPrimitive(Primitive* primitive) {
     *_aggregate << primitive;
 }
 
+void Scene::setVolume(Volume* volume) {
+    _volume = volume;
+}
+
 Scene& Scene::operator<<(Light* light) {
     addLight(light);
     return *this;
@@ -45,6 +58,10 @@ Scene& Scene::operator<<(Primitive* primitive) {
     return *this;
 }
 
-const std::vector<Light*> Scene::getLights() const {
+const std::vector<Light*>& Scene::getLights() const {
     return _lights;
+}
+
+Volume* Scene::getVolume() const {
+    return _volume;
 }

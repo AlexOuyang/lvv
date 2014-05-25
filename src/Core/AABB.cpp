@@ -54,7 +54,7 @@ AABB::~AABB() {
     
 }
 
-bool AABB::intersectP(const Ray& ray, float* t0, float* t1) {
+bool AABB::intersectP(const Ray& ray, float* t0, float* t1) const {
     float hit0 = ray.tmin;
     float hit1 = ray.tmax;
     
@@ -83,6 +83,12 @@ bool AABB::intersectP(const Ray& ray, float* t0, float* t1) {
     *t0 = hit0;
     *t1 = hit1;
     return true;
+}
+
+bool AABB::intersectP(const vec3 &p) const {
+    return (p.x >= min.x && p.x <= max.x &&
+            p.y >= min.y && p.y <= max.y &&
+            p.z >= min.z && p.z <= max.z);
 }
 
 int AABB::getMaxDimension() const {

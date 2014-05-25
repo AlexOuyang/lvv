@@ -18,6 +18,7 @@ void atrium(Scene* &scene, Camera* &camera, QtFilm* &film) {
     AssimpImporter importer;
     importer.setDefaultMaterial(Main::matte);
     
+    AABB volumeBound;
     importer.setLightsCallback([&] (const AssimpImporter::LightAttributes& attrs) {
         DirectionalLight* sunlgt = new DirectionalLight();
         sunlgt->setSpectrum(Spectrum(vec3(1.0f, 1.0f, 0.9f)));
@@ -32,6 +33,9 @@ void atrium(Scene* &scene, Camera* &camera, QtFilm* &film) {
         qDebug() << name;
         if (name == "envmap") {
             return false;
+        } else if (name == "volume") {
+            volumeBound = tp->getBoundingBox();
+            return false;
         }
 
         return true;
@@ -44,6 +48,11 @@ void atrium(Scene* &scene, Camera* &camera, QtFilm* &film) {
     
     // Build acceleration structures
     Main::buildAccelerationStructures(model);
+    
+//    HomogeneousVolume* volume = new HomogeneousVolume(volumeBound);
+//    volume->setSigmaA(Spectrum(0.f));
+//    volume->setSigmaS(Spectrum(vec3(0.1f)));
+//    scene->setVolume(volume);
     
     *scene << model;
     

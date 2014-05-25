@@ -10,6 +10,7 @@
 
 #include "Integrators/WhittedIntegrator.h"
 #include "Integrators/PathTracingIntegrator.h"
+#include "Integrators/SingleScatteringIntegrator.h"
 
 RenderOptions::RenderOptions() :
 maxThreadsCount(-1),
@@ -25,4 +26,8 @@ RenderOptions::~RenderOptions() {
 SurfaceIntegrator* RenderOptions::createSurfaceIntegrator() {
     return new PathTracingIntegrator();
     //return new WhittedIntegrator();
+}
+
+VolumeIntegrator* RenderOptions::createVolumeIntegrator() {
+    return new SingleScatteringIntegrator();
 }

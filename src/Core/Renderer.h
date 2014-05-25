@@ -16,6 +16,7 @@
 #include "Scene.h"
 #include "Camera.h"
 #include "SurfaceIntegrator.h"
+#include "VolumeIntegrator.h"
 
 class Renderer {
 public:
@@ -48,11 +49,13 @@ public:
     void renderSample(const Scene& scene, Camera* camera, const CameraSample& sample) const;
     
     Spectrum li(const Scene& scene, const Ray& ray) const;
+    Spectrum transmittance(const Scene& scene, const Ray& ray) const;
     
     RenderOptions options;
     
 private:
     SurfaceIntegrator*  _surfaceIntegrator;
+    VolumeIntegrator*   _volumeIntegrator;
     int                 _samplesCount;
 };
 

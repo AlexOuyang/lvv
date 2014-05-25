@@ -9,6 +9,7 @@
 #ifndef __CSE168_Rendering__VisibilityTester__
 #define __CSE168_Rendering__VisibilityTester__
 
+#include "Core.h"
 #include "Ray.h"
 
 class Scene;
@@ -20,6 +21,7 @@ public:
     ~VisibilityTester();
     
     bool unoccluded(const Scene& scene) const;
+    Spectrum transmittance(const Scene& scene, const Renderer& renderer) const;
     
     void setSegment(const vec3& p1, float epsilon, const vec3& p2);
     void setRay(const vec3& origin, float epsilon, const vec3& direction);

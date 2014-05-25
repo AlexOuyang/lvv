@@ -9,8 +9,7 @@
 #include "VisibilityTester.h"
 
 #include "Scene.h"
-
-#include <QDebug>
+#include "Renderer.h"
 
 VisibilityTester::VisibilityTester(const Ray& ray) : _ray() {
     _ray.time = ray.time;
@@ -22,6 +21,10 @@ VisibilityTester::~VisibilityTester() {
 
 bool VisibilityTester::unoccluded(const Scene& scene) const {
     return !scene.intersectP(_ray);
+}
+
+Spectrum VisibilityTester::transmittance(const Scene &scene, const Renderer &renderer) const {
+    return renderer.transmittance(scene, _ray);
 }
 
 void VisibilityTester::setSegment(const vec3& p1, float epsilon, const vec3& p2) {

@@ -37,11 +37,17 @@ public:
         ShadingMode shadingMode;
     };
     
+    enum LightType {
+        DirectionalLight,
+        PointLight
+    };
+    
     struct LightAttributes {
-        vec3    position;
-        vec3    direction;
-        vec3    color;
-        float   intensity;
+        LightType   type;        
+        vec3        position;
+        vec3        direction;
+        vec3        color;
+        float       intensity;
     };
     
     typedef std::function<Material* (const MaterialAttributes&)> MaterialCallback;

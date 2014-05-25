@@ -76,7 +76,7 @@ bool Triangle::intersect(const Ray& ray, Intersection* intersection) const {
     
     // Reject if we have an alpha texture
     if (_mesh && _mesh->_alphaTexture) {
-        if (_mesh->_alphaTexture->evaluateFloat(uvs) == 0.0f) {
+        if (_mesh->_alphaTexture->evaluateFloat(uvs) < 0.1f) {
             return false;
         }
     }

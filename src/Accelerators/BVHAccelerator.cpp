@@ -15,6 +15,15 @@ BVHAccelerator::Node::Node()
     children[0] = children[1] = nullptr;
 }
 
+BVHAccelerator::Node::~Node() {
+    if (children[0]) {
+        delete children[0];
+    }
+    if (children[1]) {
+        delete children[1];
+    }
+}
+
 BVHAccelerator::BuildPrimitiveInfo::BuildPrimitiveInfo()
 : primitiveIndex(0), centroid(), boundingBox() {
     
@@ -53,7 +62,12 @@ BVHAccelerator::BVHAccelerator(SplitMethod splitMethod)
 }
 
 BVHAccelerator::~BVHAccelerator() {
-    
+    for (Primitive* p : _primitives) {
+        delete p;
+    }
+    if (_root) {
+        delete _root;
+    }
 }
 
 void BVHAccelerator::preprocess() {

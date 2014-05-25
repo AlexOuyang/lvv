@@ -57,8 +57,21 @@ Spectrum& Spectrum::operator+=(const Spectrum& s) {
     return *this;
 }
 
+Spectrum& Spectrum::operator*=(const Spectrum& s) {
+    _color *= s._color;
+    return *this;
+}
+
+Spectrum Spectrum::operator-() const {
+    return -_color;
+}
+
 Spectrum Spectrum::operator+(const Spectrum& s) const {
     return Spectrum(_color + s._color);
+}
+
+Spectrum Spectrum::operator-(const Spectrum& s) const {
+    return Spectrum(_color - s._color);
 }
 
 Spectrum Spectrum::operator*(const Spectrum& s) const {
@@ -67,6 +80,10 @@ Spectrum Spectrum::operator*(const Spectrum& s) const {
 
 Spectrum Spectrum::operator*(float v) const {
     return Spectrum(_color * v);
+}
+
+Spectrum Spectrum::exp(const Spectrum &s) {
+    return glm::exp(s._color);
 }
 
 Spectrum operator*(float v, const Spectrum& s) {
