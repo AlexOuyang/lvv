@@ -26,7 +26,7 @@ bool Shape::intersectP(const Ray&) const {
     abort();
 }
 
-void Shape::refine(std::vector<Shape*> &) const {
+void Shape::refine(std::vector<std::shared_ptr<Shape>> &) const {
     qDebug() << "Shape refine not implemented";
     abort();
 }

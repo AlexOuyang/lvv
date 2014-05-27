@@ -17,11 +17,13 @@
 class GeometricPrimitive : public Primitive {
 public:
     
-    GeometricPrimitive(Shape* shape, Material* material, AreaLight* areaLight=nullptr);
+    GeometricPrimitive(const std::shared_ptr<Shape>& shape,
+                       const std::shared_ptr<Material>& material,
+                       AreaLight* areaLight=nullptr);
     ~GeometricPrimitive();
     
-    Shape*  getShape() const;
-    void    setMaterial(Material* material);
+    std::shared_ptr<Shape> getShape() const;
+    void    setMaterial(const std::shared_ptr<Material>& material);
     
     virtual bool canIntersect() const;
     virtual bool intersect(const Ray& ray, Intersection* intersection) const;
@@ -34,9 +36,9 @@ public:
     virtual AreaLight* getAreaLight() const;
     
 private:
-    Shape*      _shape;
-    Material*   _material;
-    AreaLight*  _areaLight;
+    std::shared_ptr<Shape>      _shape;
+    std::shared_ptr<Material>   _material;
+    AreaLight*                  _areaLight;
 };
 
 #endif /* defined(__CSE168_Rendering__GeometricPrimitive__) */

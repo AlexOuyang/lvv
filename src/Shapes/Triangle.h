@@ -22,7 +22,7 @@ public:
     Triangle(Vertex* a, Vertex* b, Vertex* c);
     ~Triangle();
     
-    void setMesh(Mesh* mesh);
+    void setMesh(const std::shared_ptr<const Mesh>& mesh);
     void setVertices(Vertex* v1, Vertex* v2, Vertex* v3);
     
     Vertex* getVertex(int num) const;
@@ -32,8 +32,8 @@ public:
     virtual AABB getBoundingBox() const;
 
 private:
-    Vertex* _vertices[3];
-    Mesh*   _mesh;
+    Vertex*                     _vertices[3];
+    std::shared_ptr<const Mesh> _mesh;
 };
 
 #endif /* defined(__CSE168_Rendering__Triangle__) */

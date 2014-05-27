@@ -26,7 +26,7 @@ public:
     virtual bool intersect(const Ray& ray, Intersection* intersection) const;
     virtual bool intersectP(const Ray& ray) const;
     
-    virtual void refine(std::vector<Shape*> &refined) const;
+    virtual void refine(std::vector<std::shared_ptr<Shape>> &refined) const;
 };
 
 #endif /* defined(__CSE168_Rendering__Shape__) */

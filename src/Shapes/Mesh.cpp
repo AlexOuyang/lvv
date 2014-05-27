@@ -9,17 +9,16 @@
 #include "Mesh.h"
 
 Mesh::Mesh()
-: _verticesCount(0), _trianglesCount(0), _vertices(nullptr), _triangles(nullptr),
-_alphaTexture(nullptr) {
-    
+: _verticesCount(0), _trianglesCount(0), _vertices(nullptr), _indices(nullptr),
+_alphaTexture(nullptr) {    
 }
 
 Mesh::~Mesh() {
     if (_vertices) {
         delete[] _vertices;
     }
-    if (_triangles) {
-        delete[] _triangles;
+    if (_indices) {
+        delete[] _indices;
     }
 }
 
@@ -28,9 +27,9 @@ void Mesh::setVertices(int count, Vertex* vertices) {
     _vertices = vertices;
 }
 
-void Mesh::setTriangles(int count, Triangle* triangles) {
+void Mesh::setIndices(int count, int* indices) {
     _trianglesCount = count;
-    _triangles = triangles;
+    _indices = indices;
 }
 
 void Mesh::setAlphaTexture(Texture* texture) {
@@ -41,8 +40,12 @@ int Mesh::getTrianglesCount() const {
     return _trianglesCount;
 }
 
-Triangle* Mesh::getTriangles() const {
-    return _triangles;
+std::shared_ptr<Triangle> Mesh::getTriangle(int index) const {
+    std::shared_ptr<Triangle> t = std::make_shared<Triangle>(&_vertices[_indices[index*3+0]],
+                                                             &_vertices[_indices[index*3+1]],
+                                                             &_vertices[_indices[index*3+2]]);
+    t->setMesh(this->shared_from_this());
+    return t;
 }
 
 AABB Mesh::getBoundingBox() const {
@@ -58,9 +61,9 @@ bool Mesh::canIntersect() const {
     return false;
 }
 
-void Mesh::refine(std::vector<Shape*> &refined) const {
+void Mesh::refine(std::vector<std::shared_ptr<Shape>> &refined) const {
     refined.reserve(_trianglesCount);
     for (int i = 0; i < _trianglesCount; ++i) {
-        refined.push_back(new Triangle(_triangles[i]));
+        refined.push_back(getTriangle(i));
     }
 }

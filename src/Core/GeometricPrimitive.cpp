@@ -8,7 +8,8 @@
 
 #include "GeometricPrimitive.h"
 
-GeometricPrimitive::GeometricPrimitive(Shape* shape, Material* material, AreaLight* areaLight)
+GeometricPrimitive::GeometricPrimitive(const std::shared_ptr<Shape>& shape,
+                                       const std::shared_ptr<Material>& material, AreaLight* areaLight)
 : _shape(shape), _material(material), _areaLight(areaLight) {
     
 }
@@ -17,11 +18,11 @@ GeometricPrimitive::~GeometricPrimitive() {
     
 }
 
-Shape* GeometricPrimitive::getShape() const {
+std::shared_ptr<Shape> GeometricPrimitive::getShape() const {
     return _shape;
 }
 
-void GeometricPrimitive::setMaterial(Material *material) {
+void GeometricPrimitive::setMaterial(const std::shared_ptr<Material>& material) {
     _material = material;
 }
 
@@ -34,7 +35,7 @@ bool GeometricPrimitive::intersect(const Ray& ray, Intersection* intersection) c
         return false;
     }
     intersection->primitive = this;
-    intersection->material = _material;
+    intersection->material = _material.get();
     return true;
 }
 
@@ -47,10 +48,10 @@ AABB GeometricPrimitive::getBoundingBox() const {
 }
 
 void GeometricPrimitive::refine(std::vector<std::shared_ptr<Primitive>> &refined) const {
-    std::vector<Shape*> refinedShapes;
+    std::vector<std::shared_ptr<Shape>> refinedShapes;
     _shape->refine(refinedShapes);
     
-    for (Shape* s : refinedShapes) {
+    for (const std::shared_ptr<Shape>& s : refinedShapes) {
         refined.push_back(std::make_shared<GeometricPrimitive>(s, _material, _areaLight));
     }
 }

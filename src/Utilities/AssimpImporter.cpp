@@ -32,7 +32,7 @@ AssimpImporter::~AssimpImporter() {
     
 }
 
-void AssimpImporter::setDefaultMaterial(Material *material) {
+void AssimpImporter::setDefaultMaterial(const std::shared_ptr<Material>& material) {
     _defaultMaterial = material;
 }
 
@@ -48,8 +48,8 @@ void AssimpImporter::setLightsCallback(LightCallback callback) {
     _lightsCallback = callback;
 }
 
-bool AssimpImporter::importModel(Aggregate* aggregate, const std::string& filename,
-                                 Camera** camera) {
+bool AssimpImporter::importModel(const std::shared_ptr<Aggregate>& aggregate, const std::string& filename,
+                                 std::shared_ptr<Camera>* camera) {
     // Read the scene from the file
     const aiScene* assimpScene = _importer.ReadFile(filename, 0
                                                     | aiProcess_Triangulate
@@ -109,25 +109,25 @@ bool AssimpImporter::importAssimpMaterials(const aiScene* assimpScene) {
                 break;
         }
         
-        Material* material = _defaultMaterial;
+        std::shared_ptr<Material> material = _defaultMaterial;
         
         if (_materialCallback) {
             material = _materialCallback(attrs);
         }
         
         if (!material || !_materialCallback) {
-            Matte* matte;
+            std::shared_ptr<Matte> matte;
             if (!attrs.texturePath.empty()) {
-                Texture* t = ImageLoading::LoadImage(attrs.texturePath);
+                std::shared_ptr<Texture> t = ImageLoading::LoadImage(attrs.texturePath);
                 if (!t) {
                     std::cerr << "AssimImporter Error: couldn't load texture " << attrs.texturePath << std::endl;
-                    matte = new Matte();
+                    matte = std::make_shared<Matte>();
                     matte->setColor(attrs.color);
                 } else {
-                    matte = new Matte(t);
+                    matte = std::make_shared<Matte>(t);
                 }
             } else {
-                matte = new Matte();
+                matte = std::make_shared<Matte>();
                 matte->setColor(attrs.color);
             }
             material = matte;
@@ -138,8 +138,9 @@ bool AssimpImporter::importAssimpMaterials(const aiScene* assimpScene) {
     return true;
 }
 
-bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assimpScene,
-                                      aiNode* assimpNode, Camera** camera,
+bool AssimpImporter::importAssimpNode(const std::shared_ptr<Aggregate>& aggregate,
+                                      const aiScene* assimpScene,
+                                      aiNode* assimpNode, std::shared_ptr<Camera>* camera,
                                       const mat4x4& parentMatrix) {
     
     std::string name = assimpNode->mName.C_Str();
@@ -160,8 +161,8 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
     matrix = parentMatrix * matrix;
 
     // Import camera and lights
-    if (camera && nameLowercase.find("camera") != std::string::npos) {
-        PerspectiveCamera* perspectiveCamera = new PerspectiveCamera();
+    if (camera && nameLowercase.find("camera") != std::string::npos) {        
+        std::shared_ptr<PerspectiveCamera> perspectiveCamera = std::make_shared<PerspectiveCamera>();
         
         perspectiveCamera->setTransform(Transform(matrix));
         aiCamera* assimpCamera = assimpScene->mCameras[0];
@@ -206,8 +207,8 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
             continue ;
         }
         
-        Mesh* mesh = new Mesh();
-        Material* material;
+        std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
+        std::shared_ptr<Material> material;
         
         if (assimpMesh->mMaterialIndex >= _materials.size()) {
             material = _defaultMaterial;
@@ -242,25 +243,24 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
                 _trianglesCount += 1;
             }
         }
-        Triangle* triangles = new Triangle[trianglesCount];
+        int* indices = new int[trianglesCount*3];
         uint faceId = 0;
         for (uint j = 0; j < assimpMesh->mNumFaces; ++j) {
             if (assimpMesh->mFaces[j].mNumIndices == 3) {
-                Vertex* a = &vertices[assimpMesh->mFaces[j].mIndices[0]];
-                Vertex* b = &vertices[assimpMesh->mFaces[j].mIndices[1]];
-                Vertex* c = &vertices[assimpMesh->mFaces[j].mIndices[2]];
-                triangles[faceId] = Triangle(a, b, c);
-                triangles[faceId].setMesh(mesh);
+                indices[faceId*3+0] = assimpMesh->mFaces[j].mIndices[0];
+                indices[faceId*3+1] = assimpMesh->mFaces[j].mIndices[1];
+                indices[faceId*3+2] = assimpMesh->mFaces[j].mIndices[2];
                 ++faceId;
             }
         }
         
         mesh->setVertices(verticesCount, vertices);
-        mesh->setTriangles(trianglesCount, triangles);
+        mesh->setIndices(trianglesCount, indices);
         
         // Create transformed primitive
         Transform transform(matrix);
-        std::shared_ptr<TransformedPrimitive> transformed = std::make_shared<TransformedPrimitive>(primitive, transform);
+        std::shared_ptr<TransformedPrimitive> transformed = std::make_shared<TransformedPrimitive>(primitive,
+                                                                                                   transform);
 
         if (!name.empty()) {
             transformed->setName(name);
@@ -272,7 +272,7 @@ bool AssimpImporter::importAssimpNode(Aggregate* aggregate, const aiScene* assim
         
         // Apply custom setup to primitive
         if (_primitivesCallback) {
-            if (!_primitivesCallback(transformed.get(), primitive.get())) {
+            if (!_primitivesCallback(transformed, primitive)) {
                 continue;
             }
         }

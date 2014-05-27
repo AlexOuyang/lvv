@@ -9,6 +9,7 @@
 #ifndef CSE168_Rendering_Material_h
 #define CSE168_Rendering_Material_h
 
+#include "Core.h"
 #include "Spectrum.h"
 #include "Intersection.h"
 
@@ -22,7 +23,12 @@ public:
         BSDFAll             = BSDFReflection | BSDFTransmission | BSDFDiffuse
     };
     
-    virtual ~Material() {};
+    static std::shared_ptr<Material> Load(const rapidjson::Value& value);
+    
+    virtual ~Material() { };
+    
+    const std::string& getName() const;
+    void setName(const std::string& name);
     
     virtual Spectrum transmittedLight(float distance) const;
     
@@ -44,6 +50,9 @@ public:
     static vec3 cosineSampleHemisphere();
     
     static vec3 surfaceToWorld(const vec3& v, const Intersection& intersection);
+    
+private:
+    std::string _name;
 };
 
 #endif

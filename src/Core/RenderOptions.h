@@ -17,15 +17,28 @@
 class RenderOptions {
 public:
     
+    enum SurfaceIntegrator {
+        PathTracingIntegrator,
+        WhittedIntegrator
+    };
+    
+    enum VolumeIntegrator {
+        SingleScatteringIntegrator
+    };
+    
+    static RenderOptions Load(const rapidjson::Value& value);
+    
     RenderOptions();
     ~RenderOptions();
     
-    SurfaceIntegrator* createSurfaceIntegrator();
-    VolumeIntegrator* createVolumeIntegrator();
+    ::SurfaceIntegrator* createSurfaceIntegrator();
+    ::VolumeIntegrator* createVolumeIntegrator();
     
-    int             maxThreadsCount;
-    SamplingConfig  antialiasingSampling;
-    int             maxRayDepth;
+    int                 maxThreadsCount;
+    SamplingConfig      antialiasingSampling;
+    int                 maxRayDepth;
+    SurfaceIntegrator   surfaceIntegrator;
+    VolumeIntegrator    volumeIntegrator;
 };
 
 #endif

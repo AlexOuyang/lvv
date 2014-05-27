@@ -8,6 +8,36 @@
 
 #include "Glass.h"
 
+#include "Core/Texture.h"
+
+std::shared_ptr<Glass> Glass::Load(const rapidjson::Value& value) {
+    std::shared_ptr<Glass> material = std::make_shared<Glass>();
+    
+    if (value.HasMember("name")) {
+        material->setName(value["name"].GetString());
+    }
+    if (value.HasMember("indexIn")) {
+        material->setIndexIn(value["indexIn"].GetDouble());
+    }
+    if (value.HasMember("indexOut")) {
+        material->setIndexOut(value["indexOut"].GetDouble());
+    }
+    if (value.HasMember("absorptionColor")) {
+        std::shared_ptr<Texture> texture = Texture::Load(value["absorptionColor"]);
+        if (texture) {
+            material->setAbsorptionColor(texture->evaluateVec3(vec2()));
+        }
+    }
+    if (value.HasMember("absorptionCoeff")) {
+        material->setAbsorptionCoeff(value["absorptionCoeff"].GetDouble());
+    }
+    if (value.HasMember("roughness")) {
+        material->setRoughness(value["roughness"].GetDouble());
+    }
+    
+    return material;
+}
+
 Glass::Glass() : Material(),
 _indexIn(1.0f), _indexOut(1.0f),
 _absorptionColor(vec3(1.0f)), _absorptionCoeff(0.0f), _roughness(0.2f) {

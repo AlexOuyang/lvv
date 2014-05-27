@@ -50,35 +50,38 @@ public:
         float       intensity;
     };
     
-    typedef std::function<Material* (const MaterialAttributes&)> MaterialCallback;
-    typedef std::function<bool (TransformedPrimitive*, GeometricPrimitive*)> PrimitiveCallback;
+    typedef std::function<std::shared_ptr<Material> (const MaterialAttributes&)> MaterialCallback;
+    typedef std::function<bool (const std::shared_ptr<TransformedPrimitive>&,
+                                const std::shared_ptr<GeometricPrimitive>&)> PrimitiveCallback;
     typedef std::function<void (const LightAttributes&)> LightCallback;
     
     AssimpImporter();
     ~AssimpImporter();
     
-    void setDefaultMaterial(Material* material);
+    void setDefaultMaterial(const std::shared_ptr<Material>& material);
     void setMaterialCallback(MaterialCallback callback);
     void setPrimitivesCallback(PrimitiveCallback callback);
     void setLightsCallback(LightCallback callback);
     
-    bool importModel(Aggregate* aggregate, const std::string& filename, Camera** camera=nullptr);
+    bool importModel(const std::shared_ptr<Aggregate>& aggregate, const std::string&
+                     filename, std::shared_ptr<Camera>* camera=nullptr);
     
     bool importAssimpMaterials(const aiScene* assimpScene);
-    bool importAssimpNode(Aggregate* aggregate, const aiScene* assimpScene,
-                          aiNode* assimpNode, Camera** camera=nullptr,
+    bool importAssimpNode(const std::shared_ptr<Aggregate>& aggregate,
+                          const aiScene* assimpScene,
+                          aiNode* assimpNode, std::shared_ptr<Camera>* camera=nullptr,
                           const mat4x4& parentMatrix=mat4x4());
     
     vec3 importAssimpVec3(const aiVector3D& v);
     
 private:
-    Assimp::Importer        _importer;
-    std::vector<Material*>  _materials;
-    int                     _trianglesCount;
-    MaterialCallback        _materialCallback;
-    Material*               _defaultMaterial;
-    PrimitiveCallback       _primitivesCallback;
-    LightCallback           _lightsCallback;
+    Assimp::Importer                        _importer;
+    std::vector<std::shared_ptr<Material>>  _materials;
+    int                                     _trianglesCount;
+    MaterialCallback                        _materialCallback;
+    std::shared_ptr<Material>               _defaultMaterial;
+    PrimitiveCallback                       _primitivesCallback;
+    LightCallback                           _lightsCallback;
 };
 
 #endif /* defined(__CSE168_Rendering__AssimpImporter__) */

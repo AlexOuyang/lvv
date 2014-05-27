@@ -11,7 +11,48 @@
 #include "Intersection.h"
 #include "Ray.h"
 
-Scene::Scene(Aggregate* aggregate) : _lights(), _aggregate(aggregate), _volume(nullptr) {
+#include "ListAggregate.h"
+#include "accelerators/BVHAccelerator.h"
+#include "Material.h"
+
+std::shared_ptr<Scene> Scene::Load(const rapidjson::Value& value) {
+    std::shared_ptr<Scene> scene;
+    Aggregate* aggregate = nullptr;
+    
+    // Create aggregate
+    if (value.HasMember("aggregate")) {
+        std::string str = value["aggregate"].GetString();
+        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+        if (str == "list") {
+            aggregate = new ListAggregate();
+        } else if (str == "bvh") {
+            aggregate = new BVHAccelerator();
+        }
+    }
+    if (!aggregate) {
+        aggregate = new ListAggregate();
+    }
+    
+    // Create scene
+    scene = std::make_shared<Scene>(aggregate);
+    
+    // Load materials
+    if (value.HasMember("materials")) {
+        const rapidjson::Value& materials = value["materials"];
+        if (materials.IsArray()) {
+            for (int i = 0, l = materials.Size(); i < l; ++i) {
+                std::shared_ptr<Material> material = Material::Load(materials[i]);
+                if (!material->getName().empty()) {
+                    scene->addMaterial(material->getName(), material);
+                }
+            }
+        }
+    }
+    
+    return scene;
+}
+
+Scene::Scene(Aggregate* aggregate) : _lights(), _aggregate(aggregate), _volume(nullptr), _materials() {
     
 }
 
@@ -64,4 +105,12 @@ const std::vector<Light*>& Scene::getLights() const {
 
 Volume* Scene::getVolume() const {
     return _volume;
+}
+
+void Scene::addMaterial(const std::string& name, std::shared_ptr<Material> mtl) {
+    _materials[name] = mtl;
+}
+
+std::shared_ptr<Material> Scene::getMaterial(const std::string& name) {
+    return _materials[name];
 }

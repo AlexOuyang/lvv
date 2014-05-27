@@ -14,6 +14,8 @@
 class Glass : public Material {
 public:
     
+    static std::shared_ptr<Glass> Load(const rapidjson::Value& value);
+    
     Glass();
     ~Glass();
 

@@ -15,11 +15,11 @@ AreaLight* AreaLight::CreateFromMesh(Mesh* mesh, const Transform& t, bool invers
         return nullptr;
     }
     AreaLight* light = new AreaLight();
-    Triangle* triangles = mesh->getTriangles();
+    std::shared_ptr<Triangle> triangle = mesh->getTriangle(0);
     vec3
-        p1 = t(triangles[0].getVertex((0+indexOffset)%3)->position),
-        p2 = t(triangles[0].getVertex((1+indexOffset)%3)->position),
-        p3 = t(triangles[0].getVertex((2+indexOffset)%3)->position)
+        p1 = t(triangle->getVertex((0+indexOffset)%3)->position),
+        p2 = t(triangle->getVertex((1+indexOffset)%3)->position),
+        p3 = t(triangle->getVertex((2+indexOffset)%3)->position)
     ;
     light->setPoints(p1, p2, p3);
     vec3 normal = normalize(cross(p2 - p1, p3 - p1));

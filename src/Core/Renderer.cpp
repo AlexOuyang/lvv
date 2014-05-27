@@ -45,6 +45,14 @@ void Renderer::Task::run() {
     delete[] samples;
 }
 
+std::shared_ptr<Renderer> Renderer::Load(const rapidjson::Value& value) {
+    std::shared_ptr<Renderer> renderer;
+    
+    RenderOptions options = RenderOptions::Load(value["options"]);
+    renderer = std::make_shared<Renderer>();
+    return renderer;
+}
+
 Renderer::Renderer(RenderOptions options)
 : options(options), _surfaceIntegrator(nullptr), _volumeIntegrator(nullptr), _samplesCount(0) {
     _surfaceIntegrator = options.createSurfaceIntegrator();

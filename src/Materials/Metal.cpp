@@ -8,12 +8,46 @@
 
 #include "Metal.h"
 
-Metal::Metal() : Material(), _eta(2.485f), _k(3.433f), _roughness(0.2f), _color() {
+std::shared_ptr<Metal> Metal::Load(const rapidjson::Value& value) {
+    std::shared_ptr<Metal> material = std::make_shared<Metal>();
+    
+    if (value.HasMember("name")) {
+        material->setName(value["name"].GetString());
+    }
+    if (value.HasMember("eta")) {
+        material->setEta(value["eta"].GetDouble());
+    }
+    if (value.HasMember("k")) {
+        material->setK(value["k"].GetDouble());
+    }
+    if (value.HasMember("roughness")) {
+        material->setRoughness(value["roughness"].GetDouble());
+    }
+    if (value.HasMember("color")) {
+        std::shared_ptr<Texture> texture = Texture::Load(value["color"]);
+        if (texture) {
+            material->setColor(texture);
+        }
+    }
+    
+    return material;
+}
+
+Metal::Metal() : Material(), _eta(2.485f), _k(3.433f), _roughness(0.2f),
+_color(std::make_shared<UniformVec3Texture>()) {
     
 }
 
 Metal::~Metal() {
     
+}
+
+void Metal::setEta(float eta) {
+    _eta = eta;
+}
+
+void Metal::setK(float k) {
+    _k = k;
 }
 
 void Metal::setIndices(float eta, float k) {
@@ -26,6 +60,10 @@ void Metal::setRoughness(float roughness) {
 }
 
 void Metal::setColor(const vec3& color) {
+    _color = std::make_shared<UniformVec3Texture>(color);
+}
+
+void Metal::setColor(const std::shared_ptr<Texture>& color) {
     _color = color;
 }
 
@@ -34,7 +72,7 @@ Spectrum Metal::evaluateBSDF(const vec3& wo, const vec3& wi,
     float cosi = glm::abs(glm::dot(wo, intersection.normal));
     float f = fresnelConductor(cosi, _eta, _k);
     float cookTorrance = cookTorranceReflection(wo, wi, intersection.normal, _roughness, f);
-    return Spectrum(_color) * cookTorrance;
+    return Spectrum(_color->evaluateVec3(intersection.uv)) * cookTorrance;
 }
 
 Spectrum Metal::sampleBSDF(const vec3& wo, vec3* wi, const Intersection& intersection,
@@ -44,5 +82,5 @@ Spectrum Metal::sampleBSDF(const vec3& wo, vec3* wi, const Intersection& interse
     }
     *wi = glm::reflect(-wo, intersection.normal);
     float cosi = glm::abs(glm::dot(wo, intersection.normal));
-    return _color * fresnelConductor(cosi, _eta, _k);
+    return Spectrum(_color->evaluateVec3(intersection.uv)) * fresnelConductor(cosi, _eta, _k);
 }

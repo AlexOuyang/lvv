@@ -8,14 +8,51 @@
 
 #include "RenderOptions.h"
 
+#include <algorithm>
+
 #include "Integrators/WhittedIntegrator.h"
 #include "Integrators/PathTracingIntegrator.h"
 #include "Integrators/SingleScatteringIntegrator.h"
 
+RenderOptions RenderOptions::Load(const rapidjson::Value& value) {
+    RenderOptions options;
+    
+    if (value.HasMember("maxThreadsCount")) {
+        options.maxThreadsCount = value["maxThreadsCount"].GetInt();
+    }
+    if (value.HasMember("antialiasingSampling")) {
+        options.antialiasingSampling = SamplingConfig::Load(value["antialiasingSampling"]);
+    }
+    if (value.HasMember("maxRayDepth")) {
+        options.maxRayDepth = value["maxRayDepth"].GetInt();
+    }
+    if (value.HasMember("surfaceIntegrator")) {
+        std::string str = value["surfaceIntegrator"].GetString();
+        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+        
+        if (str == "pathtracing") {
+            options.surfaceIntegrator = PathTracingIntegrator;
+        } else if (str == "whitted") {
+            options.surfaceIntegrator = WhittedIntegrator;
+        }
+    }
+    if (value.HasMember("volumeIntegrator")) {
+        std::string str = value["volumeIntegrator"].GetString();
+        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+        
+        if (str == "singlescattering") {
+            options.volumeIntegrator = SingleScatteringIntegrator;
+        }
+    }
+    return options;
+}
+
 RenderOptions::RenderOptions() :
 maxThreadsCount(-1),
 antialiasingSampling(1, true, SamplingConfig::ShirleyDistribution),
-maxRayDepth(5) {
+maxRayDepth(5),
+surfaceIntegrator(PathTracingIntegrator),
+volumeIntegrator(SingleScatteringIntegrator) {
     
 }
 
@@ -23,11 +60,18 @@ RenderOptions::~RenderOptions() {
     
 }
 
-SurfaceIntegrator* RenderOptions::createSurfaceIntegrator() {
-    return new PathTracingIntegrator();
-    //return new WhittedIntegrator();
+::SurfaceIntegrator* RenderOptions::createSurfaceIntegrator() {
+    if (surfaceIntegrator == PathTracingIntegrator) {
+        return new ::PathTracingIntegrator();
+    } else if (surfaceIntegrator == WhittedIntegrator) {
+        return new ::WhittedIntegrator();
+    }
+    return nullptr;
 }
 
-VolumeIntegrator* RenderOptions::createVolumeIntegrator() {
-    return new SingleScatteringIntegrator();
+::VolumeIntegrator* RenderOptions::createVolumeIntegrator() {
+    if (volumeIntegrator == SingleScatteringIntegrator) {
+        return new ::SingleScatteringIntegrator();
+    }
+    return nullptr;
 }

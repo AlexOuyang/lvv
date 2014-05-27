@@ -17,7 +17,7 @@
 
 #include <vector>
 
-class Mesh : public Shape {
+class Mesh : public Shape, public std::enable_shared_from_this<Mesh> {
 public:
 
     friend class Triangle;
@@ -26,23 +26,23 @@ public:
     virtual ~Mesh();
     
     void setVertices(int count, Vertex* vertices);
-    void setTriangles(int count, Triangle* triangles);
+    void setIndices(int count, int* indices);
     void setAlphaTexture(Texture* texture);
     
-    int         getTrianglesCount() const;
-    Triangle*   getTriangles() const;
+    int                         getTrianglesCount() const;
+    std::shared_ptr<Triangle>   getTriangle(int index) const;
     
     virtual AABB getBoundingBox() const;
     
     virtual bool canIntersect() const;
 
-    virtual void refine(std::vector<Shape*> &refined) const;
+    virtual void refine(std::vector<std::shared_ptr<Shape>> &refined) const;
 
 private:
     int         _verticesCount;
     int         _trianglesCount;
     Vertex*     _vertices;
-    Triangle*   _triangles;
+    int*        _indices;
     Texture*    _alphaTexture;
 };
 

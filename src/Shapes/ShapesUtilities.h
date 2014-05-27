@@ -13,7 +13,7 @@
 
 namespace ShapesUtilities {
 
-    Mesh* CreateBox(float x, float y, float z);
+    std::shared_ptr<Mesh> CreateBox(float x, float y, float z);
     
 }
 

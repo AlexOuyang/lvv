@@ -14,6 +14,8 @@
 class Texture {
 public:
     
+    static std::shared_ptr<Texture> Load(const rapidjson::Value& value);
+    
     virtual ~Texture();
     
     virtual float evaluateFloat(const vec2& pos) const;

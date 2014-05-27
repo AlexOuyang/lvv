@@ -57,7 +57,7 @@ bool BVHAccelerator::ComparePoints::operator()(const BuildPrimitiveInfo& a,
 }
 
 BVHAccelerator::BVHAccelerator(SplitMethod splitMethod)
-: _splitMethod(splitMethod), _primitives() {
+: _splitMethod(splitMethod), _primitives(), _root(nullptr) {
     
 }
 

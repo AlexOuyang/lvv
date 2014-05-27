@@ -9,18 +9,22 @@
 #ifndef __CSE168_Rendering__Matte__
 #define __CSE168_Rendering__Matte__
 
+#include "Core/Core.h"
 #include "Core/Material.h"
 #include "Core/Texture.h"
 
 class Matte : public Material {
 public:
     
+    static std::shared_ptr<Matte> Load(const rapidjson::Value& value);
+    
     Matte(const vec3& color=vec3(1.f));
-    Matte(Texture* color);
+    Matte(const std::shared_ptr<Texture>& color);
     virtual ~Matte();
     
-    void        setColor(const vec3& color);
-    Texture*    getColor() const;
+    void                        setColor(const vec3& color);
+    void                        setColor(const std::shared_ptr<Texture>& color);
+    std::shared_ptr<Texture>    getColor() const;
     
     virtual Spectrum evaluateBSDF(const vec3& wo, const vec3& wi,
                                   const Intersection& intersection) const;
@@ -28,7 +32,7 @@ public:
                                 BxDFType type) const;
     
 private:
-    Texture*    _color;
+    std::shared_ptr<Texture>    _color;
 };
 
 #endif /* defined(__CSE168_Rendering__Matte__) */

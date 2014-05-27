@@ -13,13 +13,16 @@
 
 struct SamplingConfig {
     
+    static SamplingConfig Load(const rapidjson::Value& value);
+    
     enum SamplingDistribution {
         UniformDistribution,
         GaussDistribution,
         ShirleyDistribution
     };
     
-    SamplingConfig(int sc, bool jit, SamplingDistribution dist);
+    SamplingConfig(int sc=1, bool jit=true,
+                   SamplingDistribution dist=UniformDistribution);
     
     int                     count;
     bool                    jittered;

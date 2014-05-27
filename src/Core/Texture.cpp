@@ -6,7 +6,57 @@
 //
 //
 
+#include <sstream>
+
 #include "Texture.h"
+
+#include "Spectrum.h"
+
+std::shared_ptr<Texture> Texture::Load(const rapidjson::Value& value) {
+    std::shared_ptr<Texture> texture;
+    
+    if (!value.HasMember("type")) {
+        return texture;
+    }
+    std::string type = value["type"].GetString();
+    if (type == "rgb" || type == "float" || type == "hex") {
+        if (!value.HasMember("value")) {
+            return texture;
+        }
+        bool isSingleFloat = false;
+        float floatValue;
+        vec3 color;
+        if (type == "hex") {
+            std::stringstream valueStream(value["value"].GetString());
+            int intValue;
+            valueStream >> std::hex >> intValue;
+            color = Spectrum(intValue).getColor();
+        } else {
+            const rapidjson::Value& components = value["value"];
+            if (components.IsNumber()) {
+                isSingleFloat = true;
+                floatValue = components.GetDouble();
+            } else {
+                if (!components.IsArray() || components.Size() != 3) {
+                    return texture;
+                }
+                color = vec3((float)components[0u].GetDouble(),
+                             (float)components[1u].GetDouble(),
+                             (float)components[2u].GetDouble());
+                if (type == "rgb") {
+                    color /= 255.f;
+                }
+            }
+        }
+        if (isSingleFloat) {
+            texture = std::make_shared<UniformFloatTexture>(floatValue);
+        } else {
+            texture = std::make_shared<UniformVec3Texture>(color);
+        }
+    }
+    
+    return texture;
+}
 
 Texture::~Texture() {
     
@@ -78,7 +128,9 @@ _data(nullptr), _width(0), _height(0), _scaleFactor(1.f) {
 }
 
 FloatTexture::~FloatTexture() {
-    
+    if (_data) {
+        delete[] _data;
+    }
 }
 
 void FloatTexture::setData(int width, int height, float* data) {
@@ -109,7 +161,9 @@ _data(nullptr), _width(0), _height(0), _scaleFactor(1.f) {
 }
 
 IntTexture::~IntTexture() {
-    
+    if (_data) {
+        delete[] _data;
+    }
 }
 
 void IntTexture::setData(int width, int height, uint32_t* data) {

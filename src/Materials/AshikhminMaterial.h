@@ -9,20 +9,27 @@
 #ifndef __CSE168_Rendering__AshikhminMaterial__
 #define __CSE168_Rendering__AshikhminMaterial__
 
+#include "Core/Core.h"
 #include "Core/Material.h"
 #include "Core/Texture.h"
 
 class AshikhminMaterial : public Material {
 public:
     
+    static std::shared_ptr<AshikhminMaterial> Load(const rapidjson::Value& value);
+    
     AshikhminMaterial();
     virtual ~AshikhminMaterial();
     
-    void setDiffuseColor(Texture* t);
-    void setSpecularColor(Texture* t);
-    void setDiffuseIntensity(Texture* t);
-    void setSpecularIntensity(Texture* t);
-    void setRoughness(Texture* tu, Texture* tv);
+    void setDiffuseColor(const std::shared_ptr<Texture>& t);
+    void setSpecularColor(const std::shared_ptr<Texture>& t);
+    void setDiffuseIntensity(const std::shared_ptr<Texture>& t);
+    void setSpecularIntensity(const std::shared_ptr<Texture>& t);
+    
+    void setRoughnessU(const std::shared_ptr<Texture>& tu);
+    void setRoughnessV(const std::shared_ptr<Texture>& tv);
+    void setRoughness(const std::shared_ptr<Texture>& tu,
+                      const std::shared_ptr<Texture>& tv);
     
     void setDiffuseColor(const vec3& color);
     void setSpecularColor(const vec3& color);
@@ -36,12 +43,12 @@ public:
                                 BxDFType type) const;
     
 private:
-    Texture*    _diffuseColor;
-    Texture*    _specularColor;
-    Texture*    _diffuseIntensity;
-    Texture*    _specularIntensity;
-    Texture*    _roughnessU;
-    Texture*    _roughnessV;
+    std::shared_ptr<Texture>    _diffuseColor;
+    std::shared_ptr<Texture>    _specularColor;
+    std::shared_ptr<Texture>    _diffuseIntensity;
+    std::shared_ptr<Texture>    _specularIntensity;
+    std::shared_ptr<Texture>    _roughnessU;
+    std::shared_ptr<Texture>    _roughnessV;
 };
 
 #endif /* defined(__CSE168_Rendering__AshikhminMaterial__) */

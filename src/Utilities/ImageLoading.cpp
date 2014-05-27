@@ -10,7 +10,7 @@
 
 #include <QImage>
 
-Texture* ImageLoading::LoadImage(const std::string& filename) {
+std::shared_ptr<Texture> ImageLoading::LoadImage(const std::string& filename) {
     QImage image(filename.c_str());
     
     if (image.isNull()) {
@@ -25,13 +25,13 @@ Texture* ImageLoading::LoadImage(const std::string& filename) {
     const uint32_t* bits = (const uint32_t*)converted.bits();
     std::copy(bits, bits+(size/sizeof(uint32_t)), data);
     
-    IntTexture* texture = new IntTexture();
+    std::shared_ptr<IntTexture> texture = std::make_shared<IntTexture>();
     texture->setData(converted.width(), converted.height(), data);
     
     return texture;
 }
 
-Texture* ImageLoading::LoadFloatImage(const std::string& filename) {
+std::shared_ptr<Texture> ImageLoading::LoadFloatImage(const std::string& filename) {
     QImage image(filename.c_str());
     
     if (image.isNull()) {
@@ -55,7 +55,7 @@ Texture* ImageLoading::LoadFloatImage(const std::string& filename) {
         data[i] = (value.x + value.y + value.z) / 3.f;
     }
     
-    FloatTexture* texture = new FloatTexture();
+    std::shared_ptr<FloatTexture> texture = std::make_shared<FloatTexture>();
     texture->setData(converted.width(), converted.height(), data);
     
     return texture;

@@ -11,21 +11,20 @@
 #include "Core/Ray.h"
 #include "Shapes/Mesh.h"
 
-Triangle::Triangle() : _vertices(), _mesh(nullptr) {
+Triangle::Triangle() : _vertices(), _mesh() {
     
 }
 
-Triangle::Triangle(Vertex* a, Vertex* b, Vertex* c) : _vertices(), _mesh(nullptr) {
+Triangle::Triangle(Vertex* a, Vertex* b, Vertex* c) : _vertices(), _mesh() {
     _vertices[0] = a;
     _vertices[1] = b;
     _vertices[2] = c;    
 }
 
 Triangle::~Triangle() {
-    
 }
 
-void Triangle::setMesh(Mesh* mesh) {
+void Triangle::setMesh(const std::shared_ptr<const Mesh>& mesh) {
     _mesh = mesh;
 }
 

@@ -8,6 +8,43 @@
 
 #include "Material.h"
 
+#include "Materials/Matte.h"
+#include "Materials/Metal.h"
+#include "Materials/Glass.h"
+#include "Materials/Glossy.h"
+#include "Materials/AshikhminMaterial.h"
+
+std::shared_ptr<Material> Material::Load(const rapidjson::Value& value) {
+    std::shared_ptr<Material> material;
+    
+    if (!value.HasMember("type")) {
+        return material;
+    }
+    std::string type = value["type"].GetString();
+    std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+    if (type == "ashikhmin") {
+        material = AshikhminMaterial::Load(value);
+    } else if (type == "matte") {
+        material = Matte::Load(value);
+    } else if (type == "metal") {
+        material = Metal::Load(value);
+    } else if (type == "glass") {
+        material = Glass::Load(value);
+    } else if (type == "glossy") {
+        material = Glossy::Load(value);
+    }
+    
+    return material;
+}
+
+const std::string& Material::getName() const {
+    return _name;
+}
+
+void Material::setName(const std::string& name) {
+    _name = name;
+}
+
 Spectrum Material::transmittedLight(float) const {
     return Spectrum(0.0f);
 }

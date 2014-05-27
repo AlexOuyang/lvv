@@ -8,13 +8,59 @@
 
 #include "AshikhminMaterial.h"
 
+std::shared_ptr<AshikhminMaterial> AshikhminMaterial::Load(const rapidjson::Value& value) {
+    std::shared_ptr<AshikhminMaterial> material = std::make_shared<AshikhminMaterial>();
+    
+    if (value.HasMember("name")) {
+        material->setName(value["name"].GetString());
+    }
+    if (value.HasMember("diffuseColor")) {
+        std::shared_ptr<Texture> texture = Texture::Load(value["diffuseColor"]);
+        if (texture) {
+            material->setDiffuseColor(texture);
+        }
+    }
+    if (value.HasMember("specularColor")) {
+        std::shared_ptr<Texture> texture = Texture::Load(value["specularColor"]);
+        if (texture) {
+            material->setSpecularColor(texture);
+        }
+    }
+    if (value.HasMember("diffuseIntensity")) {
+        std::shared_ptr<Texture> texture = Texture::Load(value["diffuseIntensity"]);
+        if (texture) {
+            material->setDiffuseIntensity(texture);
+        }
+    }
+    if (value.HasMember("specularIntensity")) {
+        std::shared_ptr<Texture> texture = Texture::Load(value["specularIntensity"]);
+        if (texture) {
+            material->setSpecularIntensity(texture);
+        }
+    }
+    if (value.HasMember("roughnessU")) {
+        std::shared_ptr<Texture> texture = Texture::Load(value["roughnessU"]);
+        if (texture) {
+            material->setRoughnessU(texture);
+        }
+    }
+    if (value.HasMember("roughnessV")) {
+        std::shared_ptr<Texture> texture = Texture::Load(value["roughnessV"]);
+        if (texture) {
+            material->setRoughnessV(texture);
+        }
+    }
+    
+    return material;
+}
+
 AshikhminMaterial::AshikhminMaterial() :
 Material(),
-_diffuseColor(new UniformVec3Texture(vec3(1.f))),
-_specularColor(new UniformVec3Texture(vec3(0.f))),
-_diffuseIntensity(new UniformFloatTexture(1.f)),
-_specularIntensity(new UniformFloatTexture(0.f)),
-_roughnessU(new UniformFloatTexture(1000.f)),
+_diffuseColor(std::make_shared<UniformVec3Texture>(vec3(1.f))),
+_specularColor(std::make_shared<UniformVec3Texture>(vec3(0.f))),
+_diffuseIntensity(std::make_shared<UniformFloatTexture>(1.f)),
+_specularIntensity(std::make_shared<UniformFloatTexture>(0.f)),
+_roughnessU(std::make_shared<UniformFloatTexture>(1000.f)),
 _roughnessV(new UniformFloatTexture(1000.f)) {
     
 }
@@ -23,23 +69,31 @@ AshikhminMaterial::~AshikhminMaterial() {
     
 }
 
-void AshikhminMaterial::setDiffuseColor(Texture *t) {
+void AshikhminMaterial::setDiffuseColor(const std::shared_ptr<Texture>& t) {
     _diffuseColor = t;
 }
 
-void AshikhminMaterial::setSpecularColor(Texture* t) {
+void AshikhminMaterial::setSpecularColor(const std::shared_ptr<Texture>& t) {
     _specularColor = t;
 }
 
-void AshikhminMaterial::setDiffuseIntensity(Texture* t) {
+void AshikhminMaterial::setDiffuseIntensity(const std::shared_ptr<Texture>& t) {
     _diffuseIntensity = t;
 }
 
-void AshikhminMaterial::setSpecularIntensity(Texture* t) {
+void AshikhminMaterial::setSpecularIntensity(const std::shared_ptr<Texture>& t) {
     _specularIntensity = t;
 }
 
-void AshikhminMaterial::setRoughness(Texture* tu, Texture* tv) {
+void AshikhminMaterial::setRoughnessU(const std::shared_ptr<Texture>& tu) {
+    _roughnessU = tu;
+}
+
+void AshikhminMaterial::setRoughnessV(const std::shared_ptr<Texture>& tv) {
+    _roughnessV = tv;
+}
+
+void AshikhminMaterial::setRoughness(const std::shared_ptr<Texture>& tu, const std::shared_ptr<Texture>& tv) {
     if (tu) {
         _roughnessU = tu;
     }
@@ -49,42 +103,24 @@ void AshikhminMaterial::setRoughness(Texture* tu, Texture* tv) {
 }
 
 void AshikhminMaterial::setDiffuseColor(const vec3& color) {
-    UniformVec3Texture* texture = dynamic_cast<UniformVec3Texture*>(_diffuseColor);
-    if (texture) {
-        texture->setValue(color);
-    }
+    _diffuseColor = std::make_shared<UniformVec3Texture>(color);
 }
 
 void AshikhminMaterial::setSpecularColor(const vec3& color) {
-    UniformVec3Texture* texture = dynamic_cast<UniformVec3Texture*>(_specularColor);
-    if (texture) {
-        texture->setValue(color);
-    }
+    _specularColor = std::make_shared<UniformVec3Texture>(color);
 }
 
 void AshikhminMaterial::setDiffuseIntensity(float intensity) {
-    UniformFloatTexture* texture = dynamic_cast<UniformFloatTexture*>(_diffuseIntensity);
-    if (texture) {
-        texture->setValue(intensity);
-    }
+    _diffuseIntensity = std::make_shared<UniformFloatTexture>(intensity);
 }
 
 void AshikhminMaterial::setSpecularIntensity(float intensity) {
-    UniformFloatTexture* texture = dynamic_cast<UniformFloatTexture*>(_specularIntensity);
-    if (texture) {
-        texture->setValue(intensity);
-    }
+    _specularIntensity = std::make_shared<UniformFloatTexture>(intensity);
 }
 
 void AshikhminMaterial::setRoughness(float nu, float nv) {
-    UniformFloatTexture* texture = dynamic_cast<UniformFloatTexture*>(_roughnessU);
-    if (texture) {
-        texture->setValue(nu);
-    }
-    texture = dynamic_cast<UniformFloatTexture*>(_roughnessV);
-    if (texture) {
-        texture->setValue(nv);
-    }
+    _roughnessU = std::make_shared<UniformFloatTexture>(nu);
+    _roughnessV = std::make_shared<UniformFloatTexture>(nv);
 }
 
 Spectrum AshikhminMaterial::evaluateBSDF(const vec3& wo, const vec3& wi,

@@ -19,11 +19,11 @@ public:
     
     virtual float generateRay(const CameraSample& sample, Ray* ray) = 0;
     
-    void setFilm(Film* film) { _film = film; }
-    Film* getFilm() const { return _film; }    
+    void setFilm(const std::shared_ptr<Film>& film) { _film = film; }
+    std::shared_ptr<Film> getFilm() const { return _film; }
     
 private:
-    Film*   _film;
+    std::shared_ptr<Film>   _film;
 };
 
 #endif

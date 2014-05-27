@@ -8,30 +8,46 @@
 
 #include "Matte.h"
 
-Matte::Matte(const vec3& color) : _color(new UniformVec3Texture(color)) {
+std::shared_ptr<Matte> Matte::Load(const rapidjson::Value& value) {
+    std::shared_ptr<Matte> material = std::make_shared<Matte>();
+    
+    if (value.HasMember("name")) {
+        material->setName(value["name"].GetString());
+    }
+    if (value.HasMember("color")) {
+        std::shared_ptr<Texture> texture = Texture::Load(value["color"]);
+        if (texture) {
+            material->setColor(texture);
+        }
+    }
+    
+    return material;
+}
+
+Matte::Matte(const vec3& color) : _color(std::make_shared<UniformVec3Texture>(color)) {
 
 }
 
-Matte::Matte(Texture* color) : _color() {
+Matte::Matte(const std::shared_ptr<Texture>& color) : _color() {
     if (color) {
         _color = color;
     } else {
-        _color = new UniformVec3Texture(vec3(1.f));
+        _color = std::make_shared<UniformVec3Texture>(vec3(1.f));
     }
 }
 
 Matte::~Matte() {
-    
 }
 
 void Matte::setColor(const vec3& color) {
-    UniformVec3Texture* texture = dynamic_cast<UniformVec3Texture*>(_color);
-    if (texture) {
-        texture->setValue(color);
-    }
+    _color = std::make_shared<UniformVec3Texture>(color);
 }
 
-Texture* Matte::getColor() const {
+void Matte::setColor(const std::shared_ptr<Texture>& color) {
+    _color = color;
+}
+
+std::shared_ptr<Texture> Matte::getColor() const {
     return _color;
 }
 

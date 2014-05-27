@@ -40,6 +40,8 @@ public:
         virtual void run();
     };
     
+    static std::shared_ptr<Renderer> Load(const rapidjson::Value& value);
+    
     Renderer(RenderOptions options=RenderOptions());
     ~Renderer();
     

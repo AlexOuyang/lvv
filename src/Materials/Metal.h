@@ -9,10 +9,14 @@
 #ifndef __CSE168_Rendering__Metal__
 #define __CSE168_Rendering__Metal__
 
+#include "Core/Core.h"
 #include "Core/Material.h"
+#include "Core/Texture.h"
 
 class Metal : public Material {
 public:
+    
+    static std::shared_ptr<Metal> Load(const rapidjson::Value& value);
     
     Metal();
     ~Metal();
@@ -22,15 +26,18 @@ public:
     virtual Spectrum sampleBSDF(const vec3& wo, vec3* wi, const Intersection& intersection,
                                 BxDFType type) const;
     
+    void setEta(float eta);
+    void setK(float k);
     void setIndices(float eta, float k);
     void setRoughness(float roughness);
     void setColor(const vec3& color);
+    void setColor(const std::shared_ptr<Texture>& color);
     
 private:
-    float       _eta;
-    float       _k;
-    float       _roughness;
-    vec3        _color;
+    float                       _eta;
+    float                       _k;
+    float                       _roughness;
+    std::shared_ptr<Texture>    _color;
 };
 
 #endif /* defined(__CSE168_Rendering__Metal__) */
