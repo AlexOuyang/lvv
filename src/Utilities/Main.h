@@ -15,7 +15,6 @@
 #include <QDebug>
 
 #include "Core/Core.h"
-#include "Utilities/AssimpImporter.h"
 #include "Core/Scene.h"
 #include "Core/Renderer.h"
 #include "Core/Camera.h"

@@ -15,14 +15,20 @@
 class ImageFilm : public Film {
 public:
     
+    static std::shared_ptr<ImageFilm> Load(const rapidjson::Value& value,
+                                           const vec2& resolution);
+    
     ImageFilm(const vec2& res);
     virtual ~ImageFilm();
     
+    void setFilename(const std::string& filename);
+    
     virtual void addSample(const CameraSample &sample, const Spectrum &L, float weight=1.0f);
     
-    void saveToFile(const std::string& filename);
+    void writeToFile();
     
 private:
+    std::string         _filename;
     std::vector<vec3>   _buffer;
 };
 

@@ -12,7 +12,7 @@
 
 using namespace rapidjson;
 
-ConfigFileReader::ConfigFileReader() : _renderer(), _scene() {
+ConfigFileReader::ConfigFileReader() : _film(), _renderer(), _scene() {
 }
 
 ConfigFileReader::~ConfigFileReader() {
@@ -43,13 +43,46 @@ bool ConfigFileReader::readFile(const std::string &filename) {
     }
     
     // Import configuration
+    if (json.HasMember("film")) {
+        _film = Film::Load(json["film"]);
+        if (!_film) {
+            std::cerr << "ConfigFileReader error: error while loading film" << std::endl;
+        }
+    }
     if (json.HasMember("renderer")) {
         _renderer = Renderer::Load(json["renderer"]);
+        if (!_renderer) {
+            std::cerr << "ConfigFileReader error: error while loading renderer" << std::endl;
+        }
     }
     if (json.HasMember("scene")) {
         _scene = Scene::Load(json["scene"]);
+        if (!_scene) {
+            std::cerr << "ConfigFileReader error: error while loading scene" << std::endl;
+        }
     }
 
     delete[] contents;
     return true;
+}
+
+std::shared_ptr<Film> ConfigFileReader::getFilm() const {
+    return _film;
+}
+
+std::shared_ptr<Renderer> ConfigFileReader::getRenderer() const {
+    return _renderer;
+}
+
+std::shared_ptr<Scene> ConfigFileReader::getScene() const {
+    return _scene;
+}
+
+vec3 ConfigFileReader::LoadVec3(const rapidjson::Value& value) {
+    if (!value.IsArray() || value.Size() != 3) {
+        std::cerr << "ConfigFileReader error: Invalid vector specified" << std::endl;
+    }
+    return vec3((float)value[0u].GetDouble(),
+                (float)value[1u].GetDouble(),
+                (float)value[2u].GetDouble());
 }

@@ -95,19 +95,12 @@ bool Triangle::intersect(const Ray& ray, Intersection* intersection) const {
     intersection->uv = uvs;
     
     // Generate tangents
-    if (dot(_vertices[0]->tangentU, _vertices[0]->tangentU) > 0.f) {
-        intersection->tangentU = ((1-alpha-beta)*_vertices[0]->tangentU
-                                  + alpha*_vertices[1]->tangentU
-                                  + beta*_vertices[2]->tangentU);
-        intersection->tangentV = cross(normal, intersection->tangentU);
+    if (abs(normal.y) > 1.0f-0.00001f) {
+        intersection->tangentU = vec3(1.0f, 0.0f, 0.0f);
+        intersection->tangentV = vec3(0.0f, 0.0f, 1.0f);
     } else {
-        if (abs(normal.y) > 1.0f-0.00001f) {
-            intersection->tangentU = vec3(1.0f, 0.0f, 0.0f);
-            intersection->tangentV = vec3(0.0f, 0.0f, 1.0f);
-        } else {
-            intersection->tangentU = normalize(cross(vec3(0.0f, 1.0f, 0.0f), normal));
-            intersection->tangentV = cross(normal, intersection->tangentU);
-        }
+        intersection->tangentU = normalize(cross(vec3(0.0f, 1.0f, 0.0f), normal));
+        intersection->tangentV = cross(normal, intersection->tangentU);
     }
 
     intersection->rayEpsilon = 1e-3f * t;

@@ -26,7 +26,7 @@ public:
     virtual ~Mesh();
     
     void setVertices(int count, Vertex* vertices);
-    void setIndices(int count, int* indices);
+    void setIndices(int count, uint_t* indices);
     void setAlphaTexture(Texture* texture);
     
     int                         getTrianglesCount() const;
@@ -42,7 +42,7 @@ private:
     int         _verticesCount;
     int         _trianglesCount;
     Vertex*     _vertices;
-    int*        _indices;
+    uint_t*     _indices;
     Texture*    _alphaTexture;
 };
 

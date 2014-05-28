@@ -15,6 +15,8 @@
 
 class Film {
 public:
+    
+    static std::shared_ptr<Film> Load(const rapidjson::Value& value);
 
     Film(const vec2& res);
     virtual ~Film();

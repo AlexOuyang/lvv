@@ -18,7 +18,7 @@ std::shared_ptr<Mesh> ShapesUtilities::CreateBox(float x, float y, float z) {
     int trianglesCount = 12;
 
 	Vertex* vertices = new Vertex[verticesCount];
-	int* indices = new int[trianglesCount*3];
+	uint_t* indices = new uint_t[trianglesCount*3];
         
 	x *= 0.5f;
 	y *= 0.5f;

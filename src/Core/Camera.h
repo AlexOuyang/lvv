@@ -15,12 +15,15 @@
 
 class Camera {
 public:
-    virtual ~Camera() {};
+    
+    static std::shared_ptr<Camera> Load(const rapidjson::Value& value);
+    
+    virtual ~Camera();
     
     virtual float generateRay(const CameraSample& sample, Ray* ray) = 0;
     
-    void setFilm(const std::shared_ptr<Film>& film) { _film = film; }
-    std::shared_ptr<Film> getFilm() const { return _film; }
+    void setFilm(const std::shared_ptr<Film>& film);
+    std::shared_ptr<Film> getFilm() const;
     
 private:
     std::shared_ptr<Film>   _film;

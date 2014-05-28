@@ -27,7 +27,7 @@ void Mesh::setVertices(int count, Vertex* vertices) {
     _vertices = vertices;
 }
 
-void Mesh::setIndices(int count, int* indices) {
+void Mesh::setIndices(int count, uint_t* indices) {
     _trianglesCount = count;
     _indices = indices;
 }

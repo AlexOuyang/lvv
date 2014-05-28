@@ -8,6 +8,43 @@
 
 #include "PerspectiveCamera.h"
 
+#include "Core/ConfigFileReader.h"
+
+std::shared_ptr<PerspectiveCamera> PerspectiveCamera::Load(const rapidjson::Value& value) {
+    // Check if mandatory values are specified
+    if (!value.HasMember("position")) {
+        std::cerr << "Camera error: no position specified" << std::endl;
+        return std::shared_ptr<PerspectiveCamera>();
+    }
+    if (!value.HasMember("target")) {
+        std::cerr << "Camera error: no target specified" << std::endl;
+        return std::shared_ptr<PerspectiveCamera>();
+    }
+    if (!value.HasMember("vfov")) {
+        std::cerr << "Camera error: no vertical fov specified" << std::endl;
+        return std::shared_ptr<PerspectiveCamera>();
+    }
+    if (!value.HasMember("aspect")) {
+        std::cerr << "Camera error: no aspect ratio specified" << std::endl;
+        return std::shared_ptr<PerspectiveCamera>();
+    }
+    
+    std::shared_ptr<PerspectiveCamera> camera = std::make_shared<PerspectiveCamera>();
+    
+    vec3 position = ConfigFileReader::LoadVec3(value["position"]);
+    vec3 target = ConfigFileReader::LoadVec3(value["target"]);
+    vec3 upVector = vec3(0.f, 1.f, 0.f);
+    if (value.HasMember("upVector")) {
+        upVector = ConfigFileReader::LoadVec3(value["upVector"]);
+    }
+    
+    camera->lookAt(position, target, upVector);
+    camera->setVFov(value["vfov"].GetDouble());
+    camera->setAspect(value["aspect"].GetDouble());
+    
+    return camera;
+}
+
 PerspectiveCamera::PerspectiveCamera() :
 _focusDistance(0.f), _apertureSize(0.f) {
 

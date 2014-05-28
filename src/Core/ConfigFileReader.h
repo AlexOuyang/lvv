@@ -12,8 +12,7 @@
 #include "Core/Core.h"
 #include "Core/Renderer.h"
 #include "Core/Scene.h"
-
-#include <map>
+#include "Core/Film.h"
 
 class ConfigFileReader {
 public:
@@ -23,7 +22,15 @@ public:
     
     bool readFile(const std::string& filename);
     
+    std::shared_ptr<Film> getFilm() const;
+    std::shared_ptr<Renderer> getRenderer() const;
+    std::shared_ptr<Scene> getScene() const;
+    
+    // Utility functions
+    static vec3 LoadVec3(const rapidjson::Value& value);
+    
 private:
+    std::shared_ptr<Film>       _film;
     std::shared_ptr<Renderer>   _renderer;
     std::shared_ptr<Scene>      _scene;
 };

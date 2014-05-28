@@ -14,6 +14,9 @@
 
 class PerspectiveCamera : public Camera {
 public:
+    
+    static std::shared_ptr<PerspectiveCamera> Load(const rapidjson::Value& value);
+    
     PerspectiveCamera();
     virtual ~PerspectiveCamera();
     

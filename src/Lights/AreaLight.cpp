@@ -32,7 +32,7 @@ AreaLight* AreaLight::CreateFromMesh(Mesh* mesh, const Transform& t, bool invers
 
 AreaLight::AreaLight() : Light(),
 _points(), _normal(),
-_intensity(1.0f), _color(new UniformVec3Texture()) {
+_intensity(1.0f), _color(std::make_shared<UniformVec3Texture>()) {
 }
 
 AreaLight::~AreaLight() {
@@ -54,13 +54,10 @@ void AreaLight::setIntensity(float intensity) {
 }
 
 void AreaLight::setColor(const vec3 &color) {
-    UniformVec3Texture* texture = dynamic_cast<UniformVec3Texture*>(_color);
-    if (texture) {
-        texture->setValue(color);
-    }
+    _color = std::make_shared<UniformVec3Texture>(color);
 }
 
-void AreaLight::setColor(Texture* texture) {
+void AreaLight::setColor(const std::shared_ptr<Texture>& texture) {
     _color = texture;
 }
 

@@ -20,7 +20,6 @@ struct Vertex {
     
     vec3    position;
     vec3    normal;
-    vec3    tangentU;
     vec2    texCoord;
 };
 

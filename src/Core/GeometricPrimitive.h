@@ -23,7 +23,8 @@ public:
     ~GeometricPrimitive();
     
     std::shared_ptr<Shape> getShape() const;
-    void    setMaterial(const std::shared_ptr<Material>& material);
+    
+    void setMaterial(const std::shared_ptr<Material>& material);
     
     virtual bool canIntersect() const;
     virtual bool intersect(const Ray& ray, Intersection* intersection) const;

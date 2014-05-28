@@ -16,17 +16,18 @@
 #include "Aggregate.h"
 #include "Volume.h"
 #include "Light.h"
+#include "Camera.h"
 
 class Scene {
 public:
-    
-    static std::shared_ptr<Scene> Load(const rapidjson::Value& value);
     
     Scene(Aggregate* aggregate);
     ~Scene();
     
     bool intersect(const Ray& ray, Intersection* intersection) const;
     bool intersectP(const Ray& ray) const;
+    
+    void preprocess();
     
     void addLight(Light* light);
     void addPrimitive(const std::shared_ptr<Primitive>& primitive);
@@ -38,14 +39,20 @@ public:
     const std::vector<Light*>&      getLights() const;
     Volume*                         getVolume() const;
     
-    void addMaterial(const std::string& name, std::shared_ptr<Material> mtl);
-    std::shared_ptr<Material> getMaterial(const std::string& name);
+    void addMaterial(const std::shared_ptr<Material>& mtl);
+    std::shared_ptr<Material> getMaterial(const std::string& name) const;
+    
+    void                    setCamera(const std::shared_ptr<Camera>& camera);
+    std::shared_ptr<Camera> getCamera() const;
+    
+    static std::shared_ptr<Scene> Load(const rapidjson::Value& value);
     
 private:
     std::vector<Light*>                                 _lights;
     Aggregate*                                          _aggregate;
     Volume*                                             _volume;
     std::map<std::string, std::shared_ptr<Material>>    _materials;
+    std::shared_ptr<Camera>                             _camera;
 };
 
 #endif /* defined(__CSE168_Rendering__Scene__) */

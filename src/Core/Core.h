@@ -18,6 +18,7 @@ using namespace glm;
 
 #include <memory>
 #include <rapidjson/document.h>
+#include <iostream>
 
 #include <QDebug>
 
