@@ -17,7 +17,7 @@ std::shared_ptr<Matte> Matte::Load(const rapidjson::Value& value) {
     if (value.HasMember("color")) {
         std::shared_ptr<Texture> texture = Texture::Load(value["color"]);
         if (texture) {
-            material->setColor(texture);
+            material->setDiffuseColor(texture);
         }
     }
     
@@ -39,11 +39,15 @@ Matte::Matte(const std::shared_ptr<Texture>& color) : _color() {
 Matte::~Matte() {
 }
 
-void Matte::setColor(const vec3& color) {
+std::shared_ptr<Material> Matte::clone() const {
+    return std::make_shared<Matte>(*this);
+}
+
+void Matte::setDiffuseColor(const vec3& color) {
     _color = std::make_shared<UniformVec3Texture>(color);
 }
 
-void Matte::setColor(const std::shared_ptr<Texture>& color) {
+void Matte::setDiffuseColor(const std::shared_ptr<Texture>& color) {
     _color = color;
 }
 

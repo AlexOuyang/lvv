@@ -27,27 +27,53 @@ std::shared_ptr<AshikhminMaterial> AshikhminMaterial::Load(const rapidjson::Valu
         }
     }
     if (value.HasMember("diffuseIntensity")) {
-        std::shared_ptr<Texture> texture = Texture::Load(value["diffuseIntensity"]);
-        if (texture) {
-            material->setDiffuseIntensity(texture);
+        const rapidjson::Value& intensityValue = value["diffuseIntensity"];
+        if (intensityValue.IsNumber()) {
+            material->setDiffuseIntensity(intensityValue.GetDouble());
+        } else {
+            std::shared_ptr<Texture> texture = Texture::Load(intensityValue);
+            if (texture) {
+                material->setDiffuseIntensity(texture);
+            }
         }
     }
     if (value.HasMember("specularIntensity")) {
-        std::shared_ptr<Texture> texture = Texture::Load(value["specularIntensity"]);
-        if (texture) {
-            material->setSpecularIntensity(texture);
+        const rapidjson::Value& intensityValue = value["specularIntensity"];
+        if (intensityValue.IsNumber()) {
+            material->setSpecularIntensity(intensityValue.GetDouble());
+        } else {
+            std::shared_ptr<Texture> texture = Texture::Load(intensityValue);
+            if (texture) {
+                material->setSpecularIntensity(texture);
+            }
         }
     }
     if (value.HasMember("roughnessU")) {
-        std::shared_ptr<Texture> texture = Texture::Load(value["roughnessU"]);
-        if (texture) {
-            material->setRoughnessU(texture);
+        const rapidjson::Value& roughnessValue = value["roughnessU"];
+        if (roughnessValue.IsNumber()) {
+            material->setRoughnessU(roughnessValue.GetDouble());
+        } else {
+            std::shared_ptr<Texture> texture = Texture::Load(roughnessValue);
+            if (texture) {
+                material->setRoughnessU(texture);
+            }
         }
     }
     if (value.HasMember("roughnessV")) {
-        std::shared_ptr<Texture> texture = Texture::Load(value["roughnessV"]);
-        if (texture) {
-            material->setRoughnessV(texture);
+        const rapidjson::Value& roughnessValue = value["roughnessV"];
+        if (roughnessValue.IsNumber()) {
+            material->setRoughnessV(roughnessValue.GetDouble());
+        } else {
+            std::shared_ptr<Texture> texture = Texture::Load(roughnessValue);
+            if (texture) {
+                material->setRoughnessV(texture);
+            }
+        }
+    }
+    if (value.HasMember("roughness")) {
+        const rapidjson::Value& roughnessValue = value["roughness"];
+        if (roughnessValue.IsArray() && roughnessValue.Size() == 2) {
+            material->setRoughness(roughnessValue[0u].GetDouble(), roughnessValue[1u].GetDouble());
         }
     }
     
@@ -67,6 +93,10 @@ _roughnessV(new UniformFloatTexture(1000.f)) {
 
 AshikhminMaterial::~AshikhminMaterial() {
     
+}
+
+std::shared_ptr<Material> AshikhminMaterial::clone() const {
+    return std::make_shared<AshikhminMaterial>(*this);
 }
 
 void AshikhminMaterial::setDiffuseColor(const std::shared_ptr<Texture>& t) {
@@ -116,6 +146,14 @@ void AshikhminMaterial::setDiffuseIntensity(float intensity) {
 
 void AshikhminMaterial::setSpecularIntensity(float intensity) {
     _specularIntensity = std::make_shared<UniformFloatTexture>(intensity);
+}
+
+void AshikhminMaterial::setRoughnessU(float n) {
+    _roughnessU = std::make_shared<UniformFloatTexture>(n);
+}
+
+void AshikhminMaterial::setRoughnessV(float n) {
+    _roughnessV = std::make_shared<UniformFloatTexture>(n);
 }
 
 void AshikhminMaterial::setRoughness(float nu, float nv) {

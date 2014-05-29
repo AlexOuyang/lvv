@@ -21,6 +21,8 @@ public:
     Metal();
     ~Metal();
     
+    virtual std::shared_ptr<Material> clone() const;
+    
     virtual Spectrum evaluateBSDF(const vec3& wo, const vec3& wi,
                                   const Intersection& intersection) const;
     virtual Spectrum sampleBSDF(const vec3& wo, vec3* wi, const Intersection& intersection,
@@ -30,8 +32,9 @@ public:
     void setK(float k);
     void setIndices(float eta, float k);
     void setRoughness(float roughness);
-    void setColor(const vec3& color);
-    void setColor(const std::shared_ptr<Texture>& color);
+    
+    virtual void setDiffuseColor(const vec3& color);
+    virtual void setDiffuseColor(const std::shared_ptr<Texture>& color);
     
 private:
     float                       _eta;

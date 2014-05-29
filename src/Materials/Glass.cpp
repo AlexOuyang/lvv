@@ -48,6 +48,10 @@ Glass::~Glass() {
     
 }
 
+std::shared_ptr<Material> Glass::clone() const {
+    return std::make_shared<Glass>(*this);
+}
+
 void Glass::setIndexIn(float index) {
     _indexIn = index;
 }

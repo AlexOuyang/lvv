@@ -27,18 +27,18 @@ bool ConfigFileReader::readFile(const std::string &filename) {
     }
     
     file.seekg(0, std::ios::end);
-    uint_t size = file.tellg();
-    char *contents = new char[size];
+    std::string contents;
+    contents.resize(file.tellg());
     file.seekg (0, std::ios::beg);
-    file.read (contents, size);
+    file.read(&contents[0], contents.size());
     file.close();
     
     // Parse json file
     Document json;
-    json.Parse<0>(contents);
+    json.Parse<0>(contents.c_str());
     if (json.HasParseError()) {
         qDebug() << json.GetErrorOffset() << ":" << json.GetParseError();
-        qDebug() << QString(contents).mid(json.GetErrorOffset(), 30);
+        qDebug() << QString(contents.c_str()).mid(json.GetErrorOffset(), 30);
         return false;
     }
     
@@ -62,7 +62,6 @@ bool ConfigFileReader::readFile(const std::string &filename) {
         }
     }
 
-    delete[] contents;
     return true;
 }
 

@@ -12,6 +12,7 @@
 #include "Core.h"
 #include "Spectrum.h"
 #include "Intersection.h"
+#include "Texture.h"
 
 class Material {
 public:
@@ -25,10 +26,15 @@ public:
     
     static std::shared_ptr<Material> Load(const rapidjson::Value& value);
     
-    virtual ~Material() { };
+    virtual ~Material();
+    
+    virtual std::shared_ptr<Material> clone() const = 0;
     
     const std::string& getName() const;
     void setName(const std::string& name);
+    
+    virtual void setDiffuseColor(const vec3& color);
+    virtual void setDiffuseColor(const std::shared_ptr<Texture>& color);
     
     virtual Spectrum transmittedLight(float distance) const;
     

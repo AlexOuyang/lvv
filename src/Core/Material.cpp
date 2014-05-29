@@ -37,12 +37,22 @@ std::shared_ptr<Material> Material::Load(const rapidjson::Value& value) {
     return material;
 }
 
+Material::~Material() {
+    
+}
+
 const std::string& Material::getName() const {
     return _name;
 }
 
 void Material::setName(const std::string& name) {
     _name = name;
+}
+
+void Material::setDiffuseColor(const vec3&) {
+}
+
+void Material::setDiffuseColor(const std::shared_ptr<Texture>&) {
 }
 
 Spectrum Material::transmittedLight(float) const {

@@ -21,7 +21,9 @@ public:
     AshikhminMaterial();
     virtual ~AshikhminMaterial();
     
-    void setDiffuseColor(const std::shared_ptr<Texture>& t);
+    virtual std::shared_ptr<Material> clone() const;    
+    
+    virtual void setDiffuseColor(const std::shared_ptr<Texture>& t);
     void setSpecularColor(const std::shared_ptr<Texture>& t);
     void setDiffuseIntensity(const std::shared_ptr<Texture>& t);
     void setSpecularIntensity(const std::shared_ptr<Texture>& t);
@@ -31,10 +33,12 @@ public:
     void setRoughness(const std::shared_ptr<Texture>& tu,
                       const std::shared_ptr<Texture>& tv);
     
-    void setDiffuseColor(const vec3& color);
+    virtual void setDiffuseColor(const vec3& color);
     void setSpecularColor(const vec3& color);
     void setDiffuseIntensity(float intensity);
     void setSpecularIntensity(float intensity);
+    void setRoughnessU(float n);
+    void setRoughnessV(float n);
     void setRoughness(float nu, float nv);
     
     virtual Spectrum evaluateBSDF(const vec3& wo, const vec3& wi,

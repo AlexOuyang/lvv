@@ -17,7 +17,7 @@ std::shared_ptr<Glossy> Glossy::Load(const rapidjson::Value& value) {
     if (value.HasMember("color")) {
         std::shared_ptr<Texture> texture = Texture::Load(value["color"]);
         if (texture) {
-            material->setColor(texture);
+            material->setDiffuseColor(texture);
         }
     }
     if (value.HasMember("indexIn")) {
@@ -42,11 +42,15 @@ Glossy::~Glossy() {
     
 }
 
-void Glossy::setColor(const vec3& color) {
+std::shared_ptr<Material> Glossy::clone() const {
+    return std::make_shared<Glossy>(*this);
+}
+
+void Glossy::setDiffuseColor(const vec3& color) {
     _color = std::make_shared<UniformVec3Texture>(color);
 }
 
-void Glossy::setColor(const std::shared_ptr<Texture>& color) {
+void Glossy::setDiffuseColor(const std::shared_ptr<Texture>& color) {
     _color = color;
 }
 

@@ -13,9 +13,15 @@
 #include <QDebug>
 #include <QKeyEvent>
 
+std::shared_ptr<QtFilm> QtFilm::Load(const rapidjson::Value&, const vec2& resolution) {
+    std::shared_ptr<QtFilm> film = std::make_shared<QtFilm>(resolution);
+    
+    return film;
+}
+
 QtFilm::QtFilm(const vec2& res) :
-QMainWindow(), Film(res), _ui(), _image(res.x, res.y, QImage::Format_RGB32),
-_buffer(res.x*res.y, vec3(0.0f)) {
+QMainWindow(), Film(res), _ui(), _image(res.x, res.y, QImage::Format_RGB32), _refreshTimer(),
+_buffer(res.x*res.y, vec3(0.0f)), _toggleRenderingCallback() {
     _ui.setupUi(this);
     
     resize(resolution.x + 10, resolution.y + 30);
@@ -24,10 +30,19 @@ _buffer(res.x*res.y, vec3(0.0f)) {
     
     // Fill image of black
     _image.fill(Spectrum().getIntColor());
+    
+    // Setup refresh timer
+    _refreshTimer.setInterval(1000/24); // Refresh 24 times per second
+    connect(&_refreshTimer, SIGNAL(timeout()), this, SLOT(refreshTick()));
+    _refreshTimer.start();
 }
 
 QtFilm::~QtFilm() {
     
+}
+
+void QtFilm::setToogleRenderingCallback(const std::function<void ()> callback) {
+    _toggleRenderingCallback = callback;
 }
 
 void QtFilm::paintEvent(QPaintEvent*) {
@@ -70,6 +85,10 @@ void QtFilm::addSample(const CameraSample &sample, const Spectrum &L, float weig
     _image.setPixel(sample.pixel.x, sample.pixel.y, Spectrum(newValue).getIntColor());
 }
 
+void QtFilm::refreshTick() {
+    repaint();
+}
+
 void QtFilm::saveAction() {
     QString filename = QFileDialog::getSaveFileName();
     if (!filename.isEmpty()) {
@@ -84,6 +103,9 @@ void QtFilm::saveAction() {
 void QtFilm::keyPressEvent(QKeyEvent* event) {
     if (event->key() == 32) { // Spacebar
         toggleRendering();
+        if (_toggleRenderingCallback) {
+            _toggleRenderingCallback();
+        }
     }
 }
 

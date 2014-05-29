@@ -46,13 +46,38 @@ std::shared_ptr<SceneImporter> SceneImporter::Load(const rapidjson::Value& value
             std::cerr << "SceneImporter error: overrides must be specified as an object" << std::endl;
             return std::shared_ptr<SceneImporter>();
         }
-        const rapidjson::Value& primitivesOverridesValue = overridesValue["primitives"];
-        if (!primitivesOverridesValue.IsArray()) {
-            std::cerr << "SceneImporter error: primitives overrides must be specified as an array" << std::endl;
-            return std::shared_ptr<SceneImporter>();
+        // Load material overrides
+        if (overridesValue.HasMember("materials")) {
+            const rapidjson::Value& materialsOverridesValue = overridesValue["materials"];
+            if (!materialsOverridesValue.IsArray()) {
+                std::cerr << "SceneImporter error: material overrides must be specified as an array" << std::endl;
+                return std::shared_ptr<SceneImporter>();
+            }
+            for (int i = 0, l = materialsOverridesValue.Size(); i < l; ++i) {
+                importer->addOverride(MaterialOverride::Load(materialsOverridesValue[i]));
+            }
         }
-        for (int i = 0, l = primitivesOverridesValue.Size(); i < l; ++i) {
-            importer->addOverride(PrimitiveOverride::Load(primitivesOverridesValue[i]));
+        // Load primitives overrides
+        if (overridesValue.HasMember("primitives")) {
+            const rapidjson::Value& primitivesOverridesValue = overridesValue["primitives"];
+            if (!primitivesOverridesValue.IsArray()) {
+                std::cerr << "SceneImporter error: primitives overrides must be specified as an array" << std::endl;
+                return std::shared_ptr<SceneImporter>();
+            }
+            for (int i = 0, l = primitivesOverridesValue.Size(); i < l; ++i) {
+                importer->addOverride(PrimitiveOverride::Load(primitivesOverridesValue[i]));
+            }
+        }
+        // Load lights overrides
+        if (overridesValue.HasMember("lights")) {
+            const rapidjson::Value& lightsOverridesValue = overridesValue["lights"];
+            if (!lightsOverridesValue.IsArray()) {
+                std::cerr << "SceneImporter error: light overrides must be specified as an array" << std::endl;
+                return std::shared_ptr<SceneImporter>();
+            }
+            for (int i = 0, l = lightsOverridesValue.Size(); i < l; ++i) {
+                importer->addOverride(LightOverride::Load(lightsOverridesValue[i]));
+            }
         }
     }
 
@@ -72,6 +97,27 @@ std::shared_ptr<SceneImporter> SceneImporter::Load(const rapidjson::Value& value
 
 bool SceneImporter::MatchName(const std::string& pattern, const std::string& name) {
     return pattern.find(name) != std::string::npos;
+}
+
+SceneImporter::MaterialOverride SceneImporter::MaterialOverride::Load(const rapidjson::Value& value) {
+    SceneImporter::MaterialOverride override;
+    
+    if (value.HasMember("name")) {
+        override.namePattern = value["name"].GetString();
+    }
+    if (value.HasMember("material")) {
+        override.sceneMaterial = value["material"].GetString();
+    }
+    if (value.HasMember("inherits")) {
+        const rapidjson::Value& inheritedValues = value["inherits"];
+        if (inheritedValues.IsArray()) {
+            override.inheritedAttrs.isSet = true;
+            for (uint_t i = 0, l = inheritedValues.Size(); i < l; ++i) {
+                override.inheritedAttrs.value.push_back(inheritedValues[i].GetString());
+            }
+        }
+    }
+    return override;
 }
 
 SceneImporter::PrimitiveLightOverride SceneImporter::PrimitiveLightOverride::Load(const rapidjson::Value& value) {
@@ -126,9 +172,44 @@ SceneImporter::PrimitiveOverride SceneImporter::PrimitiveOverride::Load(const ra
     return override;
 }
 
+SceneImporter::LightOverride SceneImporter::LightOverride::Load(const rapidjson::Value& value) {
+    SceneImporter::LightOverride override;
+    
+    if (value.HasMember("name")) {
+        override.namePattern = value["name"].GetString();
+    }
+    if (value.HasMember("intensity")) {
+        override.intensity.isSet = true;
+        override.intensity.value = value["intensity"].GetDouble();
+    }
+    if (value.HasMember("direction")) {
+        const rapidjson::Value& directionValue = value["direction"];
+        if (directionValue.IsArray() && directionValue.Size() == 3) {
+            override.direction.isSet = true;
+            override.direction.value = vec3((float)directionValue[0u].GetDouble(),
+                                            (float)directionValue[1u].GetDouble(),
+                                            (float)directionValue[2u].GetDouble());
+        }
+    }
+    if (value.HasMember("position")) {
+        const rapidjson::Value& positionValue = value["position"];
+        if (positionValue.IsArray() && positionValue.Size() == 3) {
+            override.position.isSet = true;
+            override.position.value = vec3((float)positionValue[0u].GetDouble(),
+                                           (float)positionValue[1u].GetDouble(),
+                                           (float)positionValue[2u].GetDouble());
+        }
+    }
+    if (value.HasMember("color")) {
+        override.color = Texture::Load(value["color"]);
+    }
+    
+    return override;
+}
+
 SceneImporter::SceneImporter() :
 _filename(), _meshAccelerationStructure(BVHAccelerationStructure),
-_materialOverrides(), _primitivesOverrides() {
+_materialsOverrides(), _primitivesOverrides(), _lightsOverrides() {
     
 }
 
@@ -145,11 +226,15 @@ void SceneImporter::setMeshAccelerationStructure(MeshAccelerationStructure s) {
 }
 
 void SceneImporter::addOverride(const SceneImporter::MaterialOverride& override) {
-    _materialOverrides.push_back(override);
+    _materialsOverrides.push_back(override);
 }
 
 void SceneImporter::addOverride(const SceneImporter::PrimitiveOverride& override) {
     _primitivesOverrides.push_back(override);
+}
+
+void SceneImporter::addOverride(const SceneImporter::LightOverride& override) {
+    _lightsOverrides.push_back(override);
 }
 
 std::shared_ptr<Aggregate> SceneImporter::createMeshAccelerationStructure() const {
@@ -162,12 +247,25 @@ std::shared_ptr<Aggregate> SceneImporter::createMeshAccelerationStructure() cons
 std::shared_ptr<Material> SceneImporter::getOverridenMaterial(const ImportedMaterialAttributes& attrs,
                                                               const Scene& scene) const {
     // Look for a matching override
-    for (const MaterialOverride& override : _materialOverrides) {
+    for (const MaterialOverride& override : _materialsOverrides) {
         if (MatchName(override.namePattern, attrs.name)) {
             // Look for the overriden material in the scene
             std::shared_ptr<Material> material = scene.getMaterial(override.sceneMaterial);
             if (material) {
-                // TODO: handle overriden properties
+                if (override.inheritedAttrs.isSet) {
+                    // Clone material
+                    material = material->clone();
+                    material->setName(material->getName()+"_inherits_"+attrs.name);
+                    for (const std::string& attr : override.inheritedAttrs.value) {
+                        if (attr == "diffuseColor") {
+                            if (attrs.diffuseTexture) {
+                                material->setDiffuseColor(attrs.diffuseTexture);
+                            } else {
+                                material->setDiffuseColor(attrs.diffuseColor);
+                            }
+                        }
+                    }
+                }
                 return material;
             }
         }
@@ -183,9 +281,9 @@ std::shared_ptr<Material> SceneImporter::addImportedMaterial(const SceneImporter
     if (!material) {
         std::shared_ptr<Matte> defaultMtl = std::make_shared<Matte>();
         if (attrs.diffuseTexture) {
-            defaultMtl->setColor(attrs.diffuseTexture);
+            defaultMtl->setDiffuseColor(attrs.diffuseTexture);
         } else {
-            defaultMtl->setColor(attrs.diffuseColor);
+            defaultMtl->setDiffuseColor(attrs.diffuseColor);
         }
 
         material = defaultMtl;
@@ -252,6 +350,10 @@ bool SceneImporter::applyPrimitiveOverrides(Scene& scene, const std::string& nam
                         }
                     }
                     
+                    if (lightOverride.intensity.isSet) {
+                        light->setIntensity(lightOverride.intensity.value);
+                    }
+                    
                     light->setTransform(transform);
                     
                     // Add light to scene
@@ -262,6 +364,41 @@ bool SceneImporter::applyPrimitiveOverrides(Scene& scene, const std::string& nam
                 }
             }
             return true;
+        }
+    }
+    return true;
+}
+
+bool SceneImporter::applyLightOverrides(Scene&, Light* light) const {
+    // Look for a matching override
+    for (const LightOverride& override : _lightsOverrides) {
+        if (MatchName(override.namePattern, light->getName())) {
+            DirectionalLight* directional = dynamic_cast<DirectionalLight*>(light);
+            if (directional) {
+                if (override.intensity.isSet) {
+                    directional->setIntensity(override.intensity.value);
+                }
+                if (override.direction.isSet) {
+                    directional->setDirection(override.direction.value);
+                }
+                if (override.color) {
+                    directional->setSpectrum(Spectrum(override.color->evaluateVec3(vec2())));
+                }
+                return true;
+            }
+            PointLight* point = dynamic_cast<PointLight*>(light);
+            if (point) {
+                if (override.intensity.isSet) {
+                    point->setIntensity(override.intensity.value);
+                }
+                if (override.direction.isSet) {
+                    point->setPosition(override.direction.value);
+                }
+                if (override.color) {
+                    point->setSpectrum(Spectrum(override.color->evaluateVec3(vec2())));
+                }
+                return true;
+            }
         }
     }
     return true;

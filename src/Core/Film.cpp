@@ -9,6 +9,7 @@
 #include "Film.h"
 
 #include "Films/ImageFilm.h"
+#include "Films/QtFilm.h"
 
 std::shared_ptr<Film> Film::Load(const rapidjson::Value& value) {
     // Check if mandatory values are specified
@@ -37,6 +38,8 @@ std::shared_ptr<Film> Film::Load(const rapidjson::Value& value) {
     std::shared_ptr<Film> film;
     if (type == "image") {
         film = ImageFilm::Load(value, resolution);
+    } else if (type == "qtwindow") {
+        film = QtFilm::Load(value, resolution);
     } else {
         std::cerr << "Film error: unknown film \"" << type << "\"" << std::endl;
         return std::shared_ptr<Film>();

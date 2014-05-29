@@ -22,8 +22,10 @@ public:
     Matte(const std::shared_ptr<Texture>& color);
     virtual ~Matte();
     
-    void                        setColor(const vec3& color);
-    void                        setColor(const std::shared_ptr<Texture>& color);
+    virtual std::shared_ptr<Material> clone() const;
+    
+    virtual void                setDiffuseColor(const vec3& color);
+    virtual void                setDiffuseColor(const std::shared_ptr<Texture>& color);
     std::shared_ptr<Texture>    getColor() const;
     
     virtual Spectrum evaluateBSDF(const vec3& wo, const vec3& wi,

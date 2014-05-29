@@ -24,6 +24,7 @@ public:
     
     void setColor(const vec3& color);
     void setColor(const std::shared_ptr<Texture>& color);
+    void setIntensity(float intensity);
     void setTransform(const Transform& t);
     
     virtual Spectrum le(const Ray& ray, const Intersection* intersection=nullptr) const;
@@ -33,6 +34,7 @@ public:
     
 private:
     std::shared_ptr<Texture>    _color;
+    float                       _intensity;
     Transform                   _transform;
 };
 

@@ -32,8 +32,11 @@ public:
     };
     
     struct MaterialOverride {
-        std::string namePattern;
-        std::string sceneMaterial;
+        static MaterialOverride Load(const rapidjson::Value& value);
+        
+        std::string                                 namePattern;
+        std::string                                 sceneMaterial;
+        OverridenProperty<std::vector<std::string>> inheritedAttrs;
     };
     
     struct PrimitiveLightOverride {
@@ -62,6 +65,16 @@ public:
         OverridenProperty<PrimitiveLightOverride>   light;
     };
     
+    struct LightOverride {
+        static LightOverride Load(const rapidjson::Value& value);
+        
+        std::string                 namePattern;
+        OverridenProperty<float>    intensity;
+        OverridenProperty<vec3>     direction;
+        OverridenProperty<vec3>     position;
+        std::shared_ptr<Texture>    color;
+    };
+    
     struct ImportedMaterialAttributes {
         std::string                 name;
         vec3                        diffuseColor;
@@ -81,6 +94,7 @@ public:
     void setMeshAccelerationStructure(MeshAccelerationStructure s);
     void addOverride(const MaterialOverride& override);
     void addOverride(const PrimitiveOverride& override);
+    void addOverride(const LightOverride& override);
     
     std::shared_ptr<Aggregate> createMeshAccelerationStructure() const;
     
@@ -91,12 +105,14 @@ public:
                                  const Transform& transform, GeometricPrimitive& p,
                                  const ImportedMaterialAttributes* material=nullptr,
                                  Mesh* mesh=nullptr) const;
+    bool applyLightOverrides(Scene& scene, Light* light) const;
     
 protected:
     std::string                     _filename;
     MeshAccelerationStructure       _meshAccelerationStructure;
-    std::vector<MaterialOverride>   _materialOverrides;
+    std::vector<MaterialOverride>   _materialsOverrides;
     std::vector<PrimitiveOverride>  _primitivesOverrides;
+    std::vector<LightOverride>      _lightsOverrides;
 };
 
 #endif /* defined(__CSE168_Rendering__SceneImporter__) */

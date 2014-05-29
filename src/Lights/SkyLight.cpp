@@ -9,11 +9,11 @@
 #include "SkyLight.h"
 
 SkyLight::SkyLight(const vec3& color) :
-Light(), _color(std::make_shared<UniformVec3Texture>(color)), _transform() {
+Light(), _color(std::make_shared<UniformVec3Texture>(color)), _intensity(1.f), _transform() {
     
 }
 
-SkyLight::SkyLight(const std::shared_ptr<Texture>& color) : Light(), _color() {
+SkyLight::SkyLight(const std::shared_ptr<Texture>& color) : Light(), _color(), _intensity(1.f), _transform() {
     if (color) {
         _color = color;
     } else {
@@ -33,6 +33,10 @@ void SkyLight::setColor(const std::shared_ptr<Texture> &color) {
     _color = color;
 }
 
+void SkyLight::setIntensity(float intensity) {
+    _intensity = intensity;
+}
+
 void SkyLight::setTransform(const Transform &t) {
     _transform = t;
 }
@@ -44,7 +48,7 @@ Spectrum SkyLight::le(const Ray & ray, const Intersection*) const {
     uv.s = ((atan2f(d.x, d.z) + M_PI)
             / (2.f * M_PI));
     uv.t = ((asin(d.y) + 0.5f*M_PI) / M_PI);
-    return Spectrum(_color->evaluateVec3(uv));
+    return Spectrum(_color->evaluateVec3(uv)) * _intensity;
 }
 
 Spectrum SkyLight::sampleL(const vec3&, float, const LightSample&, vec3*, VisibilityTester*) const {

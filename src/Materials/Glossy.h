@@ -21,13 +21,16 @@ public:
     Glossy();
     ~Glossy();
     
+    virtual std::shared_ptr<Material> clone() const;    
+    
     virtual Spectrum evaluateBSDF(const vec3& wo, const vec3& wi,
                                   const Intersection& intersection) const;
     virtual Spectrum sampleBSDF(const vec3& wo, vec3* wi, const Intersection& intersection,
                                 BxDFType type) const;
     
-    void setColor(const vec3& color);
-    void setColor(const std::shared_ptr<Texture>& color);
+    virtual void setDiffuseColor(const vec3& color);
+    virtual void setDiffuseColor(const std::shared_ptr<Texture>& color);
+    
     void setIndexIn(float index);
     void setIndexOut(float index);
     void setRoughness(float roughness);

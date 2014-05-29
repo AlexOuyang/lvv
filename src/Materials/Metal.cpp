@@ -26,7 +26,7 @@ std::shared_ptr<Metal> Metal::Load(const rapidjson::Value& value) {
     if (value.HasMember("color")) {
         std::shared_ptr<Texture> texture = Texture::Load(value["color"]);
         if (texture) {
-            material->setColor(texture);
+            material->setDiffuseColor(texture);
         }
     }
     
@@ -40,6 +40,10 @@ _color(std::make_shared<UniformVec3Texture>()) {
 
 Metal::~Metal() {
     
+}
+
+std::shared_ptr<Material> Metal::clone() const {
+    return std::make_shared<Metal>(*this);
 }
 
 void Metal::setEta(float eta) {
@@ -59,11 +63,11 @@ void Metal::setRoughness(float roughness) {
     _roughness = roughness;
 }
 
-void Metal::setColor(const vec3& color) {
+void Metal::setDiffuseColor(const vec3& color) {
     _color = std::make_shared<UniformVec3Texture>(color);
 }
 
-void Metal::setColor(const std::shared_ptr<Texture>& color) {
+void Metal::setDiffuseColor(const std::shared_ptr<Texture>& color) {
     _color = color;
 }
 

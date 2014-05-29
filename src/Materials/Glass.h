@@ -18,6 +18,8 @@ public:
     
     Glass();
     ~Glass();
+    
+    virtual std::shared_ptr<Material> clone() const;
 
     void setIndexIn(float index);
     void setIndexOut(float index);

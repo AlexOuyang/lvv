@@ -87,7 +87,7 @@ bool AssimpImporter::importLight(const aiScene *assimpScene, aiNode* assimpNode,
                 
                 directional->setDirection(transform.applyToVector(importVec3(assimpLight->mDirection)));
                 directional->setSpectrum(Spectrum(importColor(assimpLight->mColorDiffuse)));
-                directional->setIntensity(1.2);
+                directional->setIntensity(1.f);
                 light = directional;
             } else if (assimpLight->mType == aiLightSource_POINT) {
                 PointLight* point = new PointLight();
@@ -102,8 +102,13 @@ bool AssimpImporter::importLight(const aiScene *assimpScene, aiNode* assimpNode,
             }
             light->setName(name);
             
-            // Add light to the scene
-            scene << light;
+            // Apply light overrides
+            bool addToScene = applyLightOverrides(scene, light);
+            
+            if (addToScene) {
+                // Add light to the scene
+                scene << light;
+            }
             return true;
         }
     }
