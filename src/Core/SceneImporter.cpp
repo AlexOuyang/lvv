@@ -11,6 +11,8 @@
 #include "Importers/AssimpImporter.h"
 #include "Materials/Matte.h"
 #include "Accelerators/BVHAccelerator.h"
+#include "Lights/AreaLight.h"
+#include "Lights/Skylight.h"
 
 std::shared_ptr<SceneImporter> SceneImporter::Load(const rapidjson::Value& value) {
     // Check if mandatory values are specified
@@ -68,18 +70,29 @@ std::shared_ptr<SceneImporter> SceneImporter::Load(const rapidjson::Value& value
     return importer;
 }
 
-bool SceneImporter::MatchName(const std::string& name1, const std::string& name2) {
-    return name1 == name2;
+bool SceneImporter::MatchName(const std::string& pattern, const std::string& name) {
+    return pattern.find(name) != std::string::npos;
 }
 
-SceneImporter::AreaLightOverride SceneImporter::AreaLightOverride::Load(const rapidjson::Value& value) {
-    SceneImporter::AreaLightOverride override;
+SceneImporter::PrimitiveLightOverride SceneImporter::PrimitiveLightOverride::Load(const rapidjson::Value& value) {
+    SceneImporter::PrimitiveLightOverride override;
     
-    if (value.HasMember("inverseNormal")) {
-        override.inverseNormal = value["inverseNormal"].GetBool();
+    if (!value.HasMember("type")) {
+        std::cerr << "PrimitiveLightOverride error: no type specified" << std::endl;
+        return override;
     }
-    if (value.HasMember("indexOffset")) {
-        override.indexOffset = value["indexOffset"].GetInt();
+    
+    const std::string type = value["type"].GetString();
+    if (type == "area") {
+        override.type = Area;
+        if (value.HasMember("inverseNormal")) {
+            override.inverseNormal = value["inverseNormal"].GetBool();
+        }
+        if (value.HasMember("indexOffset")) {
+            override.indexOffset = value["indexOffset"].GetInt();
+        }
+    } else if (type == "environment") {
+        override.type = Environment;
     }
     if (value.HasMember("color")) {
         std::shared_ptr<Texture> texture = Texture::Load(value["color"]);
@@ -88,7 +101,8 @@ SceneImporter::AreaLightOverride SceneImporter::AreaLightOverride::Load(const ra
         }
     }
     if (value.HasMember("intensity")) {
-        override.intensity = value["intensity"].GetDouble();
+        override.intensity.isSet = true;
+        override.intensity.value = value["intensity"].GetDouble();
     }
     
     return override;
@@ -101,17 +115,14 @@ SceneImporter::PrimitiveOverride SceneImporter::PrimitiveOverride::Load(const ra
         override.namePattern = value["name"].GetString();
     }
     if (value.HasMember("material")) {
-        override.hasMaterial = true;
-        override.material = value["material"].GetString();
-    } else {
-        override.hasMaterial = false;
+        override.material.isSet = true;
+        override.material.value = value["material"].GetString();
     }
-    if (value.HasMember("areaLight")) {
-        override.hasAreaLight = true;
-        override.areaLight = AreaLightOverride::Load(value["areaLight"]);
-    } else {
-        override.hasAreaLight = false;
+    if (value.HasMember("light")) {
+        override.light.isSet = true;
+        override.light.value = PrimitiveLightOverride::Load(value["light"]);
     }
+    
     return override;
 }
 
@@ -171,17 +182,12 @@ std::shared_ptr<Material> SceneImporter::addImportedMaterial(const SceneImporter
     
     if (!material) {
         std::shared_ptr<Matte> defaultMtl = std::make_shared<Matte>();
-        if (!attrs.diffuseTexturePath.empty()) {
-            std::shared_ptr<Texture> t = ImageLoading::LoadImage(attrs.diffuseTexturePath);
-            if (!t) {
-                std::cerr << "SceneImporter Error: couldn't load texture "
-                << attrs.diffuseTexturePath << std::endl;
-            } else {
-                defaultMtl->setColor(t);
-            }
+        if (attrs.diffuseTexture) {
+            defaultMtl->setColor(attrs.diffuseTexture);
         } else {
             defaultMtl->setColor(attrs.diffuseColor);
         }
+
         material = defaultMtl;
     }
     
@@ -189,36 +195,74 @@ std::shared_ptr<Material> SceneImporter::addImportedMaterial(const SceneImporter
     return material;
 }
 
-void SceneImporter::applyPrimitiveOverrides(Scene& scene, const std::string& name,
+bool SceneImporter::applyPrimitiveOverrides(Scene& scene, const std::string& name,
                                             const Transform& transform, GeometricPrimitive& p,
+                                            const ImportedMaterialAttributes* material,
                                             Mesh* mesh) const {
     // Look for a matching override
     for (const PrimitiveOverride& override : _primitivesOverrides) {
         if (MatchName(override.namePattern, name)) {
-            if (override.hasMaterial) {
-                std::shared_ptr<Material> material = scene.getMaterial(override.material);
+            if (override.material.isSet) {
+                std::shared_ptr<Material> material = scene.getMaterial(override.material.value);
                 if (material) {
                     p.setMaterial(material);
                 } else {
                     std::cerr << "SceneImporter Error: Overriden material \"" <<
-                    override.material << "\" not found" << std::endl;
+                    override.material.value << "\" not found" << std::endl;
                 }
             }
-            if (override.hasAreaLight) {
-                // Create area light
-                AreaLight* light = AreaLight::CreateFromMesh(mesh, transform,
-                                                             override.areaLight.inverseNormal,
-                                                             override.areaLight.indexOffset);
-                light->setColor(override.areaLight.color);
-                light->setIntensity(override.areaLight.intensity);
-                
-                // Add light to geometric primitive
-                p.setAreaLight(light);
-                
-                // Add light to scene
-                scene << light;
+            if (override.light.isSet) {
+                const PrimitiveLightOverride& lightOverride = override.light.value;
+                if (lightOverride.type == PrimitiveLightOverride::Area) {
+                    // Create area light
+                    AreaLight* light = AreaLight::CreateFromMesh(mesh, transform,
+                                                                 lightOverride.inverseNormal,
+                                                                 lightOverride.indexOffset);
+                    
+                    if (lightOverride.color) {
+                        light->setColor(lightOverride.color);
+                    } else if (material) {
+                        if (material->diffuseTexture) {
+                            light->setColor(material->diffuseTexture);
+                        } else {
+                            light->setColor(material->diffuseColor);
+                        }
+                    }
+                    
+                    if (lightOverride.intensity.isSet) {
+                        light->setIntensity(lightOverride.intensity.value);
+                    }
+                    
+                    // Add light to geometric primitive
+                    p.setAreaLight(light);
+                    
+                    // Add light to scene
+                    scene << light;
+                } else if (lightOverride.type == PrimitiveLightOverride::Environment) {
+                    // Create environment light
+                    SkyLight* light = new SkyLight();
+                    
+                    if (lightOverride.color) {
+                        light->setColor(lightOverride.color);
+                    } else if (material) {
+                        if (material->diffuseTexture) {
+                            light->setColor(material->diffuseTexture);
+                        } else {
+                            light->setColor(material->diffuseColor);
+                        }
+                    }
+                    
+                    light->setTransform(transform);
+                    
+                    // Add light to scene
+                    scene << light;
+                    
+                    // Return false so the original primitive is not added to the scene
+                    return false;
+                }
             }
-            return;
+            return true;
         }
     }
+    return true;
 }

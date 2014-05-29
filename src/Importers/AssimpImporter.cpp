@@ -37,12 +37,77 @@ bool AssimpImporter::import(Scene& scene) {
     // Import materials
     importMaterials(assimpScene, scene);
     
+    // Import scene nodes
     _trianglesCount = 0;
     importNode(assimpScene, assimpScene->mRootNode, scene);
     
     std::cout << "AssimImporter: loaded " << _trianglesCount << " triangles" << std::endl;
     
     return true;
+}
+
+bool AssimpImporter::importCamera(const aiScene *assimpScene, aiNode* assimpNode,
+                                  const Transform& transform, Scene &scene) {
+    // Search for a camera matching the given node name
+    for (uint i = 0; i < assimpScene->mNumCameras; ++i) {
+        const aiCamera* assimpCamera = assimpScene->mCameras[i];
+        const std::string name = assimpCamera->mName.C_Str();
+        
+        if (name == std::string(assimpNode->mName.C_Str())) {
+            std::shared_ptr<PerspectiveCamera> camera = std::make_shared<PerspectiveCamera>();
+            camera->setName(name);
+            
+            // Set camera transform
+            camera->setTransform(transform);
+            
+            // Load camera fov and aspect
+            camera->setVFov(glm::degrees(assimpCamera->mHorizontalFOV) / assimpCamera->mAspect);
+            camera->setAspect(assimpCamera->mAspect);
+            
+            // Add camera to the scene
+            scene << camera;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool AssimpImporter::importLight(const aiScene *assimpScene, aiNode* assimpNode,
+                                 const Transform& transform, Scene &scene) {
+    // Search for a light matching the given node name
+    for (uint i = 0; i < assimpScene->mNumLights; ++i) {
+        const aiLight* assimpLight = assimpScene->mLights[i];
+        const std::string name = assimpLight->mName.C_Str();
+        
+        if (name == std::string(assimpNode->mName.C_Str())) {
+            Light* light = nullptr;
+            
+            if (assimpLight->mType == aiLightSource_DIRECTIONAL) {
+                DirectionalLight* directional =  new DirectionalLight();
+                
+                directional->setDirection(transform.applyToVector(importVec3(assimpLight->mDirection)));
+                directional->setSpectrum(Spectrum(importColor(assimpLight->mColorDiffuse)));
+                directional->setIntensity(1.2);
+                light = directional;
+            } else if (assimpLight->mType == aiLightSource_POINT) {
+                PointLight* point = new PointLight();
+                
+                point->setPosition(transform(importVec3(assimpLight->mPosition)));
+                point->setSpectrum(Spectrum(importColor(assimpLight->mColorDiffuse)));
+                light = point;
+            }
+            
+            if (!light) {
+                continue;
+            }
+            light->setName(name);
+            
+            // Add light to the scene
+            scene << light;
+            return true;
+        }
+    }
+    return false;
 }
 
 void AssimpImporter::importMaterials(const aiScene* assimpScene, Scene& scene) {
@@ -63,10 +128,22 @@ void AssimpImporter::importMaterials(const aiScene* assimpScene, Scene& scene) {
         // Convert them to renderer values
         ImportedMaterialAttributes attrs;
         attrs.name = assimpName.C_Str();
-        attrs.diffuseColor = vec3(assimpColor.r, assimpColor.g, assimpColor.b);
-        attrs.diffuseTexturePath = assimpTexturePath.C_Str();
+        attrs.diffuseColor = importColor(assimpColor);
         
-        _importedMaterials.push_back(addImportedMaterial(attrs, scene));
+        // Load textures
+        std::string diffuseTexturePath = assimpTexturePath.C_Str();
+        
+        if (!diffuseTexturePath.empty()) {
+            std::shared_ptr<Texture> t = ImageLoading::LoadImage(diffuseTexturePath);
+            if (!t) {
+                std::cerr << "AssimpImporter Error: couldn't load texture "
+                << diffuseTexturePath << std::endl;
+            } else {
+                attrs.diffuseTexture = t;
+            }
+        }
+        
+        _importedMaterials.push_back(std::make_pair(attrs, addImportedMaterial(attrs, scene)));
     }
 }
 
@@ -74,52 +151,16 @@ void AssimpImporter::importNode(const aiScene* assimpScene, aiNode* assimpNode,
                                 Scene& scene, const mat4x4& parentMatrix) {
     // Get node name
     std::string name = assimpNode->mName.C_Str();
-    std::string nameLowercase = name;
-    std::transform(name.begin(), name.end(), nameLowercase.begin(), ::tolower);
     
     // Create transform
-    mat4x4 transformationMatrix = importMatrix(assimpNode->mTransformation);
-    transformationMatrix = parentMatrix * transformationMatrix;
+    mat4x4 transformationMatrix = parentMatrix * importMatrix(assimpNode->mTransformation);
     Transform transform(transformationMatrix);
     
-    /*
-    // Import camera and lights
-    if (camera && nameLowercase.find("camera") != std::string::npos) {
-        std::shared_ptr<PerspectiveCamera> perspectiveCamera = std::make_shared<PerspectiveCamera>();
-        
-        perspectiveCamera->setTransform(Transform(matrix));
-        aiCamera* assimpCamera = assimpScene->mCameras[0];
-        perspectiveCamera->setVFov(glm::degrees(assimpCamera->mHorizontalFOV)
-                                   / assimpCamera->mAspect);
-        *camera = perspectiveCamera;
-    } else if (_lightsCallback && nameLowercase.find("light") != std::string::npos) {
-        for (uint32_t i = 0; i < assimpScene->mNumLights; ++i) {
-            aiLight* light = assimpScene->mLights[i];
-            if (std::string(light->mName.C_Str()) == name) {
-                LightAttributes attrs;
-                
-                if (light->mType == aiLightSource_DIRECTIONAL) {
-                    attrs.type = DirectionalLight;
-                } else if (light->mType == aiLightSource_POINT) {
-                    attrs.type = PointLight;
-                }
-                
-                attrs.position = importAssimpVec3(light->mPosition);
-                attrs.position = vec3(matrix * vec4(attrs.position, 1.0f));
-                attrs.color = vec3(light->mColorDiffuse.r,
-                                   light->mColorDiffuse.g,
-                                   light->mColorDiffuse.b);
-                attrs.direction = vec3(light->mDirection.x,
-                                       light->mDirection.y,
-                                       light->mDirection.z);
-                attrs.direction = vec3(matrix * vec4(attrs.direction, 0.0f));
-                attrs.intensity = glm::length(attrs.color);
-                attrs.color = glm::normalize(attrs.color);
-                
-                _lightsCallback(attrs);
-            }
-        }
-    }*/
+    // Load light
+    importLight(assimpScene, assimpNode, transform, scene);
+    
+    // Load camera
+    importCamera(assimpScene, assimpNode, transform, scene);
     
     // Load meshes
     for (uint i = 0; i < assimpNode->mNumMeshes; ++i) {
@@ -170,32 +211,36 @@ void AssimpImporter::importNode(const aiScene* assimpScene, aiNode* assimpNode,
         mesh->setIndices(trianglesCount, indices);
         
         // Create geometric primitive
-        std::shared_ptr<Material> material;
+        ImportedMaterial material;
         if (assimpMesh->mMaterialIndex < _importedMaterials.size()) {
             material = _importedMaterials[assimpMesh->mMaterialIndex];
         } else {
             std::cerr << "Assimp Importer error: invalid material index";
             return;
         }
-        std::shared_ptr<GeometricPrimitive> primitive = std::make_shared<GeometricPrimitive>(mesh, material);
+        std::shared_ptr<GeometricPrimitive> primitive = std::make_shared<GeometricPrimitive>(mesh,
+                                                                                             material.second);
         
         // Apply overrides
-        applyPrimitiveOverrides(scene, name, transform, *primitive, mesh.get());
+        bool addToScene = applyPrimitiveOverrides(scene, name, transform, *primitive,
+                                                  &material.first, mesh.get());
         
-        // Create mesh acceleration structure
-        std::shared_ptr<Aggregate> aggregate = createMeshAccelerationStructure();
-        *aggregate << primitive;
-        
-        // Build acceleration structure
-        aggregate->preprocess();
-        
-        // Create transformed primitive
-        std::shared_ptr<TransformedPrimitive> transformedPrimitive =
-        std::make_shared<TransformedPrimitive>(aggregate, transform);
-        transformedPrimitive->setName(name);
-        
-        // Add primitive to scene
-        scene << transformedPrimitive;
+        if (addToScene) {
+            // Create mesh acceleration structure
+            std::shared_ptr<Aggregate> aggregate = createMeshAccelerationStructure();
+            *aggregate << primitive;
+            
+            // Build acceleration structure
+            aggregate->preprocess();
+            
+            // Create transformed primitive
+            std::shared_ptr<TransformedPrimitive> transformedPrimitive =
+            std::make_shared<TransformedPrimitive>(aggregate, transform);
+            transformedPrimitive->setName(name);
+            
+            // Add primitive to scene
+            scene << transformedPrimitive;
+        }
     }
     
     // Load child nodes recursively
@@ -217,4 +262,8 @@ mat4x4 AssimpImporter::importMatrix(const aiMatrix4x4& m) {
 
 vec3 AssimpImporter::importVec3(const aiVector3D& v) {
     return vec3(v.x, v.y, v.z);
+}
+
+vec3 AssimpImporter::importColor(const aiColor3D& c) {
+    return vec3(c.r, c.g, c.b);
 }

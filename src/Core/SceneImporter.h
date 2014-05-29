@@ -24,13 +24,11 @@ public:
     static std::shared_ptr<SceneImporter> Load(const rapidjson::Value& value);
     static bool MatchName(const std::string& name1, const std::string& name2);
     
-    struct AreaLightOverride {
-        static AreaLightOverride Load(const rapidjson::Value& value);
+    template<class T> struct OverridenProperty {
+        OverridenProperty() : isSet(false) {}
         
-        bool                        inverseNormal;
-        int                         indexOffset;
-        std::shared_ptr<Texture>    color;
-        float                       intensity;
+        bool    isSet;
+        T       value;
     };
     
     struct MaterialOverride {
@@ -38,20 +36,36 @@ public:
         std::string sceneMaterial;
     };
     
+    struct PrimitiveLightOverride {
+        enum Type {
+            Area,
+            Environment
+        };
+        
+        static PrimitiveLightOverride Load(const rapidjson::Value& value);
+        
+        PrimitiveLightOverride()
+        : type(), inverseNormal(false), indexOffset(), color(), intensity() {}
+        
+        Type                        type;
+        bool                        inverseNormal;
+        int                         indexOffset;
+        std::shared_ptr<Texture>    color;
+        OverridenProperty<float>    intensity;
+    };
+    
     struct PrimitiveOverride {
         static PrimitiveOverride Load(const rapidjson::Value& value);
         
-        std::string         namePattern;
-        bool                hasMaterial;
-        std::string         material;
-        bool                hasAreaLight;
-        AreaLightOverride   areaLight;
+        std::string                                 namePattern;
+        OverridenProperty<std::string>              material;
+        OverridenProperty<PrimitiveLightOverride>   light;
     };
     
     struct ImportedMaterialAttributes {
-        std::string     name;
-        vec3            diffuseColor;
-        std::string     diffuseTexturePath;
+        std::string                 name;
+        vec3                        diffuseColor;
+        std::shared_ptr<Texture>    diffuseTexture;
     };
     
     enum MeshAccelerationStructure {
@@ -73,8 +87,9 @@ public:
     std::shared_ptr<Material> getOverridenMaterial(const ImportedMaterialAttributes& attrs, const Scene& scene) const;
     std::shared_ptr<Material> addImportedMaterial(const ImportedMaterialAttributes& attrs, Scene& scene);
     
-    void applyPrimitiveOverrides(Scene& scene, const std::string& name,
+    bool applyPrimitiveOverrides(Scene& scene, const std::string& name,
                                  const Transform& transform, GeometricPrimitive& p,
+                                 const ImportedMaterialAttributes* material=nullptr,
                                  Mesh* mesh=nullptr) const;
     
 protected:

@@ -18,10 +18,12 @@
 class SkyLight : public Light {
 public:
     
-    SkyLight(const vec3& color);
-    SkyLight(Texture* color);
+    SkyLight(const vec3& color=vec3(0.5f));
+    SkyLight(const std::shared_ptr<Texture>& color);
     virtual ~SkyLight();
     
+    void setColor(const vec3& color);
+    void setColor(const std::shared_ptr<Texture>& color);
     void setTransform(const Transform& t);
     
     virtual Spectrum le(const Ray& ray, const Intersection* intersection=nullptr) const;
@@ -30,8 +32,8 @@ public:
                              vec3* wi, VisibilityTester* vt) const;
     
 private:
-    Texture*    _color;
-    Transform   _transform;
+    std::shared_ptr<Texture>    _color;
+    Transform                   _transform;
 };
 
 #endif /* defined(__CSE168_Rendering__SkyLight__) */

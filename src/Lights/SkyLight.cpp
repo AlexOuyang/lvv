@@ -9,20 +9,28 @@
 #include "SkyLight.h"
 
 SkyLight::SkyLight(const vec3& color) :
-Light(), _color(new UniformVec3Texture(color)), _transform() {
+Light(), _color(std::make_shared<UniformVec3Texture>(color)), _transform() {
     
 }
 
-SkyLight::SkyLight(Texture* color) : Light(), _color(nullptr) {
+SkyLight::SkyLight(const std::shared_ptr<Texture>& color) : Light(), _color() {
     if (color) {
         _color = color;
     } else {
-        _color = new UniformVec3Texture(vec3(1.f));
+        _color = std::make_shared<UniformVec3Texture>(vec3(1.f));
     }
 }
 
 SkyLight::~SkyLight() {
     
+}
+
+void SkyLight::setColor(const vec3& color) {
+    _color = std::make_shared<UniformVec3Texture>(color);
+}
+
+void SkyLight::setColor(const std::shared_ptr<Texture> &color) {
+    _color = color;
 }
 
 void SkyLight::setTransform(const Transform &t) {

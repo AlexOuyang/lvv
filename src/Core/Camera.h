@@ -18,14 +18,19 @@ public:
     
     static std::shared_ptr<Camera> Load(const rapidjson::Value& value);
     
+    Camera();
     virtual ~Camera();
     
     virtual float generateRay(const CameraSample& sample, Ray* ray) = 0;
+    
+    void setName(const std::string& name);
+    const std::string& getName() const;
     
     void setFilm(const std::shared_ptr<Film>& film);
     std::shared_ptr<Film> getFilm() const;
     
 private:
+    std::string             _name;
     std::shared_ptr<Film>   _film;
 };
 

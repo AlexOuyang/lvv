@@ -32,8 +32,20 @@ std::shared_ptr<Camera> Camera::Load(const rapidjson::Value& value) {
     return camera;
 }
 
+Camera::Camera() : _name(), _film() {
+    
+}
+
 Camera::~Camera() {
     
+}
+
+void Camera::setName(const std::string& name) {
+    _name = name;
+}
+
+const std::string& Camera::getName() const {
+    return _name;
 }
 
 void Camera::setFilm(const std::shared_ptr<Film>& film) {

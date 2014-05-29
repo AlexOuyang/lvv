@@ -17,7 +17,7 @@
 #include "Material.h"
 
 Scene::Scene(Aggregate* aggregate) :
-_lights(), _aggregate(aggregate), _volume(nullptr), _materials(), _camera() {
+_lights(), _aggregate(aggregate), _volume(nullptr), _materials(), _cameras(), _defaultCamera() {
     
 }
 
@@ -68,6 +68,11 @@ Scene& Scene::operator<<(const std::shared_ptr<Primitive>& primitive) {
     return *this;
 }
 
+Scene& Scene::operator<<(const std::shared_ptr<Camera>& camera) {
+    addCamera(camera);
+    return *this;
+}
+
 const std::vector<Light*>& Scene::getLights() const {
     return _lights;
 }
@@ -92,12 +97,29 @@ std::shared_ptr<Material> Scene::getMaterial(const std::string& name) const {
     return std::shared_ptr<Material>();
 }
 
-void Scene::setCamera(const std::shared_ptr<Camera>& camera) {
-    _camera = camera;
+void Scene::addCamera(const std::shared_ptr<Camera>& camera) {
+    _cameras[camera->getName()] = camera;
 }
 
-std::shared_ptr<Camera> Scene::getCamera() const {
-    return _camera;
+std::shared_ptr<Camera> Scene::getCamera(const std::string& name) const {
+    if (_cameras.size() == 0) {
+        return std::shared_ptr<Camera>();
+    }
+    // Return first camera by default
+    if (name.empty()) {
+        return _cameras.begin()->second;
+    }
+    // Or retrieve camera for given name
+    auto it = _cameras.find(name);
+    if (it != _cameras.end()) {
+        return it->second;
+    }
+    return std::shared_ptr<Camera>();
+}
+
+bool Scene::setDefaultCamera(const std::string& name) {
+    _defaultCamera = name;
+    return !!getCamera(name);
 }
 
 std::shared_ptr<Scene> Scene::Load(const rapidjson::Value& value) {
@@ -136,19 +158,26 @@ std::shared_ptr<Scene> Scene::Load(const rapidjson::Value& value) {
         }
     }
     
-    // Load camera
-    if (value.HasMember("camera")) {
-        std::shared_ptr<Camera> camera = Camera::Load(value["camera"]);
-        if (camera) {
-            scene->setCamera(camera);
-        }
-    }
-    
     // Import scene from a file
     if (value.HasMember("import")) {
         std::shared_ptr<SceneImporter> importer = SceneImporter::Load(value["import"]);
         if (importer) {
             importer->import(*scene);
+        }
+    }
+    
+    // Load camera
+    if (value.HasMember("camera")) {
+        const rapidjson::Value& cameraValue = value["camera"];
+        std::shared_ptr<Camera> camera;
+        if (cameraValue.IsString()) { // Retrieve camera by name
+            const std::string name = cameraValue.GetString();
+            if (!scene->setDefaultCamera(name)) {
+                std::cerr << "Scene error: camera not found \"" << name << "\"" << std::endl;
+            }
+        } else { // Create new camera
+            camera = Camera::Load(cameraValue);
+            scene->addCamera(camera);
         }
     }
     
