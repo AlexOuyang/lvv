@@ -4013,7 +4013,7 @@ const float smokeData[] = {
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 };
 
-DensityVolume::DensityVolume(const AABB& bounds) : Volume(), _bounds(bounds) {
+DensityVolume::DensityVolume() : Volume(), _bounds() {
     
 }
 
@@ -4021,7 +4021,7 @@ DensityVolume::~DensityVolume() {
     
 }
 
-void DensityVolume::setBounds(const AABB&& bounds) {
+void DensityVolume::setBounds(const AABB& bounds) {
     _bounds = bounds;
 }
 
@@ -4047,6 +4047,9 @@ AABB DensityVolume::getBoundingBox() const {
 
 float smokeDensity(int x, int y, int z) {
     int nx = 100, ny = 100, nz = 40;
+    if (z*nx*ny + y*nx + x > nx*ny*nz || z*nx*ny + y*nx + x < 0) {
+        return 0.f;
+    }
     return smokeData[z*nx*ny + y*nx + x];
 }
 
@@ -4056,12 +4059,14 @@ float DensityVolume::density(const vec3& p) const {
     if (!_bounds.intersectP(p)) {
         return 0.f;
     }
+    //return 0.5f*exp(-2.f * p.y);
+
     // Compute voxel coordinates and offsets for _Pobj_
     vec3 vox = (p - _bounds.min) / (_bounds.max - _bounds.min);
     vox.x = vox.x * nx - .5f;
     vox.y = vox.y * ny - .5f;
     vox.z = vox.z * nz - .5f;
-    int vx = (int)(vox.x), vy = (int)(vox.y), vz = (int)(vox.z);
+    int vx = (int)floorf(vox.x), vy = (int)floorf(vox.y), vz = (int)floorf(vox.z);
     float dx = vox.x - vx, dy = vox.y - vy, dz = vox.z - vz;
     
     // Trilinearly interpolate density values to compute local density
@@ -4072,7 +4077,6 @@ float DensityVolume::density(const vec3& p) const {
     float d0 = mix(d00, d10, dy);
     float d1 = mix(d01, d11, dy);
     return mix(d0, d1, dz);
-    //return exp(-1.f * p.y);
 }
 
 bool DensityVolume::intersectP(const Ray &ray, float *t0, float *t1) const {
@@ -4108,13 +4112,16 @@ Spectrum DensityVolume::tau(const Ray& ray) const {
         return Spectrum(0.f);
     }
     
-    const float stepSize = 5.f;
+    const float stepSize = 1.f;
     
     Spectrum tau = 0.f;
     
     while (t0 < t1) {
         float step = ((float)rand()/RAND_MAX)*stepSize;
-        t0 = min(t0 + step, t1);
+        t0 = t0 + step;
+        if (t0 > t1) {
+            break;
+        }
         tau += sigmaT(ray(t0)) * step;
     }
     

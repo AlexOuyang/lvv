@@ -55,6 +55,9 @@ void Scene::addPrimitive(const std::shared_ptr<Primitive>& primitive) {
 }
 
 void Scene::setVolume(Volume* volume) {
+    if (_volume) {
+        delete _volume;
+    }
     _volume = volume;
 }
 
@@ -70,6 +73,11 @@ Scene& Scene::operator<<(const std::shared_ptr<Primitive>& primitive) {
 
 Scene& Scene::operator<<(const std::shared_ptr<Camera>& camera) {
     addCamera(camera);
+    return *this;
+}
+
+Scene& Scene::operator<<(Volume* volume) {
+    setVolume(volume);
     return *this;
 }
 

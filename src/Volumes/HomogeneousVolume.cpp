@@ -8,8 +8,8 @@
 
 #include "HomogeneousVolume.h"
 
-HomogeneousVolume::HomogeneousVolume(const AABB& bounds) : Volume(),
-_bounds(bounds), _sigmaA(0.f), _sigmaS(0.f), _le(0.f), _g(0.f) {
+HomogeneousVolume::HomogeneousVolume() : Volume(),
+_bounds(), _sigmaA(0.f), _sigmaS(0.f), _le(0.f), _g(0.f) {
     
 }
 
@@ -17,7 +17,7 @@ HomogeneousVolume::~HomogeneousVolume() {
     
 }
 
-void HomogeneousVolume::setBounds(const AABB&& bounds) {
+void HomogeneousVolume::setBounds(const AABB& bounds) {
     _bounds = bounds;
 }
 

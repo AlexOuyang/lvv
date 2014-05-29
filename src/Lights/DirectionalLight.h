@@ -14,7 +14,7 @@
 class DirectionalLight : public Light {
 public:
     
-    DirectionalLight(const vec3& direction=vec3(), float intensity = 1.0, const Spectrum& spectrum=Spectrum(1));
+    DirectionalLight(const vec3& direction=vec3(), float intensity=1.0f, const Spectrum& spectrum=Spectrum(1));
     virtual ~DirectionalLight();
     
     void setDirection(const vec3& direction);

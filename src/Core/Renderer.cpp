@@ -49,7 +49,7 @@ std::shared_ptr<Renderer> Renderer::Load(const rapidjson::Value& value) {
     std::shared_ptr<Renderer> renderer;
     
     RenderOptions options = RenderOptions::Load(value["options"]);
-    renderer = std::make_shared<Renderer>();
+    renderer = std::make_shared<Renderer>(options);
     return renderer;
 }
 

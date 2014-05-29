@@ -15,10 +15,10 @@
 class DensityVolume : public Volume {
 public:
     
-    DensityVolume(const AABB& bounds);
+    DensityVolume();
     virtual ~DensityVolume();
     
-    void setBounds(const AABB&& bounds);
+    void setBounds(const AABB& bounds);
     void setSigmaA(const Spectrum& sa);
     void setSigmaS(const Spectrum& ss);
     void setLe(const Spectrum& le);

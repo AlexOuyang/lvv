@@ -27,7 +27,7 @@ public:
     
     void setVertices(int count, Vertex* vertices);
     void setIndices(int count, uint_t* indices);
-    void setAlphaTexture(Texture* texture);
+    void setAlphaTexture(const std::shared_ptr<Texture>& texture);
     
     int                         getTrianglesCount() const;
     std::shared_ptr<Triangle>   getTriangle(int index) const;
@@ -39,11 +39,11 @@ public:
     virtual void refine(std::vector<std::shared_ptr<Shape>> &refined) const;
 
 private:
-    int         _verticesCount;
-    int         _trianglesCount;
-    Vertex*     _vertices;
-    uint_t*     _indices;
-    Texture*    _alphaTexture;
+    int                         _verticesCount;
+    int                         _trianglesCount;
+    Vertex*                     _vertices;
+    uint_t*                     _indices;
+    std::shared_ptr<Texture>    _alphaTexture;
 };
 
 #endif /* defined(__CSE168_Rendering__Mesh__) */

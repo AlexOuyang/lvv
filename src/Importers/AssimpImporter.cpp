@@ -87,11 +87,10 @@ bool AssimpImporter::importLight(const aiScene *assimpScene, aiNode* assimpNode,
                 
                 directional->setDirection(transform.applyToVector(importVec3(assimpLight->mDirection)));
                 directional->setSpectrum(Spectrum(importColor(assimpLight->mColorDiffuse)));
-                directional->setIntensity(1.f);
                 light = directional;
             } else if (assimpLight->mType == aiLightSource_POINT) {
                 PointLight* point = new PointLight();
-                
+
                 point->setPosition(transform(importVec3(assimpLight->mPosition)));
                 point->setSpectrum(Spectrum(importColor(assimpLight->mColorDiffuse)));
                 light = point;
@@ -123,12 +122,14 @@ void AssimpImporter::importMaterials(const aiScene* assimpScene, Scene& scene) {
         
         // Read material properties as assimp values
         aiString assimpName;
-        aiString assimpTexturePath;
         aiColor3D assimpColor;
+        aiString assimpDiffuseTexture;
+        aiString assimpAlphaTexture;
         
         assimpMaterial->Get(AI_MATKEY_NAME, assimpName);
         assimpMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, assimpColor);
-        assimpMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &assimpTexturePath);
+        assimpMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &assimpDiffuseTexture);
+        assimpMaterial->GetTexture(aiTextureType_OPACITY, 0, &assimpAlphaTexture);
         
         // Convert them to renderer values
         ImportedMaterialAttributes attrs;
@@ -136,15 +137,22 @@ void AssimpImporter::importMaterials(const aiScene* assimpScene, Scene& scene) {
         attrs.diffuseColor = importColor(assimpColor);
         
         // Load textures
-        std::string diffuseTexturePath = assimpTexturePath.C_Str();
-        
-        if (!diffuseTexturePath.empty()) {
-            std::shared_ptr<Texture> t = ImageLoading::LoadImage(diffuseTexturePath);
+        std::string path = assimpDiffuseTexture.C_Str();
+        if (!path.empty()) {
+            std::shared_ptr<Texture> t = ImageLoading::LoadImage(path);
             if (!t) {
-                std::cerr << "AssimpImporter Error: couldn't load texture "
-                << diffuseTexturePath << std::endl;
+                std::cerr << "AssimpImporter Error: couldn't load texture " << path << std::endl;
             } else {
                 attrs.diffuseTexture = t;
+            }
+        }
+        path = assimpAlphaTexture.C_Str();
+        if (!path.empty()) {
+            std::shared_ptr<Texture> t = ImageLoading::LoadFloatImage(path);
+            if (!t) {
+                std::cerr << "AssimpImporter Error: couldn't load texture " << path << std::endl;
+            } else {
+                attrs.alphaTexture = t;
             }
         }
         
@@ -209,13 +217,7 @@ void AssimpImporter::importNode(const aiScene* assimpScene, aiNode* assimpNode,
             }
         }
         
-        // Create mesh
-        std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
-        
-        mesh->setVertices(verticesCount, vertices);
-        mesh->setIndices(trianglesCount, indices);
-        
-        // Create geometric primitive
+        // Get mesh material
         ImportedMaterial material;
         if (assimpMesh->mMaterialIndex < _importedMaterials.size()) {
             material = _importedMaterials[assimpMesh->mMaterialIndex];
@@ -223,6 +225,18 @@ void AssimpImporter::importNode(const aiScene* assimpScene, aiNode* assimpNode,
             std::cerr << "Assimp Importer error: invalid material index";
             return;
         }
+        
+        // Create mesh
+        std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
+        
+        mesh->setVertices(verticesCount, vertices);
+        mesh->setIndices(trianglesCount, indices);
+        
+        // Create geometric primitive
+        if (material.first.alphaTexture) {
+            mesh->setAlphaTexture(material.first.alphaTexture);
+        }
+        
         std::shared_ptr<GeometricPrimitive> primitive = std::make_shared<GeometricPrimitive>(mesh,
                                                                                              material.second);
         

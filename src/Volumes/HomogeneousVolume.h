@@ -16,10 +16,10 @@
 class HomogeneousVolume : public Volume {
 public:
     
-    HomogeneousVolume(const AABB& bounds);
+    HomogeneousVolume();
     virtual ~HomogeneousVolume();
     
-    void setBounds(const AABB&& bounds);
+    void setBounds(const AABB& bounds);
     void setSigmaA(const Spectrum& sa);
     void setSigmaS(const Spectrum& ss);
     void setLe(const Spectrum& le);

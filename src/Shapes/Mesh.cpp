@@ -9,8 +9,7 @@
 #include "Mesh.h"
 
 Mesh::Mesh()
-: _verticesCount(0), _trianglesCount(0), _vertices(nullptr), _indices(nullptr),
-_alphaTexture(nullptr) {    
+: _verticesCount(0), _trianglesCount(0), _vertices(nullptr), _indices(nullptr), _alphaTexture() {
 }
 
 Mesh::~Mesh() {
@@ -32,7 +31,7 @@ void Mesh::setIndices(int count, uint_t* indices) {
     _indices = indices;
 }
 
-void Mesh::setAlphaTexture(Texture* texture) {
+void Mesh::setAlphaTexture(const std::shared_ptr<Texture>& texture) {
     _alphaTexture = texture;
 }
 

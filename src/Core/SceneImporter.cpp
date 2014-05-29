@@ -13,6 +13,8 @@
 #include "Accelerators/BVHAccelerator.h"
 #include "Lights/AreaLight.h"
 #include "Lights/Skylight.h"
+#include "Volumes/HomogeneousVolume.h"
+#include "Volumes/DensityVolume.h"
 
 std::shared_ptr<SceneImporter> SceneImporter::Load(const rapidjson::Value& value) {
     // Check if mandatory values are specified
@@ -99,6 +101,15 @@ bool SceneImporter::MatchName(const std::string& pattern, const std::string& nam
     return pattern.find(name) != std::string::npos;
 }
 
+vec3 SceneImporter::LoadVec3(const rapidjson::Value& value) {
+    if (value.IsArray() && value.Size() == 3) {
+        return vec3((float)value[0u].GetDouble(),
+                    (float)value[1u].GetDouble(),
+                    (float)value[2u].GetDouble());
+    }
+    return vec3();
+}
+
 SceneImporter::MaterialOverride SceneImporter::MaterialOverride::Load(const rapidjson::Value& value) {
     SceneImporter::MaterialOverride override;
     
@@ -128,7 +139,9 @@ SceneImporter::PrimitiveLightOverride SceneImporter::PrimitiveLightOverride::Loa
         return override;
     }
     
-    const std::string type = value["type"].GetString();
+    std::string type = value["type"].GetString();
+    std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+    
     if (type == "area") {
         override.type = Area;
         if (value.HasMember("inverseNormal")) {
@@ -154,6 +167,37 @@ SceneImporter::PrimitiveLightOverride SceneImporter::PrimitiveLightOverride::Loa
     return override;
 }
 
+SceneImporter::PrimitiveVolumeOverride SceneImporter::PrimitiveVolumeOverride::Load(const rapidjson::Value& value) {
+    SceneImporter::PrimitiveVolumeOverride override;
+    
+    if (!value.HasMember("type")) {
+        std::cerr << "PrimitiveVolumeOverride error: no type specified" << std::endl;
+        return override;
+    }
+    
+    std::string type = value["type"].GetString();
+    std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+    
+    if (type == "homogeneous") {
+        override.type = Homogeneous;
+    }
+    
+    if (value.HasMember("sigmaA")) {
+        override.sigmaA = LoadVec3(value["sigmaA"]);
+    }
+    if (value.HasMember("sigmaS")) {
+        override.sigmaS = LoadVec3(value["sigmaS"]);
+    }
+    if (value.HasMember("le")) {
+        override.le = LoadVec3(value["le"]);
+    }
+    if (value.HasMember("g")) {
+        override.g = value["g"].GetDouble();
+    }
+    
+    return override;
+}
+
 SceneImporter::PrimitiveOverride SceneImporter::PrimitiveOverride::Load(const rapidjson::Value& value) {
     SceneImporter::PrimitiveOverride override;
     
@@ -167,6 +211,10 @@ SceneImporter::PrimitiveOverride SceneImporter::PrimitiveOverride::Load(const ra
     if (value.HasMember("light")) {
         override.light.isSet = true;
         override.light.value = PrimitiveLightOverride::Load(value["light"]);
+    }
+    if (value.HasMember("volume")) {
+        override.volume.isSet = true;
+        override.volume.value = PrimitiveVolumeOverride::Load(value["volume"]);
     }
     
     return override;
@@ -186,18 +234,14 @@ SceneImporter::LightOverride SceneImporter::LightOverride::Load(const rapidjson:
         const rapidjson::Value& directionValue = value["direction"];
         if (directionValue.IsArray() && directionValue.Size() == 3) {
             override.direction.isSet = true;
-            override.direction.value = vec3((float)directionValue[0u].GetDouble(),
-                                            (float)directionValue[1u].GetDouble(),
-                                            (float)directionValue[2u].GetDouble());
+            override.direction.value = LoadVec3(directionValue);
         }
     }
     if (value.HasMember("position")) {
         const rapidjson::Value& positionValue = value["position"];
         if (positionValue.IsArray() && positionValue.Size() == 3) {
             override.position.isSet = true;
-            override.position.value = vec3((float)positionValue[0u].GetDouble(),
-                                           (float)positionValue[1u].GetDouble(),
-                                           (float)positionValue[2u].GetDouble());
+            override.position.value = LoadVec3(positionValue);
         }
     }
     if (value.HasMember("color")) {
@@ -300,6 +344,7 @@ bool SceneImporter::applyPrimitiveOverrides(Scene& scene, const std::string& nam
     // Look for a matching override
     for (const PrimitiveOverride& override : _primitivesOverrides) {
         if (MatchName(override.namePattern, name)) {
+            // Apply material overrides
             if (override.material.isSet) {
                 std::shared_ptr<Material> material = scene.getMaterial(override.material.value);
                 if (material) {
@@ -309,6 +354,7 @@ bool SceneImporter::applyPrimitiveOverrides(Scene& scene, const std::string& nam
                     override.material.value << "\" not found" << std::endl;
                 }
             }
+            // Apply light overrides
             if (override.light.isSet) {
                 const PrimitiveLightOverride& lightOverride = override.light.value;
                 if (lightOverride.type == PrimitiveLightOverride::Area) {
@@ -362,6 +408,45 @@ bool SceneImporter::applyPrimitiveOverrides(Scene& scene, const std::string& nam
                     // Return false so the original primitive is not added to the scene
                     return false;
                 }
+            }
+            // Apply volume overrides
+            if (override.volume.isSet) {
+                const PrimitiveVolumeOverride& volumeOverride = override.volume.value;
+                
+                AABB bounds = transform(p.getBoundingBox());
+                
+                // Create volume base on type
+                Volume* volume = nullptr;
+                
+                if (volumeOverride.type == PrimitiveVolumeOverride::Homogeneous) {
+                    HomogeneousVolume* homogeneous = new HomogeneousVolume();
+                    
+                    homogeneous->setBounds(bounds);
+                    homogeneous->setSigmaA(Spectrum(volumeOverride.sigmaA));
+                    homogeneous->setSigmaS(Spectrum(volumeOverride.sigmaS));
+                    homogeneous->setLe(Spectrum(volumeOverride.le));
+                    homogeneous->setPhaseParameter(volumeOverride.g);
+                    
+                    volume = homogeneous;
+                } else {
+                    DensityVolume* density = new DensityVolume();
+                    
+                    density->setBounds(bounds);
+                    density->setSigmaA(Spectrum(volumeOverride.sigmaA));
+                    density->setSigmaS(Spectrum(volumeOverride.sigmaS));
+                    density->setLe(Spectrum(volumeOverride.le));
+                    density->setPhaseParameter(volumeOverride.g);
+                    volume = density;
+                }
+                
+                if (!volume) {
+                    continue;
+                }
+                
+                scene << volume;
+                
+                // Return false so the original primitive is not added to the scene
+                return false;
             }
             return true;
         }

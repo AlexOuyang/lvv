@@ -36,6 +36,7 @@ public:
     Scene& operator<<(Light* light);
     Scene& operator<<(const std::shared_ptr<Camera>& camera);
     Scene& operator<<(const std::shared_ptr<Primitive>& primitive);
+    Scene& operator<<(Volume* volume);
     
     const std::vector<Light*>&      getLights() const;
     Volume*                         getVolume() const;

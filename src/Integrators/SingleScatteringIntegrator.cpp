@@ -36,7 +36,10 @@ Spectrum SingleScatteringIntegrator::li(const Scene& scene, const Renderer& rend
         float t1 = tstart;
         while (t1 < tend) {
             float step = ((float)rand()/RAND_MAX)*stepSize;
-            t1 = min(t0 + step, tend);
+            t1 = t0 + step;
+            if (t1 > tend) {
+                break;
+            }
             vec3 p = ray(t0);
             float dist = glm::distance(ray(t0), ray(t1));
             Ray stepRay = Ray(ray);

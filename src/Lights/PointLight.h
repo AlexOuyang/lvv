@@ -15,7 +15,7 @@
 class PointLight : public Light {
 public:
     
-    PointLight(const vec3& position=vec3(), float intensity = 1.0, const Spectrum& spectrum=Spectrum(1));
+    PointLight(const vec3& position=vec3(), float intensity=1.0f, const Spectrum& spectrum=Spectrum(1));
     virtual ~PointLight();
     
     void setPosition(const vec3& position);

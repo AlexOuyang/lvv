@@ -23,6 +23,7 @@ public:
     
     static std::shared_ptr<SceneImporter> Load(const rapidjson::Value& value);
     static bool MatchName(const std::string& name1, const std::string& name2);
+    static vec3 LoadVec3(const rapidjson::Value& value);
     
     template<class T> struct OverridenProperty {
         OverridenProperty() : isSet(false) {}
@@ -57,12 +58,27 @@ public:
         OverridenProperty<float>    intensity;
     };
     
+    struct PrimitiveVolumeOverride {
+        enum Type {
+            Homogeneous
+        };
+        
+        static PrimitiveVolumeOverride Load(const rapidjson::Value& value);
+        
+        Type    type;
+        vec3    sigmaA;
+        vec3    sigmaS;
+        vec3    le;
+        float   g;
+    };
+    
     struct PrimitiveOverride {
         static PrimitiveOverride Load(const rapidjson::Value& value);
         
         std::string                                 namePattern;
         OverridenProperty<std::string>              material;
         OverridenProperty<PrimitiveLightOverride>   light;
+        OverridenProperty<PrimitiveVolumeOverride>  volume;
     };
     
     struct LightOverride {
@@ -79,6 +95,7 @@ public:
         std::string                 name;
         vec3                        diffuseColor;
         std::shared_ptr<Texture>    diffuseTexture;
+        std::shared_ptr<Texture>    alphaTexture;
     };
     
     enum MeshAccelerationStructure {
