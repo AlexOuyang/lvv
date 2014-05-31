@@ -11,6 +11,7 @@
 
 #include "Core/Core.h"
 #include "Core/Volume.h"
+#include "Core/Transform.h"
 
 class DensityVolume : public Volume {
 public:
@@ -18,13 +19,14 @@ public:
     DensityVolume();
     virtual ~DensityVolume();
     
+    void setTransform(const Transform& objectToWorld);
     void setBounds(const AABB& bounds);
     void setSigmaA(const Spectrum& sa);
     void setSigmaS(const Spectrum& ss);
     void setLe(const Spectrum& le);
     void setPhaseParameter(float g);
     
-    virtual float density(const vec3& p) const;
+    virtual float density(const vec3& p) const = 0;
     
     virtual AABB getBoundingBox() const;
     virtual bool intersectP(const Ray& ray, float* t0, float* t1) const;
@@ -35,8 +37,9 @@ public:
     virtual Spectrum sigmaT(const vec3& p) const;
     virtual Spectrum tau(const Ray& ray) const;
     
-private:
-    AABB    _bounds;
+protected:
+    Transform   _worldToObject;
+    AABB        _bounds;
     Spectrum    _sigmaA;
     Spectrum    _sigmaS;
     Spectrum    _le;

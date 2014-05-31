@@ -20,25 +20,15 @@ ConfigFileReader::~ConfigFileReader() {
 
 bool ConfigFileReader::readFile(const std::string &filename) {
     // Open and read config file
-    std::ifstream file (filename);
-    
-    if (!file.is_open()) {
-        return false;
-    }
-    
-    file.seekg(0, std::ios::end);
     std::string contents;
-    contents.resize(file.tellg());
-    file.seekg (0, std::ios::beg);
-    file.read(&contents[0], contents.size());
-    file.close();
+    LoadFileContents(filename, contents);
     
     // Parse json file
     Document json;
     json.Parse<0>(contents.c_str());
     if (json.HasParseError()) {
-        qDebug() << json.GetErrorOffset() << ":" << json.GetParseError();
-        qDebug() << QString(contents.c_str()).mid(json.GetErrorOffset(), 30);
+        std::cerr << json.GetErrorOffset() << ": " << json.GetParseError() << std::endl;
+        std::cerr << contents.substr(json.GetErrorOffset(), 30) << std::endl;
         return false;
     }
     
@@ -75,6 +65,26 @@ std::shared_ptr<Renderer> ConfigFileReader::getRenderer() const {
 
 std::shared_ptr<Scene> ConfigFileReader::getScene() const {
     return _scene;
+}
+
+bool ConfigFileReader::LoadFileContents(std::string filename, std::string& contents) {
+    if (filename[0] != '/') {
+        filename = Core::baseDirectory + filename;
+    }
+    
+    std::ifstream file (filename);
+    
+    if (!file.is_open()) {
+        std::cerr << "ConfigFileReader error: cannot open file \"" << contents << std::endl;
+        return false;
+    }
+    
+    file.seekg(0, std::ios::end);
+    contents.resize(file.tellg());
+    file.seekg (0, std::ios::beg);
+    file.read(&contents[0], contents.size());
+    file.close();
+    return true;
 }
 
 vec3 ConfigFileReader::LoadVec3(const rapidjson::Value& value) {

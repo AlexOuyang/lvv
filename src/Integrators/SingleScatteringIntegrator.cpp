@@ -28,20 +28,18 @@ Spectrum SingleScatteringIntegrator::li(const Scene& scene, const Renderer& rend
     
     vec3 wo = -ray.direction;
     
-    const float stepSize = 10.f;
+    const float stepSize = 0.1f;
     
     float tstart, tend;
     if (volume->intersectP(ray, &tstart, &tend)) {
-        float t0 = tstart;
+        float t0 = tstart + ((float)rand()/RAND_MAX)*stepSize;
         float t1 = tstart;
         while (t1 < tend) {
-            float step = ((float)rand()/RAND_MAX)*stepSize;
-            t1 = t0 + step;
+            t1 = t0 + stepSize;
             if (t1 > tend) {
                 break;
             }
             vec3 p = ray(t0);
-            float dist = glm::distance(ray(t0), ray(t1));
             Ray stepRay = Ray(ray);
             stepRay.tmin = t0;
             stepRay.tmax = t1;
@@ -51,10 +49,10 @@ Spectrum SingleScatteringIntegrator::li(const Scene& scene, const Renderer& rend
             tr *= Spectrum::exp(-tau);
             
             // Add emitted light
-            lv += tr * dist * volume->le(p);
+            lv += tr * stepSize * volume->le(p);
             
             // Compute radiance contribution from lights
-            Spectrum scattering = volume->sigmaS(p) * dist;
+            Spectrum scattering = volume->sigmaS(p) * stepSize;
             if (!scattering.isBlack()) {
                 for (Light* light : scene.getLights()) {
                     VisibilityTester vt(stepRay);

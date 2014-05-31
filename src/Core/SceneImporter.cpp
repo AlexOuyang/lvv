@@ -14,7 +14,7 @@
 #include "Lights/AreaLight.h"
 #include "Lights/Skylight.h"
 #include "Volumes/HomogeneousVolume.h"
-#include "Volumes/DensityVolume.h"
+#include "Volumes/GridVolume.h"
 
 std::shared_ptr<SceneImporter> SceneImporter::Load(const rapidjson::Value& value) {
     // Check if mandatory values are specified
@@ -39,7 +39,11 @@ std::shared_ptr<SceneImporter> SceneImporter::Load(const rapidjson::Value& value
         return std::shared_ptr<SceneImporter>();
     }
     
-    importer->setFilename(value["filename"].GetString());
+    std::string filename = value["filename"].GetString();
+    if (filename[0] != '/') {
+        filename = Core::baseDirectory + filename;
+    }
+    importer->setFilename(filename);
     
     // Load scene overrides
     if (value.HasMember("overrides")) {
@@ -180,6 +184,12 @@ SceneImporter::PrimitiveVolumeOverride SceneImporter::PrimitiveVolumeOverride::L
     
     if (type == "homogeneous") {
         override.type = Homogeneous;
+    } else if (type == "grid") {
+        override.type = Grid;
+        
+        if (value.HasMember("data")) {
+            override.gridDataFile = value["data"].GetString();
+        }
     }
     
     if (value.HasMember("sigmaA")) {
@@ -428,14 +438,20 @@ bool SceneImporter::applyPrimitiveOverrides(Scene& scene, const std::string& nam
                     homogeneous->setPhaseParameter(volumeOverride.g);
                     
                     volume = homogeneous;
-                } else {
-                    DensityVolume* density = new DensityVolume();
+                } else if (volumeOverride.type == PrimitiveVolumeOverride::Grid) {
+                    GridVolume* density = new GridVolume();
                     
-                    density->setBounds(bounds);
-                    density->setSigmaA(Spectrum(volumeOverride.sigmaA));
-                    density->setSigmaS(Spectrum(volumeOverride.sigmaS));
-                    density->setLe(Spectrum(volumeOverride.le));
-                    density->setPhaseParameter(volumeOverride.g);
+                    if (!density->loadData(volumeOverride.gridDataFile)) {
+                        delete density;
+                        density = nullptr;
+                    } else {
+                        density->setBounds(bounds);
+                        density->setSigmaA(Spectrum(volumeOverride.sigmaA));
+                        density->setSigmaS(Spectrum(volumeOverride.sigmaS));
+                        density->setLe(Spectrum(volumeOverride.le));
+                        density->setPhaseParameter(volumeOverride.g);
+                    }
+                    
                     volume = density;
                 }
                 

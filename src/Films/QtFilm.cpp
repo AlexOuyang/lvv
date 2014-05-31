@@ -85,6 +85,13 @@ void QtFilm::addSample(const CameraSample &sample, const Spectrum &L, float weig
     _image.setPixel(sample.pixel.x, sample.pixel.y, Spectrum(newValue).getIntColor());
 }
 
+void QtFilm::clear() {
+    // Fill image of black
+    _image.fill(Spectrum().getIntColor());
+    _buffer.clear();
+    _buffer.resize(resolution.x*resolution.y, vec3(0.0f));
+}
+
 void QtFilm::refreshTick() {
     repaint();
 }

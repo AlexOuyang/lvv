@@ -22,10 +22,12 @@ public:
     virtual ~ImageFilm();
     
     void setFilename(const std::string& filename);
+    const std::string& getFilename() const;
     
     virtual void addSample(const CameraSample &sample, const Spectrum &L, float weight=1.0f);
+    virtual void clear();
     
-    void writeToFile();
+    void writeToFile(const std::string& filename="");
     
 private:
     std::string         _filename;

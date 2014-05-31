@@ -38,6 +38,7 @@ public:
     Scene& operator<<(const std::shared_ptr<Primitive>& primitive);
     Scene& operator<<(Volume* volume);
     
+    const Aggregate*                getAggregate() const;
     const std::vector<Light*>&      getLights() const;
     Volume*                         getVolume() const;
     

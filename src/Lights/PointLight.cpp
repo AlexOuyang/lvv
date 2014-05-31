@@ -39,5 +39,5 @@ Spectrum PointLight::sampleL(const vec3& point, float rayEpsilon,
     vec3 dist = _position - point;
     *wi = vec3(normalize(dist));
     vt->setSegment(point, rayEpsilon, _position);
-    return (_spectrum * _intensity) * (1.0 / dot(dist, dist));
+    return (_spectrum * _intensity) * (1.0f / dot(dist, dist));
 }

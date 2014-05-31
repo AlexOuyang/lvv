@@ -45,6 +45,7 @@ public:
     Renderer(RenderOptions options=RenderOptions());
     ~Renderer();
     
+    void            reset();
     void            render(const Scene& scene, Camera* camera);
     CameraSample*   getSamples(Renderer::Task* task, int* samplesCount) const;
     

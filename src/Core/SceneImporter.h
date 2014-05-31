@@ -60,16 +60,18 @@ public:
     
     struct PrimitiveVolumeOverride {
         enum Type {
-            Homogeneous
+            Homogeneous,
+            Grid
         };
         
         static PrimitiveVolumeOverride Load(const rapidjson::Value& value);
         
-        Type    type;
-        vec3    sigmaA;
-        vec3    sigmaS;
-        vec3    le;
-        float   g;
+        Type        type;
+        vec3        sigmaA;
+        vec3        sigmaS;
+        vec3        le;
+        float       g;
+        std::string gridDataFile;
     };
     
     struct PrimitiveOverride {

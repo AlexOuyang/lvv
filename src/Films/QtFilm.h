@@ -33,6 +33,7 @@ public:
     
     virtual void addSample(const CameraSample &sample, const Spectrum &L,
                            float weight=1.0f);
+    virtual void clear();
     
     void applyFilters();
     

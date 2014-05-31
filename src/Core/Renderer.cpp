@@ -68,6 +68,10 @@ Renderer::~Renderer() {
     }
 }
 
+void Renderer::reset() {
+    _samplesCount = 0;    
+}
+
 void Renderer::render(const Scene& scene, Camera* camera) {
     _samplesCount += 1;
     

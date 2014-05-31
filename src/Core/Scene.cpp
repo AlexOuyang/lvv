@@ -81,6 +81,10 @@ Scene& Scene::operator<<(Volume* volume) {
     return *this;
 }
 
+const Aggregate* Scene::getAggregate() const {
+    return _aggregate;
+}
+
 const std::vector<Light*>& Scene::getLights() const {
     return _lights;
 }

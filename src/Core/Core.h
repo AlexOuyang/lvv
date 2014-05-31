@@ -32,11 +32,15 @@ class Material;
 class Primitive;
 class Transform;
 
-namespace Core {
-    const float Epsilon = 0.0001f;
+class Core {
+public:
+    static const float Epsilon;
     
-    int roundUpPow2(int n);
-}
+    static int roundUpPow2(int n);
+    
+    static std::string baseDirectory;
+    static void setBaseDirectory(const std::string& dir);
+};
 
 /*
  * Debug utilities

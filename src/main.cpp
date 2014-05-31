@@ -15,6 +15,11 @@
 #include "Films/ImageFilm.h"
 #include "Films/QtFilm.h"
 
+#include <sstream>
+#include <iomanip>
+#include "Accelerators/BVHAccelerator.h"
+#include "Core/TransformedPrimitive.h"
+
 int main(int argc, char* argv[]) {
     if (argc <= 1) {
         std::cerr << "Usage: " << argv[0] << " filename" << std::endl;
@@ -24,9 +29,19 @@ int main(int argc, char* argv[]) {
     // Init QApplication
     QApplication app(argc, argv);
     
+    std::string configFile = argv[1];
+    // Get base directory based on config file path
+    size_t lastSlash = configFile.find_last_of('/');
+    if (lastSlash != std::string::npos) {
+        std::string base = configFile.substr(0, lastSlash+1);
+        Core::setBaseDirectory(base);
+    } else {
+        Core::setBaseDirectory("./");
+    }
+    
     ConfigFileReader reader;
 
-    if (!reader.readFile(argv[1])) {
+    if (!reader.readFile(configFile)) {
         return EXIT_FAILURE;
     }
     
@@ -55,6 +70,43 @@ int main(int argc, char* argv[]) {
     }
     
     camera->setFilm(film);
+    
+    // ANIMATE
+    if (false)
+    {
+        // Prepare scene elements
+        BVHAccelerator* aggregate = const_cast<BVHAccelerator*>(dynamic_cast<const BVHAccelerator*>(scene->getAggregate()));
+        std::shared_ptr<TransformedPrimitive> spherePrim = std::dynamic_pointer_cast<TransformedPrimitive>(aggregate->findPrimitive("sphere"));
+        Transform transform = spherePrim->getTransform();
+        
+        std::shared_ptr<ImageFilm> image = std::dynamic_pointer_cast<ImageFilm>(film);
+        
+        int nbFrames = 24*4;
+        int nbSamples = 60;
+        for (int i = 0; i < nbFrames; ++i) {
+            QTime clock;
+            clock.start();
+            
+            transform.rotate(360.f/nbFrames, vec3(0.f, 1.f, 0.f));
+            spherePrim->setTransform(transform);
+            qDebug() << "Rendering frame " << i << "/" << nbFrames;
+            for (int j = 0; j < nbSamples; ++j) {
+                renderer->render(*scene, camera.get());
+            }
+            
+            // Create filename
+            std::stringstream ss;
+            ss << "/Users/gael/Desktop/anim/animframe_" << std::setfill('0') << std::setw(2) << i << ".bmp";
+            image->writeToFile(ss.str());
+            image->clear();
+            renderer->reset();
+            
+            float elapsed = ((float)clock.elapsed()/1000.f);
+            qDebug() << "Rendered frame in" << elapsed << "s";
+        }
+        qDebug() << "Rendering done";
+        return EXIT_SUCCESS;
+    }
     
     // If we have an image film, render an store
     std::shared_ptr<ImageFilm> image = std::dynamic_pointer_cast<ImageFilm>(film);

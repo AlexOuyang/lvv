@@ -8,6 +8,8 @@
 
 #include "Core.h"
 
+const float Core::Epsilon = 0.0001f;
+
 int Core::roundUpPow2(int n) {
     n--;
     n |= n >> 1;
@@ -16,6 +18,12 @@ int Core::roundUpPow2(int n) {
     n |= n >> 8;
     n |= n >> 16;
     return n+1;
+}
+
+std::string Core::baseDirectory = "";
+
+void Core::setBaseDirectory(const std::string& dir) {
+    baseDirectory = dir;
 }
 
 QDebug operator<<(QDebug dbg, const std::string& s) {

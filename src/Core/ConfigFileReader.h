@@ -27,6 +27,7 @@ public:
     std::shared_ptr<Scene> getScene() const;
     
     // Utility functions
+    static bool LoadFileContents(std::string filename, std::string& contents);
     static vec3 LoadVec3(const rapidjson::Value& value);
     
 private:
