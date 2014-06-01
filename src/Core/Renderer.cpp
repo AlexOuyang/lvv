@@ -11,7 +11,6 @@
 #include "Core/Intersection.h"
 
 #include <QThreadPool>
-#include <QDebug>
 #include <random>
 #include <algorithm>
 
@@ -69,7 +68,13 @@ Renderer::~Renderer() {
 }
 
 void Renderer::reset() {
-    _samplesCount = 0;    
+    _samplesCount = 0;
+}
+
+void Renderer::preprocess(const Scene& scene, Camera* camera) {
+    // Let integrators preprocess scene
+    _surfaceIntegrator->preprocess(scene, camera);
+    _volumeIntegrator->preprocess(scene, camera);
 }
 
 void Renderer::render(const Scene& scene, Camera* camera) {

@@ -102,7 +102,8 @@ std::shared_ptr<SceneImporter> SceneImporter::Load(const rapidjson::Value& value
 }
 
 bool SceneImporter::MatchName(const std::string& pattern, const std::string& name) {
-    return pattern.find(name) != std::string::npos;
+    //return pattern.find(name) != std::string::npos;
+    return pattern == name;
 }
 
 vec3 SceneImporter::LoadVec3(const rapidjson::Value& value) {

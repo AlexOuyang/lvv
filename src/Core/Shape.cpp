@@ -17,16 +17,16 @@ bool Shape::canIntersect() const {
 }
 
 bool Shape::intersect(const Ray&, Intersection*) const {
-    qDebug() << "Shape intersect not implemented";
+    std::cerr << "Shape intersect not implemented" << std::endl;
     abort();
 }
 
 bool Shape::intersectP(const Ray&) const {
-    qDebug() << "Shape intersectP not implemented";
+    std::cerr << "Shape intersectP not implemented" << std::endl;
     abort();
 }
 
 void Shape::refine(std::vector<std::shared_ptr<Shape>> &) const {
-    qDebug() << "Shape refine not implemented";
+    std::cerr << "Shape refine not implemented" << std::endl;
     abort();
 }

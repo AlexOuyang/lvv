@@ -8,8 +8,6 @@
 
 #include "AreaLight.h"
 
-#include <QDebug>
-
 AreaLight* AreaLight::CreateFromMesh(Mesh* mesh, const Transform& t, bool inverseNormal, int indexOffset) {
     if (mesh->getTrianglesCount() != 2) {
         return nullptr;
@@ -75,23 +73,6 @@ Spectrum AreaLight::le(const Ray& ray, const Intersection* intersection) const {
 Spectrum AreaLight::sampleL(const vec3 &point, float rayEpsilon,
                             const LightSample& lightSample,
                             vec3 *wi, VisibilityTester *vt) const {
-//    // Sample random position over mesh
-//    // Assuming all mesh triangles have the same probability
-//    const Triangle& triangle = _mesh->_triangles[rand() % _mesh->_trianglesCount];
-//    
-//    // Sample point in triangle
-//    float alpha = sqrt(lightSample.u)*lightSample.v;
-//    float beta = 1.0f-sqrt(lightSample.u);
-//    
-//    vec3 sampledPosition = (
-//                            triangle.getVertex(0)->position
-//                            + alpha * (triangle.getVertex(1)->position
-//                                       - triangle.getVertex(0)->position)
-//                            + beta * (triangle.getVertex(2)->position
-//                                         - triangle.getVertex(0)->position)
-//                            );
-//    vec3 normal = triangle.getVertex(0)->normal;
-    
     vec3 v1 = _points[1] - _points[0], v2 = _points[2] - _points[0];
     vec3 sampledPosition = _points[0] + lightSample.u * v1 + lightSample.v * v2;
     
@@ -105,6 +86,34 @@ Spectrum AreaLight::sampleL(const vec3 &point, float rayEpsilon,
     vt->setSegment(point, rayEpsilon, sampledPosition);
     return Spectrum(
             (color * _intensity)
-            * dot(dist, _normal)
+            * dot(-dist, _normal)
             * (1.0f / (distLength*distLength)));
+}
+
+Spectrum AreaLight::samplePhoton(vec3 *p, vec3 *direction) const {
+    float u = (float)rand()/RAND_MAX;
+    float v = (float)rand()/RAND_MAX;
+    
+    vec3 v1 = _points[1] - _points[0], v2 = _points[2] - _points[0];
+    vec3 sampledPosition = _points[0] + u * v1 + v * v2;
+    
+    *p = sampledPosition;
+    
+    vec3 color = _color->evaluateVec3(vec2(u, v));
+    
+    // Cosine sample hemisphere direction
+    float s = (float)rand()/RAND_MAX;
+    float t = (float)rand()/RAND_MAX;
+    u = 2.0f*M_PI*s;
+    v = sqrt(1.f - t);
+    vec3 dir = vec3(v*cos(u), sqrt(t), v*sin(u));
+
+//    u = 2.0f*M_PI*s;
+//    v = sqrt(1.f - t*t);
+//
+//    vec3 dir = vec3(v*cos(u), sqrt(t), v*sin(u));
+    
+    *direction = normalize(v1)*dir.x + normalize(v2)*dir.z + _normal*dir.y;
+    
+    return color * _intensity;
 }

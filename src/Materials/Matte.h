@@ -30,8 +30,10 @@ public:
     
     virtual Spectrum evaluateBSDF(const vec3& wo, const vec3& wi,
                                   const Intersection& intersection) const;
-    virtual Spectrum sampleBSDF(const vec3& wo, vec3* wi, const Intersection& intersection,
+    virtual Spectrum sampleBSDF(const vec3& wo, vec3* wi,
+                                const Intersection& intersection,
                                 BxDFType type) const;
+    virtual BxDFType getBSDFType() const;
     
 private:
     std::shared_ptr<Texture>    _color;

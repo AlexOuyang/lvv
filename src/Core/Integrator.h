@@ -9,9 +9,13 @@
 #ifndef CSE168_Rendering_Integrator_h
 #define CSE168_Rendering_Integrator_h
 
+#include "Core.h"
+
 class Integrator {
 public:    
     virtual ~Integrator() {};
+    
+    virtual void preprocess(const Scene&, const Camera*) {};
 };
 
 #endif

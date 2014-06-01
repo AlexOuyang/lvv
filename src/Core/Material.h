@@ -40,8 +40,10 @@ public:
     
     virtual Spectrum evaluateBSDF(const vec3& wo, const vec3& wi,
                                   const Intersection& intersection) const = 0;
-    virtual Spectrum sampleBSDF(const vec3& wo, vec3* wi, const Intersection& intersection,
+    virtual Spectrum sampleBSDF(const vec3& wo, vec3* wi,
+                                const Intersection& intersection,
                                 BxDFType type) const = 0;
+    virtual BxDFType getBSDFType() const { return (BxDFType)0; };
     
     // Utility functions for computing material bsdf's
     static float fresnelDielectric(float cosi, float cost, float etai, float etat);

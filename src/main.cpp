@@ -127,6 +127,12 @@ int main(int argc, char* argv[]) {
         
         window->show();
         
+        QTime clock;
+        clock.start();
+        std::cout << "Rendering photon maps..." << std::endl;
+        renderer->preprocess(*scene, camera.get());
+        float elapsed = ((float)clock.elapsed()/1000.f);
+        std::cout << "Photon maps rendered in " << elapsed << "s" << std::endl;
         std::cout << "Begin rendering..." << std::endl;
 
         std::thread renderingThread([&] {
@@ -135,15 +141,15 @@ int main(int argc, char* argv[]) {
             while (true) {
                 if (continueRendering) {
                     ++sampleCount;
-                    QTime clock;
                     clock.start();
                     renderer->render(*scene, camera.get());
-                    float elapsed = ((float)clock.elapsed()/1000.f);
+                    elapsed = ((float)clock.elapsed()/1000.f);
                     avgSampleTime = (sampleCount > 1)
                     ? ((avgSampleTime*(sampleCount-1))+elapsed)/sampleCount : elapsed;
                     qDebug() << "Rendered sample" << sampleCount
                     << "in" << elapsed << "s, avg"
                     << avgSampleTime << "s";
+                    continueRendering = false;
                 } else {
                     QThread::msleep(100);
                 }

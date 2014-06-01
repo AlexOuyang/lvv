@@ -6,8 +6,6 @@
 //
 //
 
-#include <QDebug>
-
 #include "BVHAccelerator.h"
 
 BVHAccelerator::Node::Node()

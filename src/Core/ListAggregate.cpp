@@ -8,8 +8,6 @@
 
 #include "ListAggregate.h"
 
-#include <QDebug>
-
 ListAggregate::ListAggregate() : _primitives() {
     
 }

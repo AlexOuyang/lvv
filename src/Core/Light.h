@@ -27,11 +27,13 @@ public:
                              const LightSample& lightSample,
                              vec3* wi, VisibilityTester* vt) const = 0;
     
+    virtual Spectrum samplePhoton(vec3* p, vec3* direction) const;
+    
     void    setName(const std::string& name);
     const   std::string& getName() const;
     
-    const SamplingConfig& getSamplingConfig() const;
-    void setSamplingConfig(const SamplingConfig& sc);
+    const   SamplingConfig& getSamplingConfig() const;
+    void    setSamplingConfig(const SamplingConfig& sc);
     
 private:
     std::string     _name;

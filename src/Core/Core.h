@@ -27,6 +27,7 @@ class Ray;
 class Intersection;
 class AABB;
 class Scene;
+class Camera;
 class Renderer;
 class Material;
 class Primitive;

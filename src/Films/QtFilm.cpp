@@ -10,7 +10,6 @@
 
 #include <QPainter>
 #include <QFileDialog>
-#include <QDebug>
 #include <QKeyEvent>
 
 std::shared_ptr<QtFilm> QtFilm::Load(const rapidjson::Value&, const vec2& resolution) {

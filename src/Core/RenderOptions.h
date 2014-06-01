@@ -18,8 +18,9 @@ class RenderOptions {
 public:
     
     enum SurfaceIntegrator {
+        WhittedIntegrator,
         PathTracingIntegrator,
-        WhittedIntegrator
+        PhotonMappingIntegrator
     };
     
     enum VolumeIntegrator {

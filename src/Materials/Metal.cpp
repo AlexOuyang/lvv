@@ -88,3 +88,7 @@ Spectrum Metal::sampleBSDF(const vec3& wo, vec3* wi, const Intersection& interse
     float cosi = glm::abs(glm::dot(wo, intersection.normal));
     return Spectrum(_color->evaluateVec3(intersection.uv)) * fresnelConductor(cosi, _eta, _k);
 }
+
+Material::BxDFType Metal::getBSDFType() const {
+    return BSDFReflection;
+}

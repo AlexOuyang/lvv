@@ -52,6 +52,10 @@ bool Spectrum::isBlack() const {
     return (_color.r < Epsilon) && (_color.g < Epsilon) && (_color.b < Epsilon);
 }
 
+float Spectrum::luminance() const {
+    return  0.2126f*_color.r + 0.7152f*_color.g + 0.0722f*_color.b;
+}
+
 Spectrum& Spectrum::operator+=(const Spectrum& s) {
     _color += s._color;
     return *this;

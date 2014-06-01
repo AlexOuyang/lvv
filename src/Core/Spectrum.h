@@ -25,7 +25,8 @@ public:
     vec3    getColor() const;
     int     getIntColor() const;
     
-    bool isBlack() const;
+    bool    isBlack() const;
+    float   luminance() const;
     
     Spectrum& operator+=(const Spectrum& s);
     Spectrum& operator*=(const Spectrum& s);

@@ -41,3 +41,18 @@ Spectrum PointLight::sampleL(const vec3& point, float rayEpsilon,
     vt->setSegment(point, rayEpsilon, _position);
     return (_spectrum * _intensity) * (1.0f / dot(dist, dist));
 }
+
+Spectrum PointLight::samplePhoton(vec3 *p, vec3 *direction) const {
+    *p = _position;
+    
+    // Sample direction
+    float s = (float)rand()/RAND_MAX;
+    float t = (float)rand()/RAND_MAX;
+    float u = 2.f*M_PI*s;
+    float v = sqrt(t*(1-t));
+    direction->x = 2.f*v*cos(u);
+    direction->y = 1.f - 2.f*t;
+    direction->z = 2.f*v*sin(u);
+    
+    return _spectrum * _intensity;
+}

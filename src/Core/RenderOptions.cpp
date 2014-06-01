@@ -12,6 +12,7 @@
 
 #include "Integrators/WhittedIntegrator.h"
 #include "Integrators/PathTracingIntegrator.h"
+#include "Integrators/PhotonMappingIntegrator.h"
 #include "Integrators/SingleScatteringIntegrator.h"
 
 RenderOptions RenderOptions::Load(const rapidjson::Value& value) {
@@ -30,10 +31,12 @@ RenderOptions RenderOptions::Load(const rapidjson::Value& value) {
         std::string str = value["surfaceIntegrator"].GetString();
         std::transform(str.begin(), str.end(), str.begin(), ::tolower);
         
-        if (str == "pathtracing") {
-            options.surfaceIntegrator = PathTracingIntegrator;
-        } else if (str == "whitted") {
+        if (str == "whitted") {
             options.surfaceIntegrator = WhittedIntegrator;
+        } else if (str == "pathtracing") {
+            options.surfaceIntegrator = PathTracingIntegrator;
+        } else if (str == "photonmapping") {
+            options.surfaceIntegrator = PhotonMappingIntegrator;
         }
     }
     if (value.HasMember("volumeIntegrator")) {
@@ -61,10 +64,12 @@ RenderOptions::~RenderOptions() {
 }
 
 ::SurfaceIntegrator* RenderOptions::createSurfaceIntegrator() {
-    if (surfaceIntegrator == PathTracingIntegrator) {
-        return new ::PathTracingIntegrator();
-    } else if (surfaceIntegrator == WhittedIntegrator) {
+    if (surfaceIntegrator == WhittedIntegrator) {
         return new ::WhittedIntegrator();
+    } else if (surfaceIntegrator == PathTracingIntegrator) {
+        return new ::PathTracingIntegrator();
+    } else if (surfaceIntegrator == PhotonMappingIntegrator) {
+        return new ::PhotonMappingIntegrator();
     }
     return nullptr;
 }

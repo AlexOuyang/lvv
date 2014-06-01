@@ -9,6 +9,7 @@
 #ifndef __CSE168_Rendering__PathTracingIntegrator__
 #define __CSE168_Rendering__PathTracingIntegrator__
 
+#include "Core/Core.h"
 #include "Core/SurfaceIntegrator.h"
 
 class PathTracingIntegrator : public SurfaceIntegrator {

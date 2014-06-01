@@ -113,6 +113,10 @@ Spectrum Glass::sampleBSDF(const vec3 &wo, vec3 *wi, const Intersection &interse
     }
 }
 
+Material::BxDFType Glass::getBSDFType() const {
+    return (BxDFType)(BSDFReflection | BSDFTransmission);
+}
+
 Spectrum Glass::transmittedLight(float distance) const {
     vec3 alpha = (vec3(1.0) - _absorptionColor)*_absorptionCoeff;
     return Spectrum(glm::exp(-1.0f * alpha * distance));

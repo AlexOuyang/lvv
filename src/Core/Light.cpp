@@ -31,3 +31,7 @@ const SamplingConfig& Light::getSamplingConfig() const {
 void Light::setSamplingConfig(const SamplingConfig& sc) {
     _samplingConfig = sc;
 }
+
+Spectrum Light::samplePhoton(vec3*, vec3*) const {
+    return Spectrum(0.f);
+}

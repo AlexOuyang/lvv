@@ -8,6 +8,8 @@
 
 #include "SingleScatteringIntegrator.h"
 
+#include "Core/Renderer.h"
+
 SingleScatteringIntegrator::SingleScatteringIntegrator() {
     
 }
@@ -72,6 +74,27 @@ Spectrum SingleScatteringIntegrator::li(const Scene& scene, const Renderer& rend
                         lv += tr * volume->phase(p, -wi, wo) * li;
                     }
                 }
+                
+                // Multiple scattering
+//                if (ray.depth == 0) {
+//                    Ray scatteredRay(ray);
+//                    
+//                    scatteredRay.origin = p;
+//                    scatteredRay.tmin = 0.f;
+//                    scatteredRay.tmax = INFINITY;
+//                    scatteredRay.depth = ray.depth + 1;
+//                    
+//                    // Uniform sample sphere
+//                    float s = (float)rand()/RAND_MAX;
+//                    float t = (float)rand()/RAND_MAX;
+//                    float u = 2.f*M_PI*s;
+//                    float v = sqrt(t*(1.f-t));
+//                    scatteredRay.direction.x = 2*v * cos(u);
+//                    scatteredRay.direction.y = 1.f - 2.f*t;
+//                    scatteredRay.direction.z = 2.f*v * sin(u);
+//                    Spectrum scatteredL = renderer.li(scene, scatteredRay);
+//                    lv += tr * stepSize * volume->phase(p, -scatteredRay.direction, wo) * scatteredL;
+//                }
             }
             
             t0 = t1;
