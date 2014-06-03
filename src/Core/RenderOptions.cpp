@@ -10,11 +10,6 @@
 
 #include <algorithm>
 
-#include "Integrators/WhittedIntegrator.h"
-#include "Integrators/PathTracingIntegrator.h"
-#include "Integrators/PhotonMappingIntegrator.h"
-#include "Integrators/SingleScatteringIntegrator.h"
-
 RenderOptions RenderOptions::Load(const rapidjson::Value& value) {
     RenderOptions options;
     
@@ -28,55 +23,34 @@ RenderOptions RenderOptions::Load(const rapidjson::Value& value) {
         options.maxRayDepth = value["maxRayDepth"].GetInt();
     }
     if (value.HasMember("surfaceIntegrator")) {
-        std::string str = value["surfaceIntegrator"].GetString();
-        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-        
-        if (str == "whitted") {
-            options.surfaceIntegrator = WhittedIntegrator;
-        } else if (str == "pathtracing") {
-            options.surfaceIntegrator = PathTracingIntegrator;
-        } else if (str == "photonmapping") {
-            options.surfaceIntegrator = PhotonMappingIntegrator;
+        options.surfaceIntegrator = SurfaceIntegrator::Load(value["surfaceIntegrator"]);
+        if (!options.surfaceIntegrator) {
+            std::cerr << "RenderOptions error: error while loading surface integrator" << std::endl;
         }
+    } else {
+        std::cerr << "RenderOptions error: no surface integrator given" << std::endl;
     }
     if (value.HasMember("volumeIntegrator")) {
-        std::string str = value["volumeIntegrator"].GetString();
-        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-        
-        if (str == "singlescattering") {
-            options.volumeIntegrator = SingleScatteringIntegrator;
+        options.volumeIntegrator = VolumeIntegrator::Load(value["volumeIntegrator"]);
+        if (!options.volumeIntegrator) {
+            std::cerr << "RenderOptions error: error while loading volume integrator" << std::endl;
         }
+    } else {
+        std::cerr << "RenderOptions error: no volume integrator given" << std::endl;
     }
+    
     return options;
 }
 
 RenderOptions::RenderOptions() :
 maxThreadsCount(-1),
-antialiasingSampling(1, true, SamplingConfig::ShirleyDistribution),
+antialiasingSampling(1, true, SamplingConfig::UniformDistribution),
 maxRayDepth(5),
-surfaceIntegrator(PathTracingIntegrator),
-volumeIntegrator(SingleScatteringIntegrator) {
+surfaceIntegrator(),
+volumeIntegrator() {
     
 }
 
 RenderOptions::~RenderOptions() {
     
-}
-
-::SurfaceIntegrator* RenderOptions::createSurfaceIntegrator() {
-    if (surfaceIntegrator == WhittedIntegrator) {
-        return new ::WhittedIntegrator();
-    } else if (surfaceIntegrator == PathTracingIntegrator) {
-        return new ::PathTracingIntegrator();
-    } else if (surfaceIntegrator == PhotonMappingIntegrator) {
-        return new ::PhotonMappingIntegrator();
-    }
-    return nullptr;
-}
-
-::VolumeIntegrator* RenderOptions::createVolumeIntegrator() {
-    if (volumeIntegrator == SingleScatteringIntegrator) {
-        return new ::SingleScatteringIntegrator();
-    }
-    return nullptr;
 }

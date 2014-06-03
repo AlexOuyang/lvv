@@ -15,10 +15,19 @@
 
 class SurfaceIntegrator : public Integrator {
 public:
-    virtual ~SurfaceIntegrator() {};
+    
+    static std::shared_ptr<SurfaceIntegrator> Load(const rapidjson::Value& value);
+    
+    SurfaceIntegrator();
+    virtual ~SurfaceIntegrator();
+    
+    void setMaxRayDepth(uint_t depth);
     
     virtual Spectrum li(const Scene& scene, const Renderer& renderer, const Ray& ray,
                         const Intersection& Intersection) const = 0;
+    
+protected:
+    uint_t  _maxRayDepth;
 };
 
 #endif

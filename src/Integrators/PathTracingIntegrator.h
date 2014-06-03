@@ -15,6 +15,8 @@
 class PathTracingIntegrator : public SurfaceIntegrator {
 public:
     
+    static std::shared_ptr<PathTracingIntegrator> Load(const rapidjson::Value& value);
+    
     PathTracingIntegrator();
     virtual ~PathTracingIntegrator();
     

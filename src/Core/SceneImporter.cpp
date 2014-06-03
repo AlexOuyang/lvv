@@ -6,8 +6,7 @@
 //
 //
 
-#include "SceneImporter.h"
-
+#include "Importers/FBXImporter.h"
 #include "Importers/AssimpImporter.h"
 #include "Materials/Matte.h"
 #include "Accelerators/BVHAccelerator.h"
@@ -15,6 +14,8 @@
 #include "Lights/Skylight.h"
 #include "Volumes/HomogeneousVolume.h"
 #include "Volumes/GridVolume.h"
+
+#include "SceneImporter.h"
 
 std::shared_ptr<SceneImporter> SceneImporter::Load(const rapidjson::Value& value) {
     // Check if mandatory values are specified
@@ -34,6 +35,8 @@ std::shared_ptr<SceneImporter> SceneImporter::Load(const rapidjson::Value& value
     std::shared_ptr<SceneImporter> importer;
     if (type == "assimp") {
         importer = AssimpImporter::Load(value);
+    } else if (type == "fbx") {
+        importer = FBXImporter::Load(value);
     } else {
         std::cerr << "SceneImporter error: unknown importer \"" << type << "\"" << std::endl;
         return std::shared_ptr<SceneImporter>();

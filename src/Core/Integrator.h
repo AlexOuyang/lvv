@@ -13,9 +13,13 @@
 
 class Integrator {
 public:    
-    virtual ~Integrator() {};
+    virtual ~Integrator();
     
-    virtual void preprocess(const Scene&, const Camera*) {};
+    virtual void preprocess(const Scene&, const Camera*, const Renderer&);
+    
+    static Spectrum GetDirectLighting(const Scene& scene, const Renderer& renderer,
+                                      const Ray& ray,
+                                      const Intersection& intersection);
 };
 
 #endif

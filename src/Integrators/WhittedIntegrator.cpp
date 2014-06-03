@@ -15,6 +15,12 @@
 #include "Core/VisibilityTester.h"
 #include "Core/Renderer.h"
 
+std::shared_ptr<WhittedIntegrator> WhittedIntegrator::Load(const rapidjson::Value& value) {
+    std::shared_ptr<WhittedIntegrator> integrator = std::make_shared<WhittedIntegrator>();
+    
+    return integrator;
+}
+
 WhittedIntegrator::WhittedIntegrator() {
     
 }
@@ -34,58 +40,20 @@ Spectrum WhittedIntegrator::li(const Scene& scene, const Renderer& renderer, con
     }
     
     // Initialize common variables
-    const vec3& point = intersection.point;
     const vec3& n = intersection.normal;
     vec3 wo = -ray.direction;
     
-    // Add contribution of each light source
-    for (Light* light : scene.getLights()) {
-        // Sample light
-        const SamplingConfig& sampling = light->getSamplingConfig();
-        int samplesCount = sampling.count;
-        for (int i = 0; i < samplesCount; ++i) {
-            for (int j = 0; j < samplesCount; ++j) {
-                LightSample sample;
-                vec3 wi;
-                VisibilityTester vt(ray);
-                
-                sample.u = (float)i/samplesCount;
-                sample.v = (float)j/samplesCount;
-                
-                if (sampling.jittered) {
-                    sample.u += ((float)rand()/RAND_MAX) / samplesCount;
-                    sample.v += ((float)rand()/RAND_MAX) / samplesCount;
-                } else {
-                    sample.u += 0.5f / samplesCount;
-                    sample.v += 0.5f / samplesCount;
-                }
-                
-                Spectrum li = light->sampleL(point, intersection.rayEpsilon, sample, &wi, &vt);
-                
-                if (li.isBlack()) {
-                    continue;
-                }
-                
-                Spectrum f = intersection.material->evaluateBSDF(wo, wi, intersection);
-                
-                if (!f.isBlack() && vt.unoccluded(scene)) {
-                    float cosine = dot(wi, n);
-                    if (cosine > 0) {
-                        l += li * f * cosine * (1.0f / (samplesCount*samplesCount));
-                    }
-                }
-            }
-        }
-    }
+    l += GetDirectLighting(scene, renderer, ray, intersection);
     
     // Trace rays for specular reflection and refraction
-    if (ray.depth < renderer.options.maxRayDepth) {
-        
-        // Reflectected light
+    if (ray.depth < _maxRayDepth) {
+
+        Material::BxDFType type;
+        // Reflected light
         {
             vec3 wi;
             Spectrum f = intersection.material->sampleBSDF(wo, &wi, intersection,
-                                                           Material::BSDFReflection);
+                                                           Material::BSDFReflection, &type);
             if (!f.isBlack() && glm::dot(wi, n) != 0.0f) {
                 Ray reflectedRay;
                 
@@ -102,7 +70,7 @@ Spectrum WhittedIntegrator::li(const Scene& scene, const Renderer& renderer, con
         {
             vec3 wi;
             Spectrum f = intersection.material->sampleBSDF(wo, &wi, intersection,
-                                                           Material::BSDFTransmission);
+                                                           Material::BSDFTransmission, &type);
             if (!f.isBlack() && glm::dot(wi, n) != 0.0f) {
                 Ray transmittedRay;
                 

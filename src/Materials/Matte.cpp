@@ -61,11 +61,13 @@ Spectrum Matte::evaluateBSDF(const vec3&, const vec3&,
 }
 
 Spectrum Matte::sampleBSDF(const vec3&, vec3* wi, const Intersection& intersection,
-                           BxDFType type) const {
+                           BxDFType type, BxDFType* sampledType) const {
     if (!(type & BSDFDiffuse)) {
+        *sampledType = (BxDFType)0;
         return Spectrum(0.0f);
     }
     
+    *sampledType = BSDFDiffuse;
     *wi = normalize(surfaceToWorld(cosineSampleHemisphere(), intersection));
     return _color->evaluateVec3(intersection.uv);
 }

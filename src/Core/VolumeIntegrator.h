@@ -15,7 +15,10 @@
 
 class VolumeIntegrator : public Integrator {
 public:
-    virtual ~VolumeIntegrator() {};
+    
+    static std::shared_ptr<VolumeIntegrator> Load(const rapidjson::Value& value);
+    
+    virtual ~VolumeIntegrator();
     
     virtual Spectrum li(const Scene& scene, const Renderer& renderer,
                         const Ray& ray, Spectrum *transmittance) const = 0;

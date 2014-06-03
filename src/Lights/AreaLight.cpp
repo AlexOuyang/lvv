@@ -63,11 +63,17 @@ Spectrum AreaLight::le(const Ray& ray, const Intersection* intersection) const {
     if (ray.tmax == INFINITY) {
         return Spectrum(0.f);
     }
+    
+    if (dot(-ray.direction, _normal) < 0) {
+        return Spectrum(0.f);
+    }
+    
     vec2 uv;
     if (intersection) {
         uv = intersection->uv;
     }
-    return Spectrum(_color->evaluateVec3(uv) * _intensity);
+    
+    return Spectrum(_color->evaluateVec3(uv) * (_intensity / (float)M_PI));
 }
 
 Spectrum AreaLight::sampleL(const vec3 &point, float rayEpsilon,
@@ -84,8 +90,11 @@ Spectrum AreaLight::sampleL(const vec3 &point, float rayEpsilon,
     *wi = dist;
     
     vt->setSegment(point, rayEpsilon, sampledPosition);
+    
+    float area = length(v1) * length(v2);
+
     return Spectrum(
-            (color * _intensity)
+            (color * (_intensity * area))
             * dot(-dist, _normal)
             * (1.0f / (distLength*distLength)));
 }
@@ -101,19 +110,16 @@ Spectrum AreaLight::samplePhoton(vec3 *p, vec3 *direction) const {
     
     vec3 color = _color->evaluateVec3(vec2(u, v));
     
+    float area = length(v1) * length(v2);
+    
     // Cosine sample hemisphere direction
     float s = (float)rand()/RAND_MAX;
     float t = (float)rand()/RAND_MAX;
     u = 2.0f*M_PI*s;
     v = sqrt(1.f - t);
     vec3 dir = vec3(v*cos(u), sqrt(t), v*sin(u));
-
-//    u = 2.0f*M_PI*s;
-//    v = sqrt(1.f - t*t);
-//
-//    vec3 dir = vec3(v*cos(u), sqrt(t), v*sin(u));
     
     *direction = normalize(v1)*dir.x + normalize(v2)*dir.z + _normal*dir.y;
     
-    return color * _intensity;
+    return color * _intensity * area * (float)M_PI;
 }

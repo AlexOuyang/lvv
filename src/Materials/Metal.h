@@ -27,7 +27,7 @@ public:
                                   const Intersection& intersection) const;
     virtual Spectrum sampleBSDF(const vec3& wo, vec3* wi,
                                 const Intersection& intersection,
-                                BxDFType type) const;
+                                BxDFType type, BxDFType* sampledType) const;
     virtual BxDFType getBSDFType() const;
     
     void setEta(float eta);

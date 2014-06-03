@@ -16,6 +16,8 @@
 class SingleScatteringIntegrator : public VolumeIntegrator {
 public:
     
+    static std::shared_ptr<SingleScatteringIntegrator> Load(const rapidjson::Value& value);
+    
     SingleScatteringIntegrator();
     virtual ~SingleScatteringIntegrator();
     

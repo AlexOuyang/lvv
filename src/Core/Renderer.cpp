@@ -14,6 +14,33 @@
 #include <random>
 #include <algorithm>
 
+std::shared_ptr<Renderer> Renderer::Load(const rapidjson::Value& value) {
+    std::shared_ptr<Renderer> renderer = std::make_shared<Renderer>();
+    
+    if (value.HasMember("maxThreadsCount")) {
+        renderer->setMaxThreadsCount(value["maxThreadsCount"].GetInt());
+    }
+    if (value.HasMember("antialiasingSampling")) {
+        renderer->setAntialiasingSampling(SamplingConfig::Load(value["antialiasingSampling"]));
+    }
+
+    if (value.HasMember("surfaceIntegrator")) {
+        renderer->setSurfaceIntegrator(SurfaceIntegrator::Load(value["surfaceIntegrator"]));
+    } else {
+        std::cerr << "Renderer error: no surface integrator given" << std::endl;
+        return std::shared_ptr<Renderer>();
+    }
+    
+    if (value.HasMember("volumeIntegrator")) {
+        renderer->setVolumeIntegrator(VolumeIntegrator::Load(value["volumeIntegrator"]));
+    } else {
+        std::cerr << "Renderer error: no volume integrator given" << std::endl;
+        return std::shared_ptr<Renderer>();
+    }
+    
+    return renderer;
+}
+
 int Renderer::Task::NumSystemCores() {
     int num = QThread::idealThreadCount();
     return glm::max(1, num);
@@ -44,27 +71,35 @@ void Renderer::Task::run() {
     delete[] samples;
 }
 
-std::shared_ptr<Renderer> Renderer::Load(const rapidjson::Value& value) {
-    std::shared_ptr<Renderer> renderer;
-    
-    RenderOptions options = RenderOptions::Load(value["options"]);
-    renderer = std::make_shared<Renderer>(options);
-    return renderer;
-}
-
-Renderer::Renderer(RenderOptions options)
-: options(options), _surfaceIntegrator(nullptr), _volumeIntegrator(nullptr), _samplesCount(0) {
-    _surfaceIntegrator = options.createSurfaceIntegrator();
-    _volumeIntegrator = options.createVolumeIntegrator();
+Renderer::Renderer() :
+_maxThreadsCount(-1), _antialiasingSampling(),
+_surfaceIntegrator(), _volumeIntegrator(), _samplesCount(0) {
 }
 
 Renderer::~Renderer() {
-    if (_surfaceIntegrator) {
-        delete _surfaceIntegrator;
+}
+
+void Renderer::setMaxThreadsCount(int count) {
+    _maxThreadsCount = count;
+}
+
+void Renderer::setAntialiasingSampling(const SamplingConfig& config) {
+    _antialiasingSampling = config;
+}
+
+void Renderer::setSurfaceIntegrator(const std::shared_ptr<SurfaceIntegrator>& integrator) {
+    _surfaceIntegrator = integrator;
+}
+
+void Renderer::setVolumeIntegrator(const std::shared_ptr<VolumeIntegrator>& integrator) {
+    _volumeIntegrator = integrator;
+}
+
+uint_t Renderer::getIdealThreadCount() const {
+    if (_maxThreadsCount == -1) {
+        return Task::NumSystemCores();
     }
-    if (_volumeIntegrator) {
-        delete _volumeIntegrator;
-    }
+    return min(Task::NumSystemCores(), _maxThreadsCount);
 }
 
 void Renderer::reset() {
@@ -73,8 +108,8 @@ void Renderer::reset() {
 
 void Renderer::preprocess(const Scene& scene, Camera* camera) {
     // Let integrators preprocess scene
-    _surfaceIntegrator->preprocess(scene, camera);
-    _volumeIntegrator->preprocess(scene, camera);
+    _surfaceIntegrator->preprocess(scene, camera, *this);
+    _volumeIntegrator->preprocess(scene, camera, *this);
 }
 
 void Renderer::render(const Scene& scene, Camera* camera) {
@@ -105,8 +140,8 @@ void Renderer::render(const Scene& scene, Camera* camera) {
     // Create thread pool
     QThreadPool threadPool;
     
-    if (options.maxThreadsCount > 0) {
-        threadPool.setMaxThreadCount(options.maxThreadsCount);
+    if (_maxThreadsCount > 0) {
+        threadPool.setMaxThreadCount(_maxThreadsCount);
     }
     
     // Launch tasks
@@ -189,7 +224,7 @@ void Renderer::renderSample(const Scene& scene, Camera* camera, const CameraSamp
     Spectrum ls;
     
     // Create sub-samples for anti-aliasing
-    int samplesCount = options.antialiasingSampling.count;
+    int samplesCount = _antialiasingSampling.count;
     for (int subSampleX = 0; subSampleX < samplesCount; ++subSampleX) {
         for (int subSampleY = 0; subSampleY < samplesCount; ++subSampleY) {
             // Create sub sample based on sampling method
@@ -200,14 +235,14 @@ void Renderer::renderSample(const Scene& scene, Camera* camera, const CameraSamp
             
             vec2 subSampleSize = vec2(1.0f) / (float)samplesCount;
             
-            if (options.antialiasingSampling.jittered) {
+            if (_antialiasingSampling.jittered) {
                 subSampleDelta += (vec2((float)rand()/RAND_MAX, (float)rand()/RAND_MAX)
                                    * subSampleSize);
             } else {
                 subSampleDelta += (vec2(0.5f, 0.5f) * subSampleSize);
             }
 
-            switch (options.antialiasingSampling.distribution) {
+            switch (_antialiasingSampling.distribution) {
                 case SamplingConfig::GaussDistribution: {
                     float a = 0.4f * sqrt(-2*log(subSampleDelta.x));
                     float b = 2.0f * M_PI * subSampleDelta.y;

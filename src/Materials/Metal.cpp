@@ -73,17 +73,18 @@ void Metal::setDiffuseColor(const std::shared_ptr<Texture>& color) {
 
 Spectrum Metal::evaluateBSDF(const vec3& wo, const vec3& wi,
                              const Intersection& intersection) const {
-    float cosi = glm::abs(glm::dot(wo, intersection.normal));
-    float f = fresnelConductor(cosi, _eta, _k);
-    float cookTorrance = cookTorranceReflection(wo, wi, intersection.normal, _roughness, f);
-    return Spectrum(_color->evaluateVec3(intersection.uv)) * cookTorrance;
+    vec3 h = normalize(wo + wi);
+    float blinn = pow(dot(intersection.normal, h), _roughness);
+    return Spectrum(_color->evaluateVec3(intersection.uv)) * blinn * 0.f;
 }
 
 Spectrum Metal::sampleBSDF(const vec3& wo, vec3* wi, const Intersection& intersection,
-                           BxDFType type) const {
+                           BxDFType type, BxDFType* sampledType) const {
     if (!(type & BSDFReflection)) {
+        *sampledType = (BxDFType)0;
         return Spectrum(0.0f);
     }
+    *sampledType = BSDFReflection;
     *wi = glm::reflect(-wo, intersection.normal);
     float cosi = glm::abs(glm::dot(wo, intersection.normal));
     return Spectrum(_color->evaluateVec3(intersection.uv)) * fresnelConductor(cosi, _eta, _k);

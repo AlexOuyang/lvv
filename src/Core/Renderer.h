@@ -21,6 +21,8 @@
 class Renderer {
 public:
     
+    static std::shared_ptr<Renderer> Load(const rapidjson::Value& value);
+
     class Task : public QRunnable {
     public:
         
@@ -40,10 +42,15 @@ public:
         virtual void run();
     };
     
-    static std::shared_ptr<Renderer> Load(const rapidjson::Value& value);
-    
-    Renderer(RenderOptions options=RenderOptions());
+    Renderer();
     ~Renderer();
+    
+    void setMaxThreadsCount(int count);
+    void setAntialiasingSampling(const SamplingConfig& config);
+    void setSurfaceIntegrator(const std::shared_ptr<SurfaceIntegrator>& integrator);
+    void setVolumeIntegrator(const std::shared_ptr<VolumeIntegrator>& integrator);
+    
+    uint_t getIdealThreadCount() const;
     
     void            reset();
     void            preprocess(const Scene& scene, Camera* camera);
@@ -54,13 +61,13 @@ public:
     
     Spectrum li(const Scene& scene, const Ray& ray) const;
     Spectrum transmittance(const Scene& scene, const Ray& ray) const;
-    
-    RenderOptions options;
-    
+
 private:
-    SurfaceIntegrator*  _surfaceIntegrator;
-    VolumeIntegrator*   _volumeIntegrator;
-    int                 _samplesCount;
+    int                                 _maxThreadsCount;
+    SamplingConfig                      _antialiasingSampling;
+    std::shared_ptr<SurfaceIntegrator>  _surfaceIntegrator;
+    std::shared_ptr<VolumeIntegrator>   _volumeIntegrator;
+    int                                 _samplesCount;
 };
 
 #endif /* defined(__CSE168_Rendering__Renderer__) */

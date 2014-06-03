@@ -6,6 +6,8 @@
 //
 //
 
+#include <fbxsdk.h>
+
 #include <thread>
 #include <QApplication>
 #include <QThread>
@@ -50,22 +52,22 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<Scene> scene = reader.getScene();
     
     if (!film) {
-        std::cerr << "Error: no film specified" << std::endl;
+        std::cerr << "Error: error while loading film" << std::endl;
         return EXIT_FAILURE;
     }
     if (!renderer) {
-        std::cerr << "Error: no renderer specified" << std::endl;
+        std::cerr << "Error: error while loading renderer" << std::endl;
         return EXIT_FAILURE;
     }
     if (!scene) {
-        std::cerr << "Error: no scene specified" << std::endl;
+        std::cerr << "Error: error while loading scene" << std::endl;
         return EXIT_FAILURE;
     }
     
     std::shared_ptr<Camera> camera = scene->getCamera();
     
     if (!camera) {
-        std::cerr << "Error: no camera specified" << std::endl;
+        std::cerr << "Error: error while loading camera" << std::endl;
         return EXIT_FAILURE;
     }
     
@@ -116,6 +118,14 @@ int main(int argc, char* argv[]) {
         return EXIT_SUCCESS;
     }
     
+//    QTime clock;
+//    clock.start();
+//    std::cout << "Rendering photon maps..." << std::endl;
+//    renderer->preprocess(*scene, camera.get());
+//    float elapsed = ((float)clock.elapsed()/1000.f);
+//    std::cout << "Photon maps rendered in " << elapsed << "s" << std::endl;
+//    return 0;
+    
     // Else open the window and launch rendering thread
     std::shared_ptr<QtFilm> window = std::dynamic_pointer_cast<QtFilm>(film);
     if (window) {
@@ -149,7 +159,7 @@ int main(int argc, char* argv[]) {
                     qDebug() << "Rendered sample" << sampleCount
                     << "in" << elapsed << "s, avg"
                     << avgSampleTime << "s";
-                    continueRendering = false;
+                    //continueRendering = false;
                 } else {
                     QThread::msleep(100);
                 }

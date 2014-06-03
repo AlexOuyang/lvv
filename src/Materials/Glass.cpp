@@ -74,15 +74,13 @@ void Glass::setRoughness(float roughness) {
 
 Spectrum Glass::evaluateBSDF(const vec3& wo, const vec3 &wi,
                              const Intersection& intersection) const {
-    float cosi = glm::abs(glm::dot(wo, intersection.normal));
-    vec3 t;
-    float fr = refracted(cosi, wo, intersection.normal, _indexOut, _indexIn, &t);
-    float cookTorrance = cookTorranceReflection(wo, wi, intersection.normal, _roughness, fr);
-    return cookTorrance * Spectrum(1.0f);
+    vec3 h = normalize(wo + wi);
+    float blinn = pow(dot(intersection.normal, h), _roughness);
+    return Spectrum(0.0f) * blinn;
 }
 
 Spectrum Glass::sampleBSDF(const vec3 &wo, vec3 *wi, const Intersection &intersection,
-                           Material::BxDFType type) const {
+                           Material::BxDFType type, BxDFType* sampledType) const {
     const vec3& n = intersection.normal;
     float cosi = glm::abs(glm::dot(wo, n));
     vec3 t;
@@ -91,6 +89,7 @@ Spectrum Glass::sampleBSDF(const vec3 &wo, vec3 *wi, const Intersection &interse
     if (type == BSDFAll) {
         float u = (float)rand()/RAND_MAX;
         if (u > fr) {
+            *sampledType = BSDFTransmission;
             *wi = t;
             // If going out of the object, add absorption
             if (glm::dot(wo, n) < 0.0f) {
@@ -98,17 +97,21 @@ Spectrum Glass::sampleBSDF(const vec3 &wo, vec3 *wi, const Intersection &interse
             }
             return Spectrum(1.0f);
         } else {
+            *sampledType = BSDFReflection;
             *wi = glm::reflect(-wo, n);
             return Spectrum(1.0f);
         }
     }
     else if (type & BSDFReflection) {
+        *sampledType = BSDFReflection;
         *wi = glm::reflect(-wo, n);
         return Spectrum(fr);
     } else if (type & BSDFTransmission) {
+        *sampledType = BSDFTransmission;
         *wi = t;
         return Spectrum(1.0f - fr);
     } else {
+        *sampledType = (BxDFType)0;
         return Spectrum(0.0f);
     }
 }

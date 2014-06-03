@@ -198,7 +198,7 @@ Spectrum AshikhminMaterial::evaluateBSDF(const vec3& wo, const vec3& wi,
 }
 
 Spectrum AshikhminMaterial::sampleBSDF(const vec3& wo, vec3* wi, const Intersection& intersection,
-                                       BxDFType) const {
+                                       BxDFType, BxDFType* sampledType) const {
     float nu = _roughnessU->evaluateFloat(intersection.uv);
     float nv = _roughnessV->evaluateFloat(intersection.uv);
     float specularIntensity = _specularIntensity->evaluateFloat(intersection.uv);
@@ -206,6 +206,7 @@ Spectrum AshikhminMaterial::sampleBSDF(const vec3& wo, vec3* wi, const Intersect
     vec3 specularColor = _specularColor->evaluateVec3(intersection.uv);
     
     if ((float)rand()/RAND_MAX < specularIntensity) {
+        *sampledType = BSDFReflection;
         float s1 = (float)rand()/RAND_MAX;
         float s2 = (float)rand()/RAND_MAX;
         
@@ -238,6 +239,7 @@ Spectrum AshikhminMaterial::sampleBSDF(const vec3& wo, vec3* wi, const Intersect
         }
         return specularColor;
     } else {
+        *sampledType = BSDFDiffuse;
         *wi = normalize(surfaceToWorld(cosineSampleHemisphere(), intersection));
         return diffuseColor;
     }

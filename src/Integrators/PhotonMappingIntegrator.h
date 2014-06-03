@@ -11,16 +11,26 @@
 
 #include "Core/Core.h"
 #include "Core/SurfaceIntegrator.h"
+#include "Core/Light.h"
 
 #include <queue>
+#include <mutex>
 
 class PhotonMappingIntegrator : public SurfaceIntegrator {
 public:
     
-    PhotonMappingIntegrator();
-    ~PhotonMappingIntegrator();
+    static std::shared_ptr<PhotonMappingIntegrator> Load(const rapidjson::Value& value);
     
-    virtual void preprocess(const Scene& scene, const Camera* camera);
+    PhotonMappingIntegrator();
+    virtual ~PhotonMappingIntegrator();
+    
+    void setGlobalPhotonsCount(uint_t count);
+    void setCausticsPhotonsCount(uint_t count);
+    void setSearchRadius(float radius);
+    void setSearchCount(uint_t count);
+    
+    virtual void preprocess(const Scene& scene, const Camera* camera,
+                            const Renderer& renderer);
     
     virtual Spectrum li(const Scene& scene, const Renderer& renderer, const Ray& ray,
                         const Intersection& Intersection) const;
@@ -53,19 +63,38 @@ private:
     <PhotonMapSearchNode, std::vector<PhotonMapSearchNode>,
     PhotonMapNodeComparator> PhotonMapSearchQueue;
     
-    PhotonMapNode* _generatePhotonMap(const Scene& scene, const Camera* camera,
-                                      uint_t photonsCount,
-                                      bool causticsMap=false);
+    class TraceLightPhotonsTask {
+    public:
+        void run();
+        
+        std::vector<Photon>             photons;
+        uint_t                          photonsCount;
+        uint_t                          nbPhotonsTraced;
+        const Scene*                    scene;
+        const Light*                    light;
+        bool                            isCausticMap;
+        const PhotonMappingIntegrator*  integrator;
+    };
     
+    PhotonMapNode* _generatePhotonMap(const Scene& scene, const Camera*,
+                                      const Renderer& renderer,
+                                      uint_t photonsCount, bool isCausticMap);
+    
+    void _traceLightPhotons(const Scene& scene, const Renderer& renderer,
+                            const Light* light, std::vector<Photon>* photons,
+                            int photonsCount, bool isCausticMap) const;
     void _tracePhoton(const Scene& scene, const Ray& ray, const Spectrum& power,
-                      std::vector<Photon>& photons, uint_t photonsCount,
-                      bool causticsMap) const;
+                      std::vector<Photon>* photons, uint_t photonsCount,
+                      bool isCausticMap) const;
     
     PhotonMapNode* _buildPhotonMapNode(std::vector<Photon>& photons,
                                        uint_t start, uint_t end) const;
     
-    void _findNearestPhotons(const vec3& p, PhotonMapSearchQueue& queue,
-                             const PhotonMapNode* node, float& maxDist) const;
+    Spectrum    _getPhotonMapRadiance(const Intersection& intersection,
+                                      const Ray& ray,
+                                      const PhotonMapNode* photonMap) const;
+    void        _findNearestPhotons(const vec3& p, PhotonMapSearchQueue& queue,
+                                    const PhotonMapNode* node, float& maxDist) const;
     
     PhotonMapNode*      _globalMap;
     PhotonMapNode*      _causticsMap;

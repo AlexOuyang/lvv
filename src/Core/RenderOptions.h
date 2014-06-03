@@ -17,29 +17,16 @@
 class RenderOptions {
 public:
     
-    enum SurfaceIntegrator {
-        WhittedIntegrator,
-        PathTracingIntegrator,
-        PhotonMappingIntegrator
-    };
-    
-    enum VolumeIntegrator {
-        SingleScatteringIntegrator
-    };
-    
     static RenderOptions Load(const rapidjson::Value& value);
     
     RenderOptions();
     ~RenderOptions();
     
-    ::SurfaceIntegrator* createSurfaceIntegrator();
-    ::VolumeIntegrator* createVolumeIntegrator();
-    
-    int                 maxThreadsCount;
-    SamplingConfig      antialiasingSampling;
-    int                 maxRayDepth;
-    SurfaceIntegrator   surfaceIntegrator;
-    VolumeIntegrator    volumeIntegrator;
+    int                                 maxThreadsCount;
+    SamplingConfig                      antialiasingSampling;
+    int                                 maxRayDepth;
+    std::shared_ptr<SurfaceIntegrator>  surfaceIntegrator;
+    std::shared_ptr<VolumeIntegrator>   volumeIntegrator;
 };
 
 #endif

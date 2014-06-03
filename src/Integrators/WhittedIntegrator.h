@@ -14,6 +14,8 @@
 class WhittedIntegrator : public SurfaceIntegrator {
 public:
     
+    static std::shared_ptr<WhittedIntegrator> Load(const rapidjson::Value& value);
+    
     WhittedIntegrator();
     virtual ~WhittedIntegrator();
     

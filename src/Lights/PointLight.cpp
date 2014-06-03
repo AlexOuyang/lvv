@@ -54,5 +54,5 @@ Spectrum PointLight::samplePhoton(vec3 *p, vec3 *direction) const {
     direction->y = 1.f - 2.f*t;
     direction->z = 2.f*v*sin(u);
     
-    return _spectrum * _intensity;
+    return _spectrum * _intensity * 2.f*M_PI;
 }

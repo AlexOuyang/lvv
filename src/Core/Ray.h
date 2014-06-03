@@ -13,6 +13,13 @@
 
 class Ray {
 public:
+    
+    enum Type {
+        Primary             = 1 << 0,
+        DiffuseReflected    = 1 << 1,
+        SpecularReflected   = 1 << 2
+    };
+    
     Ray();
     Ray(const Ray& ray);
     ~Ray();
@@ -26,6 +33,7 @@ public:
     mutable float   tmax;
     int             depth;
     float           time;
+    Type            type;
 };
 
 #endif

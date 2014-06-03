@@ -10,6 +10,12 @@
 
 #include "Core/Renderer.h"
 
+std::shared_ptr<SingleScatteringIntegrator> SingleScatteringIntegrator::Load(const rapidjson::Value& value) {
+    std::shared_ptr<SingleScatteringIntegrator> integrator = std::make_shared<SingleScatteringIntegrator>();
+    
+    return integrator;
+}
+
 SingleScatteringIntegrator::SingleScatteringIntegrator() {
     
 }

@@ -42,7 +42,7 @@ public:
                                   const Intersection& intersection) const = 0;
     virtual Spectrum sampleBSDF(const vec3& wo, vec3* wi,
                                 const Intersection& intersection,
-                                BxDFType type) const = 0;
+                                BxDFType type, BxDFType* sampledType) const = 0;
     virtual BxDFType getBSDFType() const { return (BxDFType)0; };
     
     // Utility functions for computing material bsdf's
