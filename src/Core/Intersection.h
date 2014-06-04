@@ -17,6 +17,8 @@ public:
     Intersection();
     ~Intersection();
     
+    void applyNormalMapping();
+    
     float               t;
     float               rayEpsilon;
     vec3                point;

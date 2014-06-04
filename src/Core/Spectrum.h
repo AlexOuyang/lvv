@@ -28,6 +28,8 @@ public:
     bool    isBlack() const;
     float   luminance() const;
     
+    bool hasNaNs() const;
+    
     Spectrum& operator+=(const Spectrum& s);
     Spectrum& operator*=(const Spectrum& s);
     Spectrum operator-() const;

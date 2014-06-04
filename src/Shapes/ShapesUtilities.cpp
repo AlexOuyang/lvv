@@ -113,7 +113,10 @@ std::shared_ptr<Mesh> ShapesUtilities::CreateBox(float x, float y, float z) {
     indices[11*3+2] = 23;
     
     mesh->setVertices(verticesCount, vertices);
-    mesh->setIndices(trianglesCount, indices);
+    mesh->setIndices(trianglesCount*3, indices);
+    
+    // Generate mesh tangents
+    mesh->generateTangents();
     
     return mesh;
 }

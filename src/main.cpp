@@ -41,11 +41,18 @@ int main(int argc, char* argv[]) {
         Core::setBaseDirectory("./");
     }
     
+    QTime clock;
+    clock.start();
+    std::cout << "Importing scene..." << std::endl;
+    
     ConfigFileReader reader;
 
     if (!reader.readFile(configFile)) {
         return EXIT_FAILURE;
     }
+    
+    float elapsed = ((float)clock.elapsed()/1000.f);
+    std::cout << "Scene imported in " << elapsed << "s" << std::endl;
     
     std::shared_ptr<Film> film = reader.getFilm();
     std::shared_ptr<Renderer> renderer = reader.getRenderer();

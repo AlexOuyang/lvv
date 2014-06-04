@@ -29,6 +29,8 @@ public:
     void setIndices(int count, uint_t* indices);
     void setAlphaTexture(const std::shared_ptr<Texture>& texture);
     
+    void generateTangents();
+    
     int                         getTrianglesCount() const;
     std::shared_ptr<Triangle>   getTriangle(int index) const;
     
@@ -40,8 +42,8 @@ public:
 
 private:
     int                         _verticesCount;
-    int                         _trianglesCount;
     Vertex*                     _vertices;
+    int                         _indicesCount;
     uint_t*                     _indices;
     std::shared_ptr<Texture>    _alphaTexture;
 };

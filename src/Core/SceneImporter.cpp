@@ -9,6 +9,7 @@
 #include "Importers/FBXImporter.h"
 #include "Importers/AssimpImporter.h"
 #include "Materials/Matte.h"
+#include "Materials/AshikhminMaterial.h"
 #include "Accelerators/BVHAccelerator.h"
 #include "Lights/AreaLight.h"
 #include "Lights/Skylight.h"
@@ -105,7 +106,12 @@ std::shared_ptr<SceneImporter> SceneImporter::Load(const rapidjson::Value& value
 }
 
 bool SceneImporter::MatchName(const std::string& pattern, const std::string& name) {
-    //return pattern.find(name) != std::string::npos;
+    if (pattern[pattern.length()-1] == '*') {
+        if (pattern[0] == '*') {
+            return name.find(pattern.substr(1, pattern.length()-2)) != std::string::npos;
+        }
+        return name.find(pattern.substr(0, pattern.length()-1)) == 0;
+    }
     return pattern == name;
 }
 
@@ -315,11 +321,39 @@ std::shared_ptr<Material> SceneImporter::getOverridenMaterial(const ImportedMate
                     material = material->clone();
                     material->setName(material->getName()+"_inherits_"+attrs.name);
                     for (const std::string& attr : override.inheritedAttrs.value) {
+                        if (attr == "diffuseIntensity") {
+                            if (attrs.diffuseIntensityTexture) {
+                                material->setDiffuseIntensity(attrs.diffuseIntensityTexture);
+                            } else {
+                                material->setDiffuseIntensity(attrs.diffuseIntensity);
+                            }
+                        }
+                        if (attr == "specularIntensity") {
+                            if (attrs.specularIntensityTexture) {
+                                material->setSpecularIntensity(attrs.specularIntensityTexture);
+                            } else {
+                                material->setSpecularIntensity(1.f - attrs.diffuseIntensity);
+                            }
+                        }
+                        
                         if (attr == "diffuseColor") {
                             if (attrs.diffuseTexture) {
                                 material->setDiffuseColor(attrs.diffuseTexture);
                             } else {
                                 material->setDiffuseColor(attrs.diffuseColor);
+                            }
+                        }
+                        if (attr == "specularColor") {
+                            if (attrs.specularTexture) {
+                                material->setSpecularColor(attrs.specularTexture);
+                            } else {
+                                material->setSpecularColor(attrs.specularColor);
+                            }
+                        }
+                        
+                        if (attr == "normalMap") {
+                            if (attrs.normalMap) {
+                                material->setNormalMap(attrs.normalMap);
                             }
                         }
                     }
@@ -337,14 +371,53 @@ std::shared_ptr<Material> SceneImporter::addImportedMaterial(const SceneImporter
     std::shared_ptr<Material> material = getOverridenMaterial(attrs, scene);
     
     if (!material) {
-        std::shared_ptr<Matte> defaultMtl = std::make_shared<Matte>();
-        if (attrs.diffuseTexture) {
-            defaultMtl->setDiffuseColor(attrs.diffuseTexture);
+        if (attrs.shadingMode == ImportedMaterialAttributes::Lambert) {
+            std::shared_ptr<Matte> matte = std::make_shared<Matte>();
+            if (attrs.diffuseTexture) {
+                matte->setDiffuseColor(attrs.diffuseTexture);
+            } else {
+                matte->setDiffuseColor(attrs.diffuseColor);
+            }
+            
+            material = matte;
+        } else if (attrs.shadingMode == ImportedMaterialAttributes::Phong) {
+            std::shared_ptr<AshikhminMaterial> mtl = std::make_shared<AshikhminMaterial>();
+            
+            if (attrs.diffuseIntensityTexture) {
+                mtl->setDiffuseIntensity(attrs.diffuseIntensityTexture);
+            } else {
+                mtl->setDiffuseIntensity(attrs.diffuseIntensity);
+            }
+            
+            if (attrs.diffuseTexture) {
+                mtl->setDiffuseColor(attrs.diffuseTexture);
+            } else {
+                mtl->setDiffuseColor(attrs.diffuseColor);
+            }
+            
+            if (attrs.specularIntensityTexture) {
+                mtl->setSpecularIntensity(attrs.specularIntensityTexture);
+            } else {
+                mtl->setSpecularIntensity(1.f - attrs.diffuseIntensity);
+            }
+            
+            if (attrs.specularTexture) {
+                mtl->setSpecularColor(attrs.specularTexture);
+            } else {
+                mtl->setSpecularColor(attrs.specularColor);
+            }
+            
+            material = mtl;
         } else {
-            defaultMtl->setDiffuseColor(attrs.diffuseColor);
+            std::cerr << "SceneImporter error: unkwnown material shading mode" << std::endl;
+            material = std::make_shared<Matte>();
         }
-
-        material = defaultMtl;
+    }
+    
+    material->setName(attrs.name);
+    
+    if (attrs.normalMap) {
+        material->setNormalMap(attrs.normalMap);
     }
     
     scene.addMaterial(material);

@@ -37,6 +37,10 @@ std::shared_ptr<Material> Material::Load(const rapidjson::Value& value) {
     return material;
 }
 
+Material::Material() : _name(), _normalMap() {
+    
+}
+
 Material::~Material() {
     
 }
@@ -49,10 +53,36 @@ void Material::setName(const std::string& name) {
     _name = name;
 }
 
-void Material::setDiffuseColor(const vec3&) {
+void Material::setNormalMap(const std::shared_ptr<Texture>& map) {
+    _normalMap = map;
+}
+
+const Texture* Material::getNormalMap() const {
+    return _normalMap.get();
 }
 
 void Material::setDiffuseColor(const std::shared_ptr<Texture>&) {
+}
+
+void Material::setSpecularColor(const std::shared_ptr<Texture>&) {
+}
+
+void Material::setDiffuseIntensity(const std::shared_ptr<Texture>&) {
+}
+
+void Material::setSpecularIntensity(const std::shared_ptr<Texture>&) {
+}
+
+void Material::setDiffuseColor(const vec3&) {
+}
+
+void Material::setSpecularColor(const vec3&) {
+}
+
+void Material::setDiffuseIntensity(float intensity) {
+}
+
+void Material::setSpecularIntensity(float intensity) {
 }
 
 Spectrum Material::transmittedLight(float) const {
@@ -128,6 +158,6 @@ vec3 Material::cosineSampleHemisphere() {
 }
 
 vec3 Material::surfaceToWorld(const vec3& v, const Intersection& intersection) {
-    return (intersection.tangentU*v.x + intersection.tangentV*v.z
-            + intersection.normal*v.y);
+    return normalize(intersection.tangentU*v.x + intersection.tangentV*v.z
+                     + intersection.normal*v.y);
 }

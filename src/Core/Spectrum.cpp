@@ -56,6 +56,10 @@ float Spectrum::luminance() const {
     return  0.2126f*_color.r + 0.7152f*_color.g + 0.0722f*_color.b;
 }
 
+bool Spectrum::hasNaNs() const {
+    return glm::isnan(_color.r) || glm::isnan(_color.g) || glm::isnan(_color.b);
+}
+
 Spectrum& Spectrum::operator+=(const Spectrum& s) {
     _color += s._color;
     return *this;

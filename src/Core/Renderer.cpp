@@ -293,6 +293,7 @@ Spectrum Renderer::li(const Scene &scene, const Ray &ray) const {
     
     // Intersect ray with scene geometry
     if (scene.intersect(ray, &intersection)) {
+        intersection.applyNormalMapping();
         li = _surfaceIntegrator->li(scene, *this, ray, intersection);
     } else {
         // Handle ray that doesn't intersect any geometry
@@ -304,6 +305,11 @@ Spectrum Renderer::li(const Scene &scene, const Ray &ray) const {
     // Compute light coming from participating media
     Spectrum t;
     Spectrum lv = _volumeIntegrator->li(scene, *this, ray, &t);
+    
+    // Make sure we don't have NaN values
+    if (t.hasNaNs() || li.hasNaNs() || lv.hasNaNs()) {
+        qDebug() << "NAN";
+    }
     
     return t * li + lv;
 }

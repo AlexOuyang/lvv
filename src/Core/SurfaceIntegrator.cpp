@@ -39,7 +39,7 @@ std::shared_ptr<SurfaceIntegrator> SurfaceIntegrator::Load(const rapidjson::Valu
         return integrator;
     }
     
-    if (value.HasMember("maxRayDepth")) {
+    if (value.IsObject() && value.HasMember("maxRayDepth")) {
         integrator->setMaxRayDepth(value["maxRayDepth"].GetInt());
     }
     

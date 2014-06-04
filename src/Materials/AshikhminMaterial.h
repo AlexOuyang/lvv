@@ -24,9 +24,9 @@ public:
     virtual std::shared_ptr<Material> clone() const;    
     
     virtual void setDiffuseColor(const std::shared_ptr<Texture>& t);
-    void setSpecularColor(const std::shared_ptr<Texture>& t);
-    void setDiffuseIntensity(const std::shared_ptr<Texture>& t);
-    void setSpecularIntensity(const std::shared_ptr<Texture>& t);
+    virtual void setSpecularColor(const std::shared_ptr<Texture>& t);
+    virtual void setDiffuseIntensity(const std::shared_ptr<Texture>& t);
+    virtual void setSpecularIntensity(const std::shared_ptr<Texture>& t);
     
     void setRoughnessU(const std::shared_ptr<Texture>& tu);
     void setRoughnessV(const std::shared_ptr<Texture>& tv);
@@ -34,9 +34,9 @@ public:
                       const std::shared_ptr<Texture>& tv);
     
     virtual void setDiffuseColor(const vec3& color);
-    void setSpecularColor(const vec3& color);
-    void setDiffuseIntensity(float intensity);
-    void setSpecularIntensity(float intensity);
+    virtual void setSpecularColor(const vec3& color);
+    virtual void setDiffuseIntensity(float intensity);
+    virtual void setSpecularIntensity(float intensity);
     void setRoughnessU(float n);
     void setRoughnessV(float n);
     void setRoughness(float nu, float nv);

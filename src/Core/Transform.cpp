@@ -52,6 +52,10 @@ void Transform::scale(const vec3& scale) {
     _matrix = glm::scale(_matrix, scale);
 }
 
+void Transform::applyMatrix(const mat4x4& matrix) {
+    _matrix = _matrix * matrix;
+}
+
 vec3 Transform::applyToVector(const vec3& v) const {
     return vec3(_matrix * vec4(v, 0.0f));
 }
@@ -63,6 +67,12 @@ vec3 Transform::applyToNormal(const vec3& n) const {
 
 vec3 Transform::operator()(const vec3& p) const {
     return vec3(_matrix * vec4(p, 1.0f));
+}
+
+Transform Transform::operator()(const Transform& t) const {
+    Transform res;
+    res._matrix = _matrix * t._matrix;
+    return res;
 }
 
 Ray Transform::operator()(const Ray& r) const {

@@ -26,6 +26,7 @@ public:
     
     static std::shared_ptr<Material> Load(const rapidjson::Value& value);
     
+    Material();
     virtual ~Material();
     
     virtual std::shared_ptr<Material> clone() const = 0;
@@ -33,8 +34,18 @@ public:
     const std::string& getName() const;
     void setName(const std::string& name);
     
-    virtual void setDiffuseColor(const vec3& color);
+    void setNormalMap(const std::shared_ptr<Texture>& map);
+    const Texture* getNormalMap() const;
+    
     virtual void setDiffuseColor(const std::shared_ptr<Texture>& color);
+    virtual void setSpecularColor(const std::shared_ptr<Texture>& t);
+    virtual void setDiffuseIntensity(const std::shared_ptr<Texture>& t);
+    virtual void setSpecularIntensity(const std::shared_ptr<Texture>& t);
+    
+    virtual void setDiffuseColor(const vec3& color);
+    virtual void setSpecularColor(const vec3& color);
+    virtual void setDiffuseIntensity(float intensity);
+    virtual void setSpecularIntensity(float intensity);
     
     virtual Spectrum transmittedLight(float distance) const;
     
@@ -60,7 +71,8 @@ public:
     static vec3 surfaceToWorld(const vec3& v, const Intersection& intersection);
     
 private:
-    std::string _name;
+    std::string                 _name;
+    std::shared_ptr<Texture>    _normalMap;
 };
 
 #endif

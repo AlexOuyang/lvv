@@ -21,6 +21,7 @@ public:
     void setPosition(const vec3& position);
     void setIntensity(float intensity);
     void setSpectrum(const Spectrum& spectrum);
+    void setNoDecay(bool noDecay);
     
     virtual Spectrum le(const Ray& ray, const Intersection* intersection=nullptr) const;
     virtual Spectrum sampleL(const vec3& point, float rayEpsilon,
@@ -32,6 +33,7 @@ private:
     vec3        _position;
     float       _intensity;
     Spectrum    _spectrum;
+    bool        _noDecay;
 };
 
 #endif /* defined(__CSE168_Rendering__vec3Light__) */

@@ -134,6 +134,7 @@ void AssimpImporter::importMaterials(const aiScene* assimpScene, Scene& scene) {
         // Convert them to renderer values
         ImportedMaterialAttributes attrs;
         attrs.name = assimpName.C_Str();
+        attrs.shadingMode = ImportedMaterialAttributes::Lambert;
         attrs.diffuseColor = importColor(assimpColor);
         
         // Load textures
@@ -206,7 +207,8 @@ void AssimpImporter::importNode(const aiScene* assimpScene, aiNode* assimpNode,
             }
         }
         _trianglesCount += trianglesCount;
-        uint_t* indices = new uint_t[trianglesCount*3];
+        uint_t indicesCount = trianglesCount*3;
+        uint_t* indices = new uint_t[indicesCount];
         uint_t faceId = 0;
         for (uint_t j = 0; j < assimpMesh->mNumFaces; ++j) {
             if (assimpMesh->mFaces[j].mNumIndices == 3) {
@@ -230,7 +232,10 @@ void AssimpImporter::importNode(const aiScene* assimpScene, aiNode* assimpNode,
         std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
         
         mesh->setVertices(verticesCount, vertices);
-        mesh->setIndices(trianglesCount, indices);
+        mesh->setIndices(indicesCount, indices);
+        
+        // Generate mesh tangents
+        mesh->generateTangents();
         
         // Create geometric primitive
         if (material.first.alphaTexture) {

@@ -9,7 +9,7 @@
 #include "PointLight.h"
 
 PointLight::PointLight(const vec3& position, float intensity, const Spectrum& spectrum)
-: Light(), _position(position), _intensity(intensity), _spectrum(spectrum) {
+: Light(), _position(position), _intensity(intensity), _spectrum(spectrum), _noDecay(false) {
     
 }
 
@@ -29,6 +29,10 @@ void PointLight::setSpectrum(const Spectrum& spectrum) {
     _spectrum = spectrum;
 }
 
+void PointLight::setNoDecay(bool noDecay) {
+    _noDecay = noDecay;
+}
+
 Spectrum PointLight::le(const Ray&, const Intersection*) const {
     return Spectrum(0.0f);
 }
@@ -39,7 +43,11 @@ Spectrum PointLight::sampleL(const vec3& point, float rayEpsilon,
     vec3 dist = _position - point;
     *wi = vec3(normalize(dist));
     vt->setSegment(point, rayEpsilon, _position);
-    return (_spectrum * _intensity) * (1.0f / dot(dist, dist));
+    float decay = 1.f;
+    if (!_noDecay) {
+        decay = (1.0f / dot(dist, dist));
+    }
+    return (_spectrum * _intensity * decay);
 }
 
 Spectrum PointLight::samplePhoton(vec3 *p, vec3 *direction) const {

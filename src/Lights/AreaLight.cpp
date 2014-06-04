@@ -119,7 +119,7 @@ Spectrum AreaLight::samplePhoton(vec3 *p, vec3 *direction) const {
     v = sqrt(1.f - t);
     vec3 dir = vec3(v*cos(u), sqrt(t), v*sin(u));
     
-    *direction = normalize(v1)*dir.x + normalize(v2)*dir.z + _normal*dir.y;
+    *direction = normalize(normalize(v1)*dir.x + normalize(v2)*dir.z + _normal*dir.y);
     
     return color * _intensity * area * (float)M_PI;
 }

@@ -94,9 +94,21 @@ public:
     };
     
     struct ImportedMaterialAttributes {
+        enum ShadingMode {
+            Lambert,
+            Phong
+        };
+        
         std::string                 name;
+        ShadingMode                 shadingMode;
         vec3                        diffuseColor;
         std::shared_ptr<Texture>    diffuseTexture;
+        float                       diffuseIntensity;
+        std::shared_ptr<Texture>    diffuseIntensityTexture;
+        vec3                        specularColor;
+        std::shared_ptr<Texture>    specularTexture;
+        std::shared_ptr<Texture>    specularIntensityTexture;
+        std::shared_ptr<Texture>    normalMap;
         std::shared_ptr<Texture>    alphaTexture;
     };
     

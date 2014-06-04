@@ -61,7 +61,7 @@ PhotonMappingIntegrator::PhotonMapNode::~PhotonMapNode() {
 PhotonMappingIntegrator::PhotonMappingIntegrator() :
 _globalMap(nullptr), _causticsMap(nullptr),
 _globalPhotonsCount(1e6), _causticsPhotonsCount(1e6),
-_searchRadius(sqrt(0.0001f)), _searchCount(200) {
+_searchRadius(sqrt(0.1f)), _searchCount(200) {
 }
 
 void PhotonMappingIntegrator::setGlobalPhotonsCount(uint_t count) {
@@ -144,6 +144,9 @@ void PhotonMappingIntegrator::_traceLightPhotons(const Scene& scene, const Rende
         nbPhotonsTraced += tasks[i].nbPhotonsTraced;
     }
     
+    delete[] threads;
+    delete[] tasks;
+    
     // Divide photons power by number of photons traced
     for (Photon& photon : *photons) {
         photon.power *= 1.f / (float)nbPhotonsTraced;
@@ -173,6 +176,9 @@ void PhotonMappingIntegrator::_tracePhoton(const Scene& scene, const Ray &ray, c
     Intersection isec;
     
     while (scene.intersect(photonRay, &isec)) {
+        // Update intersection normal
+        isec.applyNormalMapping();
+        
         // Sample bsdf
         vec3 wi;
         Material::BxDFType type;
@@ -185,7 +191,7 @@ void PhotonMappingIntegrator::_tracePhoton(const Scene& scene, const Ray &ray, c
                 if (photonRay.depth > 0) {
                     Photon p;
                     p.position = isec.point;
-                    p.direction = -photonRay.direction;
+                    p.direction = normalize(-photonRay.direction);
                     p.power = photonPower;
                     photons->push_back(p);
                 }
@@ -196,7 +202,7 @@ void PhotonMappingIntegrator::_tracePhoton(const Scene& scene, const Ray &ray, c
             if (type & Material::BSDFDiffuse) {
                 Photon p;
                 p.position = isec.point;
-                p.direction = -photonRay.direction;
+                p.direction = normalize(-photonRay.direction);
                 p.power = photonPower;
                 photons->push_back(p);
             }
@@ -253,7 +259,7 @@ PhotonMappingIntegrator::_buildPhotonMapNode(std::vector<Photon> &photons, uint_
 Spectrum PhotonMappingIntegrator::li(const Scene& scene, const Renderer& renderer, const Ray& ray,
                                      const Intersection& intersection) const {
     Spectrum l(0.f);
-    
+
     // If primitive is an area light, simply return its emited light
     AreaLight* areaLight = intersection.primitive->getAreaLight();
     if (areaLight) {

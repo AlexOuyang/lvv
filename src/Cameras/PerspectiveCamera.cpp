@@ -46,7 +46,7 @@ std::shared_ptr<PerspectiveCamera> PerspectiveCamera::Load(const rapidjson::Valu
 }
 
 PerspectiveCamera::PerspectiveCamera() :
-_focusDistance(0.f), _apertureSize(0.f) {
+_transform(), _vfov(glm::radians(40.f)), _aspect(1.33f), _focusDistance(0.f), _apertureSize(0.f) {
 
 }
 

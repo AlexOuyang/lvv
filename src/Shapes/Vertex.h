@@ -21,6 +21,7 @@ struct Vertex {
     vec3    position;
     vec3    normal;
     vec2    texCoord;
+    vec3    tangentU, tangentV;
 };
 
 #endif /* defined(__CSE168_Rendering__Vertex__) */

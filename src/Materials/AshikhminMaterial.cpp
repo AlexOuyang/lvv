@@ -86,8 +86,8 @@ _diffuseColor(std::make_shared<UniformVec3Texture>(vec3(1.f))),
 _specularColor(std::make_shared<UniformVec3Texture>(vec3(0.f))),
 _diffuseIntensity(std::make_shared<UniformFloatTexture>(1.f)),
 _specularIntensity(std::make_shared<UniformFloatTexture>(0.f)),
-_roughnessU(std::make_shared<UniformFloatTexture>(1000.f)),
-_roughnessV(new UniformFloatTexture(1000.f)) {
+_roughnessU(std::make_shared<UniformFloatTexture>(100.f)),
+_roughnessV(std::make_shared<UniformFloatTexture>(100.f)) {
     
 }
 
@@ -181,15 +181,28 @@ Spectrum AshikhminMaterial::evaluateBSDF(const vec3& wo, const vec3& wi,
     float nh = dot(h, n);
     float hk = dot(h, wo);
     
-    float specularComponent = sqrt((nu + 1.f)*(nv + 1.f)) / (8.f*M_PI);
-    float exponent = (nu*hu*hu +nv*hv*hv) / (1.f - nh*nh);
-    specularComponent *= pow(nh, exponent) / (hk * max(dot(n, wi), dot(n, wo)));
-    specularComponent *= specularIntensity + (1.f - specularIntensity)*pow(1.f - hk, 5.f);
+    float specularComponent = 0.f;
+    if (specularIntensity > 0.f) {
+        specularComponent = sqrt((nu + 1.f)*(nv + 1.f)) / (8.f*M_PI);
+        float exponent = (nu*hu*hu +nv*hv*hv) / (1.f - nh*nh);
+        specularComponent *= pow(nh, exponent) / (hk * max(dot(n, wi), dot(n, wo)));
+        specularComponent *= specularIntensity + (1.f - specularIntensity)*pow(1.f - hk, 5.f);
+        if (glm::isnan(specularComponent)) {
+            specularComponent = 0.f;
+        }
+    }
     
-    float diffuseComponent = (28.f*diffuseIntensity) / (23.f*M_PI);
-    diffuseComponent *= (1.f - specularIntensity);
-    diffuseComponent *= (1.f - pow(1.f - (dot(n, wi)/2.f), 5.f));
-    diffuseComponent *= (1.f - pow(1.f - (dot(n, wo)/2.f), 5.f));
+    float diffuseComponent = 0.f;
+    if (diffuseIntensity > 0.f) {
+        diffuseComponent = (28.f*diffuseIntensity) / (23.f*M_PI);
+        diffuseComponent *= (1.f - specularIntensity);
+        diffuseComponent *= (1.f - pow(1.f - (dot(n, wi)/2.f), 5.f));
+        diffuseComponent *= (1.f - pow(1.f - (dot(n, wo)/2.f), 5.f));
+    }
+    
+    if (diffuseComponent < 0) {
+        diffuseComponent = 0.f;
+    }
     
     // Clamp specular component to avoid ridiculously high values
     specularComponent = min(42.f, specularComponent);
