@@ -37,6 +37,9 @@ public:
     void setNormalMap(const std::shared_ptr<Texture>& map);
     const Texture* getNormalMap() const;
     
+    void setAlphaTexture(const std::shared_ptr<Texture>& texture);
+    const Texture* getAlphaTexture() const;
+    
     virtual void setDiffuseColor(const std::shared_ptr<Texture>& color);
     virtual void setSpecularColor(const std::shared_ptr<Texture>& t);
     virtual void setDiffuseIntensity(const std::shared_ptr<Texture>& t);
@@ -73,6 +76,7 @@ public:
 private:
     std::string                 _name;
     std::shared_ptr<Texture>    _normalMap;
+    std::shared_ptr<Texture>    _alphaTexture;
 };
 
 #endif

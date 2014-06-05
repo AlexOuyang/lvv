@@ -178,6 +178,11 @@ SceneImporter::PrimitiveLightOverride SceneImporter::PrimitiveLightOverride::Loa
         override.intensity.value = value["intensity"].GetDouble();
     }
     
+    if (value.HasMember("rotationOffset")) {
+        override.rotationOffset.isSet = true;
+        override.rotationOffset.value = value["rotationOffset"].GetDouble();
+    }
+    
     return override;
 }
 
@@ -316,10 +321,10 @@ std::shared_ptr<Material> SceneImporter::getOverridenMaterial(const ImportedMate
             // Look for the overriden material in the scene
             std::shared_ptr<Material> material = scene.getMaterial(override.sceneMaterial);
             if (material) {
+                // Clone material
+                material = material->clone();
+                material->setName(material->getName()+"_inherits_"+attrs.name);
                 if (override.inheritedAttrs.isSet) {
-                    // Clone material
-                    material = material->clone();
-                    material->setName(material->getName()+"_inherits_"+attrs.name);
                     for (const std::string& attr : override.inheritedAttrs.value) {
                         if (attr == "diffuseIntensity") {
                             if (attrs.diffuseIntensityTexture) {
@@ -354,6 +359,12 @@ std::shared_ptr<Material> SceneImporter::getOverridenMaterial(const ImportedMate
                         if (attr == "normalMap") {
                             if (attrs.normalMap) {
                                 material->setNormalMap(attrs.normalMap);
+                            }
+                        }
+                        
+                        if (attr == "alphaTexture") {
+                            if (attrs.alphaTexture) {
+                                material->setAlphaTexture(attrs.alphaTexture);
                             }
                         }
                     }
@@ -412,12 +423,16 @@ std::shared_ptr<Material> SceneImporter::addImportedMaterial(const SceneImporter
             std::cerr << "SceneImporter error: unkwnown material shading mode" << std::endl;
             material = std::make_shared<Matte>();
         }
-    }
-    
-    material->setName(attrs.name);
-    
-    if (attrs.normalMap) {
-        material->setNormalMap(attrs.normalMap);
+        
+        if (attrs.normalMap) {
+            material->setNormalMap(attrs.normalMap);
+        }
+        
+        if (attrs.alphaTexture) {
+            material->setAlphaTexture(attrs.alphaTexture);
+        }
+        
+        material->setName(attrs.name);
     }
     
     scene.addMaterial(material);
@@ -427,7 +442,7 @@ std::shared_ptr<Material> SceneImporter::addImportedMaterial(const SceneImporter
 bool SceneImporter::applyPrimitiveOverrides(Scene& scene, const std::string& name,
                                             const Transform& transform, GeometricPrimitive& p,
                                             const ImportedMaterialAttributes* material,
-                                            Mesh* mesh) const {
+                                            MeshBase* mesh) const {
     // Look for a matching override
     for (const PrimitiveOverride& override : _primitivesOverrides) {
         if (MatchName(override.namePattern, name)) {
@@ -444,11 +459,15 @@ bool SceneImporter::applyPrimitiveOverrides(Scene& scene, const std::string& nam
             // Apply light overrides
             if (override.light.isSet) {
                 const PrimitiveLightOverride& lightOverride = override.light.value;
-                if (lightOverride.type == PrimitiveLightOverride::Area) {
+                if (lightOverride.type == PrimitiveLightOverride::Area && mesh) {
                     // Create area light
                     AreaLight* light = AreaLight::CreateFromMesh(mesh, transform,
                                                                  lightOverride.inverseNormal,
                                                                  lightOverride.indexOffset);
+                    
+                    if (!light) {
+                        continue;
+                    }
                     
                     if (lightOverride.color) {
                         light->setColor(lightOverride.color);
@@ -487,7 +506,12 @@ bool SceneImporter::applyPrimitiveOverrides(Scene& scene, const std::string& nam
                         light->setIntensity(lightOverride.intensity.value);
                     }
                     
-                    light->setTransform(transform);
+                    Transform t = Transform::Inverse(transform);
+                    if (lightOverride.rotationOffset.isSet) {
+                        t.rotate(glm::radians(lightOverride.rotationOffset.value), vec3(0.f, 1.f, 0.f));
+                    }
+                    
+                    light->setTransform(t);
                     
                     // Add light to scene
                     scene << light;

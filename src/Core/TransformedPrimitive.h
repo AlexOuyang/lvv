@@ -12,8 +12,9 @@
 #include "Core.h"
 #include "Primitive.h"
 #include "AnimatedTransform.h"
+#include "SceneNode.h"
 
-class TransformedPrimitive : public Primitive {
+class TransformedPrimitive : public Primitive, public SceneNode {
 public:
     
     TransformedPrimitive(const std::shared_ptr<Primitive>& primitive, const Transform& transform);
@@ -25,10 +26,6 @@ public:
     
     void        setMaterial(Material* material);
     
-    void        setTransform(const Transform& transform);
-    void        setTransform(const AnimatedTransform& transform);
-    Transform   getTransform() const;
-    
     virtual bool canIntersect() const;
     virtual bool intersect(const Ray& ray, Intersection* intersection) const;
     virtual bool intersectP(const Ray& ray) const;
@@ -37,7 +34,6 @@ public:
 private:
     std::shared_ptr<Primitive>  _primitive;
     Material*                   _material;
-    AnimatedTransform           _worldToPrimitive;
 };
 
 

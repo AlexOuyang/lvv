@@ -13,6 +13,7 @@
 #include <map>
 
 #include "Core/Core.h"
+#include "Core/AnimationEvaluator.h"
 #include "Aggregate.h"
 #include "Volume.h"
 #include "Light.h"
@@ -49,6 +50,10 @@ public:
     std::shared_ptr<Camera> getCamera(const std::string& name="") const;
     bool                    setDefaultCamera(const std::string& name);
     
+    void registerAnimationEvaluator(const std::shared_ptr<AnimationEvaluator>&
+                                    evaluator);
+    void evaluateAnimation(float tstart, float tend);
+    
     static std::shared_ptr<Scene> Load(const rapidjson::Value& value);
     
 private:
@@ -58,6 +63,7 @@ private:
     std::map<std::string, std::shared_ptr<Material>>    _materials;
     std::map<std::string, std::shared_ptr<Camera>>      _cameras;
     std::string                                         _defaultCamera;
+    std::vector<std::shared_ptr<AnimationEvaluator>>    _animationEvaluators;
 };
 
 #endif /* defined(__CSE168_Rendering__Scene__) */

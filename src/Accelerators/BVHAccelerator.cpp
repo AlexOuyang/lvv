@@ -93,6 +93,13 @@ void BVHAccelerator::preprocess() {
     _primitives.swap(orderedPrimitives);
 }
 
+void BVHAccelerator::rebuild() {
+    if (_root) {
+        delete _root;
+    }
+    preprocess();
+}
+
 /*
  * Structure used by SAH split
  */

@@ -30,3 +30,7 @@ void Shape::refine(std::vector<std::shared_ptr<Shape>> &) const {
     std::cerr << "Shape refine not implemented" << std::endl;
     abort();
 }
+
+bool Shape::hasMaterial() const {
+    return false;
+}

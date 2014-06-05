@@ -19,8 +19,7 @@
 
 #include <sstream>
 #include <iomanip>
-#include "Accelerators/BVHAccelerator.h"
-#include "Core/TransformedPrimitive.h"
+#include "Cameras/PerspectiveCamera.h"
 
 int main(int argc, char* argv[]) {
     if (argc <= 1) {
@@ -81,37 +80,42 @@ int main(int argc, char* argv[]) {
     camera->setFilm(film);
     
     // ANIMATE
-    if (false)
+    if (true)
     {
-        // Prepare scene elements
-        BVHAccelerator* aggregate = const_cast<BVHAccelerator*>(dynamic_cast<const BVHAccelerator*>(scene->getAggregate()));
-        std::shared_ptr<TransformedPrimitive> spherePrim = std::dynamic_pointer_cast<TransformedPrimitive>(aggregate->findPrimitive("sphere"));
-        Transform transform = spherePrim->getTransform();
-        
         std::shared_ptr<ImageFilm> image = std::dynamic_pointer_cast<ImageFilm>(film);
+        // Animation config
+        float startFrame = 150.f;
+        float endFrame = 151.f;
+        float exposureTime = 0.2f;
+        float deltaFrame = 1.f;
+        int nbSamples = 200;
         
-        int nbFrames = 24*4;
-        int nbSamples = 60;
-        for (int i = 0; i < nbFrames; ++i) {
+        // Init animation values
+        int nbFrames = (endFrame - startFrame) / deltaFrame;
+        int frameNum = 0;
+        float currentFrame = startFrame;
+        while (currentFrame < endFrame) {
             QTime clock;
             clock.start();
             
-            transform.rotate(360.f/nbFrames, vec3(0.f, 1.f, 0.f));
-            spherePrim->setTransform(transform);
-            qDebug() << "Rendering frame " << i << "/" << nbFrames;
+            scene->evaluateAnimation(currentFrame-(exposureTime/2), currentFrame+(exposureTime/2));
+            currentFrame += deltaFrame;
+            qDebug() << "Rendering frame " << frameNum << "/" << nbFrames;
             for (int j = 0; j < nbSamples; ++j) {
                 renderer->render(*scene, camera.get());
             }
             
             // Create filename
             std::stringstream ss;
-            ss << "/Users/gael/Desktop/anim/animframe_" << std::setfill('0') << std::setw(2) << i << ".bmp";
+            ss << "/Users/gael/Desktop/dragon_anim/frame_" << std::setfill('0') << std::setw(3) << frameNum << ".bmp";
             image->writeToFile(ss.str());
             image->clear();
             renderer->reset();
             
             float elapsed = ((float)clock.elapsed()/1000.f);
             qDebug() << "Rendered frame in" << elapsed << "s";
+            
+            ++frameNum;
         }
         qDebug() << "Rendering done";
         return EXIT_SUCCESS;
@@ -124,14 +128,6 @@ int main(int argc, char* argv[]) {
         image->writeToFile();
         return EXIT_SUCCESS;
     }
-    
-//    QTime clock;
-//    clock.start();
-//    std::cout << "Rendering photon maps..." << std::endl;
-//    renderer->preprocess(*scene, camera.get());
-//    float elapsed = ((float)clock.elapsed()/1000.f);
-//    std::cout << "Photon maps rendered in " << elapsed << "s" << std::endl;
-//    return 0;
     
     // Else open the window and launch rendering thread
     std::shared_ptr<QtFilm> window = std::dynamic_pointer_cast<QtFilm>(film);

@@ -13,7 +13,9 @@ Aggregate::~Aggregate() {
 }
 
 void Aggregate::preprocess() {
-    
+}
+
+void Aggregate::rebuild() {
 }
 
 Aggregate& Aggregate::operator<<(const std::shared_ptr<Primitive>& primitive) {

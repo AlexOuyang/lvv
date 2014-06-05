@@ -17,7 +17,8 @@
 #include "Material.h"
 
 Scene::Scene(Aggregate* aggregate) :
-_lights(), _aggregate(aggregate), _volume(nullptr), _materials(), _cameras(), _defaultCamera() {
+_lights(), _aggregate(aggregate), _volume(nullptr), _materials(), _cameras(), _defaultCamera(),
+_animationEvaluators() {
     
 }
 
@@ -132,6 +133,18 @@ std::shared_ptr<Camera> Scene::getCamera(const std::string& name) const {
 bool Scene::setDefaultCamera(const std::string& name) {
     _defaultCamera = name;
     return !!getCamera(name);
+}
+
+void Scene::registerAnimationEvaluator(const std::shared_ptr<AnimationEvaluator>& evaluator) {
+    _animationEvaluators.push_back(evaluator);
+}
+
+void Scene::evaluateAnimation(float tstart, float tend) {
+    for (const std::shared_ptr<AnimationEvaluator>& evaluator : _animationEvaluators) {
+        evaluator->evaluate(tstart, tend);
+    }
+    // Re-build scene aggregate
+    _aggregate->rebuild();
 }
 
 std::shared_ptr<Scene> Scene::Load(const rapidjson::Value& value) {

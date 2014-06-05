@@ -56,6 +56,7 @@ public:
         int                         indexOffset;
         std::shared_ptr<Texture>    color;
         OverridenProperty<float>    intensity;
+        OverridenProperty<float>    rotationOffset;
     };
     
     struct PrimitiveVolumeOverride {
@@ -135,7 +136,7 @@ public:
     bool applyPrimitiveOverrides(Scene& scene, const std::string& name,
                                  const Transform& transform, GeometricPrimitive& p,
                                  const ImportedMaterialAttributes* material=nullptr,
-                                 Mesh* mesh=nullptr) const;
+                                 MeshBase* mesh=nullptr) const;
     bool applyLightOverrides(Scene& scene, Light* light) const;
     
 protected:

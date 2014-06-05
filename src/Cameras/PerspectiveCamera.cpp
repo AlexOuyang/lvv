@@ -46,7 +46,7 @@ std::shared_ptr<PerspectiveCamera> PerspectiveCamera::Load(const rapidjson::Valu
 }
 
 PerspectiveCamera::PerspectiveCamera() :
-_transform(), _vfov(glm::radians(40.f)), _aspect(1.33f), _focusDistance(0.f), _apertureSize(0.f) {
+_vfov(glm::radians(40.f)), _aspect(1.33f), _focusDistance(1.f), _apertureSize(0.f) {
 
 }
 
@@ -96,14 +96,6 @@ float PerspectiveCamera::generateRay(const CameraSample& sample, Ray* ray) {
     ray->time = time;
     
     return 1.0;
-}
-
-void PerspectiveCamera::setTransform(const AnimatedTransform& t) {
-    _transform = t;
-}
-
-void PerspectiveCamera::setTransform(const Transform& t) {
-    _transform.setTransform(t);
 }
 
 void PerspectiveCamera::lookAt(const vec3& position, const vec3& target, const vec3& up) {

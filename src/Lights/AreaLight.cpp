@@ -8,7 +8,16 @@
 
 #include "AreaLight.h"
 
-AreaLight* AreaLight::CreateFromMesh(Mesh* mesh, const Transform& t, bool inverseNormal, int indexOffset) {
+#include "Shapes/Mesh.h"
+
+AreaLight* AreaLight::CreateFromMesh(MeshBase* meshBase, const Transform& t, bool inverseNormal,
+                                     int indexOffset) {
+    Mesh* mesh = dynamic_cast<Mesh*>(meshBase);
+    
+    if (!mesh) {
+        return nullptr;
+    }
+    
     if (mesh->getTrianglesCount() != 2) {
         return nullptr;
     }

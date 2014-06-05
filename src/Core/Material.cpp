@@ -34,10 +34,24 @@ std::shared_ptr<Material> Material::Load(const rapidjson::Value& value) {
         material = Glossy::Load(value);
     }
     
+    if (value.HasMember("normalMap")) {
+        std::shared_ptr<Texture> texture = Texture::Load(value["normalMap"]);
+        if (texture) {
+            material->setNormalMap(texture);
+        }
+    }
+    
+    if (value.HasMember("alphaTexture")) {
+        std::shared_ptr<Texture> texture = Texture::Load(value["alphaTexture"]);
+        if (texture) {
+            material->setAlphaTexture(texture);
+        }
+    }
+    
     return material;
 }
 
-Material::Material() : _name(), _normalMap() {
+Material::Material() : _name(), _normalMap(), _alphaTexture() {
     
 }
 
@@ -59,6 +73,14 @@ void Material::setNormalMap(const std::shared_ptr<Texture>& map) {
 
 const Texture* Material::getNormalMap() const {
     return _normalMap.get();
+}
+
+void Material::setAlphaTexture(const std::shared_ptr<Texture>& texture) {
+    _alphaTexture = texture;
+}
+
+const Texture* Material::getAlphaTexture() const {
+    return _alphaTexture.get();
 }
 
 void Material::setDiffuseColor(const std::shared_ptr<Texture>&) {

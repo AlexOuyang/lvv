@@ -11,13 +11,13 @@
 
 #include "Core/Core.h"
 #include "Core/Light.h"
-#include "Shapes/Mesh.h"
+#include "Shapes/MeshBase.h"
 #include "Core/Transform.h"
 
 class AreaLight : public Light {
 public:
     
-    static AreaLight* CreateFromMesh(Mesh* mesh, const Transform& t=Transform(),
+    static AreaLight* CreateFromMesh(MeshBase* mesh, const Transform& t=Transform(),
                                      bool inverseNormal=false, int indexOffset=0);
     
     AreaLight();

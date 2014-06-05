@@ -9,11 +9,12 @@
 #ifndef CSE168_Rendering_Camera_h
 #define CSE168_Rendering_Camera_h
 
+#include "Core/SceneNode.h"
 #include "CameraSample.h"
 #include "Ray.h"
 #include "Film.h"
 
-class Camera {
+class Camera : public SceneNode {
 public:
     
     static std::shared_ptr<Camera> Load(const rapidjson::Value& value);

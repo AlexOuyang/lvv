@@ -56,6 +56,10 @@ void Transform::applyMatrix(const mat4x4& matrix) {
     _matrix = _matrix * matrix;
 }
 
+void Transform::setMatrix(const mat4x4& matrix) {
+    _matrix = matrix;
+}
+
 vec3 Transform::applyToVector(const vec3& v) const {
     return vec3(_matrix * vec4(v, 0.0f));
 }

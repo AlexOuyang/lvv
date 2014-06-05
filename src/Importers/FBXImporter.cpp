@@ -12,13 +12,13 @@
 
 #include "Core/Scene.h"
 #include "Shapes/Mesh.h"
+#include "Shapes/AnimatedMesh.h"
 #include "Core/TransformedPrimitive.h"
 #include "Core/GeometricPrimitive.h"
 #include "Materials/Matte.h"
 #include "Lights/PointLight.h"
 #include "Lights/DirectionalLight.h"
 #include "Lights/AreaLight.h"
-#include "Cameras/PerspectiveCamera.h"
 #include "Utilities/ImageLoading.h"
 #include "Shapes/ShapesUtilities.h"
 
@@ -61,7 +61,7 @@ bool FBXImporter::import(Scene &scene) {
     return true;
 }
 
-void FBXImporter::importNode(const FbxNode *fbxNode, Scene &scene, const Transform& parentTransform) {
+void FBXImporter::importNode(FbxNode *fbxNode, Scene &scene, const Transform& parentTransform) {
     // Import node transform
     Transform transform = importNodeTransform(fbxNode);
     transform = parentTransform(transform);
@@ -76,13 +76,13 @@ void FBXImporter::importNode(const FbxNode *fbxNode, Scene &scene, const Transfo
     }
 }
 
-void FBXImporter::importNodeAttribute(const FbxNode* fbxNode, const FbxNodeAttribute* fbxAttribute,
+void FBXImporter::importNodeAttribute(FbxNode* fbxNode, FbxNodeAttribute* fbxAttribute,
                                       Scene& scene,
                                       const Transform& transform) {
     FbxNodeAttribute::EType type = fbxAttribute->GetAttributeType();
     
     if (type == FbxNodeAttribute::eMesh) {
-        const FbxMesh* fbxMesh = dynamic_cast<const FbxMesh*>(fbxAttribute);
+        FbxMesh* fbxMesh = dynamic_cast<FbxMesh*>(fbxAttribute);
         importMesh(fbxNode, fbxMesh, scene, transform);
     }
     
@@ -125,7 +125,7 @@ void FBXImporter::importNodeAttribute(const FbxNode* fbxNode, const FbxNodeAttri
     }
     
     if (type == FbxNodeAttribute::eCamera) {
-        const FbxCamera* fbxCamera = dynamic_cast<const FbxCamera*>(fbxAttribute);
+        FbxCamera* fbxCamera = dynamic_cast<FbxCamera*>(fbxAttribute);
         
         std::shared_ptr<PerspectiveCamera> camera = std::make_shared<PerspectiveCamera>();
         camera->setName(fbxNode->GetName());
@@ -141,11 +141,17 @@ void FBXImporter::importNodeAttribute(const FbxNode* fbxNode, const FbxNodeAttri
         camera->lookAt(importVec3(fbxCamera->Position.Get()), importVec3(fbxCamera->InterestPosition.Get()),
                        importVec3(fbxCamera->UpVector.Get()));
         
+        if (isNodeAnimated(fbxNode)) {
+            scene.registerAnimationEvaluator(std::make_shared<CameraAnimationEvaluator>(fbxCamera,
+                                                                                        camera,
+                                                                                        shared_from_this()));
+        }
+        
         scene << camera;
     }
 }
 
-void FBXImporter::importMesh(const FbxNode* fbxNode, const FbxMesh* fbxMesh, Scene &scene,
+void FBXImporter::importMesh(FbxNode* fbxNode, FbxMesh* fbxMesh, Scene &scene,
                              const Transform &transform) {
     if (!fbxMesh->IsTriangleMesh()) {
         return;
@@ -156,31 +162,72 @@ void FBXImporter::importMesh(const FbxNode* fbxNode, const FbxMesh* fbxMesh, Sce
     // Load mesh data
     uint_t indicesCount, verticesCount;
     uint_t* indices;
+    uint_t* materialIndices = nullptr;
     Vertex* vertices;
+    bool hasUVs = false;
     
-    _loadMeshData(fbxMesh, &verticesCount, &vertices, &indicesCount, &indices);
+    FbxTime time = FBXSDK_TIME_INFINITE;
+    if (!_loadMeshData(fbxMesh, &verticesCount, &vertices, &indicesCount,
+                       &indices, &materialIndices, &hasUVs, time)) {
+        return;
+    }
     
     // Create mesh
-    std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
+    std::shared_ptr<MeshBase> mesh;
+    std::shared_ptr<AnimatedMesh> animated;
     
+    if (fbxMesh->GetDeformerCount() == 0) {
+        // Create static mesh
+        mesh = std::make_shared<Mesh>();
+    } else {
+        // Create animated mesh with same vertices
+        animated = std::make_shared<AnimatedMesh>();
+        
+        // Create end vertices
+        Vertex* endVertices = new Vertex[verticesCount];
+        for (uint_t i = 0; i < verticesCount; ++i) {
+            endVertices[i] = vertices[i];
+        }
+        
+        animated->setEndVertices(endVertices);
+        
+        mesh = animated;
+    }
+    
+    // Set mesh base data
     mesh->setVertices(verticesCount, vertices);
     mesh->setIndices(indicesCount, indices);
     
+    if (materialIndices) {
+        mesh->setMaterialIndices(materialIndices);
+    }
+    
     // Generate mesh tangents
-    mesh->generateTangents();
+    mesh->generateTangents(hasUVs);
     
-    // Load mesh material
-    ImportedMaterial material = _importNodeMaterial(fbxNode, scene);
+    // Load mesh materials
+    std::vector<ImportedMaterial> materials;
+    _importNodeMaterials(materials, fbxNode, scene);
     
-    if (material.first.alphaTexture) {
-        mesh->setAlphaTexture(material.first.alphaTexture);
+    // If material indices are providen, assign materials to mesh
+    if (materialIndices) {
+        std::vector<std::shared_ptr<Material>> meshMaterials;
+        meshMaterials.reserve(materials.size());
+        for (ImportedMaterial& material : materials) {
+            meshMaterials.push_back(material.second);
+        }
+        mesh->setMaterials(meshMaterials);
+    }
+    
+    if (materials.size() == 1 && materials[0].first.alphaTexture) {
+        mesh->setAlphaTexture(materials[0].first.alphaTexture);
     }
     
     std::shared_ptr<GeometricPrimitive> primitive = std::make_shared<GeometricPrimitive>(mesh,
-                                                                                         material.second);
+                                                                                         materials[0].second);
     
     // Apply overrides
-    bool addToScene = applyPrimitiveOverrides(scene, name, transform, *primitive, &material.first,
+    bool addToScene = applyPrimitiveOverrides(scene, name, transform, *primitive, &materials[0].first,
                                               mesh.get());
     
     if (addToScene) {
@@ -193,62 +240,84 @@ void FBXImporter::importMesh(const FbxNode* fbxNode, const FbxMesh* fbxMesh, Sce
         
         // Create transformed primitive
         std::shared_ptr<TransformedPrimitive> transformedPrimitive =
+        //std::make_shared<TransformedPrimitive>(aggregate, Transform());
         std::make_shared<TransformedPrimitive>(aggregate, transform);
+        
+        transformedPrimitive->setName(name);
+        
+        // Create animation evaluators
+        if (isNodeAnimated(fbxNode)) {
+            scene.registerAnimationEvaluator(std::make_shared<MeshAnimationEvaluator>(fbxNode,
+                                                                                      transformedPrimitive,
+                                                                                      shared_from_this()));
+        }
+        if (animated) {
+            scene
+            .registerAnimationEvaluator(std::make_shared<SkinnedMeshAnimationEvaluator>(fbxMesh,
+                                                                                        animated,
+                                                                                        aggregate,
+                                                                                        shared_from_this()));
+        }
         
         // Add primitive to scene
         scene << transformedPrimitive;
     }
 }
 
-FBXImporter::ImportedMaterial FBXImporter::_importNodeMaterial(const FbxNode *fbxNode, Scene &scene) {
-    std::shared_ptr<Material> material;
-    
+void FBXImporter::_importNodeMaterials(std::vector<ImportedMaterial>& materials,
+                                       const FbxNode *fbxNode, Scene &scene) {
     if (fbxNode->GetMaterialCount() == 0) {
         std::cerr << "FbxImport warning: no material for node \"" << fbxNode->GetName() << "\"" << std::endl;
-        return std::make_pair(ImportedMaterialAttributes(), std::make_shared<Matte>());
+        materials.push_back(std::make_pair(ImportedMaterialAttributes(), std::make_shared<Matte>()));
     }
     
-    FbxSurfaceMaterial* fbxMaterial = fbxNode->GetMaterial(0);
-    
-    // Check if material already exists
-    auto importedIt = _importedMaterials.find(fbxMaterial);
-    if (importedIt != _importedMaterials.end()) {
-        return importedIt->second;
-    }
-    
-    FbxSurfaceLambert* fbxLambert = dynamic_cast<FbxSurfaceLambert*>(fbxMaterial);
-    FbxSurfacePhong* fbxPhong = dynamic_cast<FbxSurfacePhong*>(fbxMaterial);
+    for (uint_t i = 0; i < fbxNode->GetMaterialCount(); ++i) {
+        std::shared_ptr<Material> material;
+        
+        FbxSurfaceMaterial* fbxMaterial = fbxNode->GetMaterial(i);
+        
+        // Check if material already exists
+        auto importedIt = _importedMaterials.find(fbxMaterial);
+        if (importedIt != _importedMaterials.end()) {
+            materials.push_back(importedIt->second);
+            continue;
+        }
+        
+        FbxSurfaceLambert* fbxLambert = dynamic_cast<FbxSurfaceLambert*>(fbxMaterial);
+        FbxSurfacePhong* fbxPhong = dynamic_cast<FbxSurfacePhong*>(fbxMaterial);
 
-    ImportedMaterialAttributes attrs;
-    attrs.name = fbxMaterial->GetName();
-    
-    if (fbxLambert) {
-        attrs.shadingMode = ImportedMaterialAttributes::Lambert;
-        attrs.diffuseColor = importVec3(fbxLambert->Diffuse.Get());
-        attrs.diffuseTexture = importTexture(fbxLambert->Diffuse.GetSrcObject<FbxTexture>(0));
-        attrs.diffuseIntensity = fbxLambert->DiffuseFactor.Get();
-        attrs.diffuseIntensityTexture = importTexture(fbxLambert->DiffuseFactor.GetSrcObject<FbxTexture>(0),
-                                                      true);
-        attrs.alphaTexture = importTexture(fbxLambert->TransparentColor.GetSrcObject<FbxTexture>(0), true);
-        attrs.normalMap = importTexture(fbxLambert->NormalMap.GetSrcObject<FbxTexture>(0));
+        ImportedMaterialAttributes attrs;
+        attrs.name = fbxMaterial->GetName();
+        
+        if (fbxLambert) {
+            attrs.shadingMode = ImportedMaterialAttributes::Lambert;
+            attrs.diffuseColor = importVec3(fbxLambert->Diffuse.Get());
+            attrs.diffuseTexture = importTexture(fbxLambert->Diffuse.GetSrcObject<FbxTexture>(0));
+            attrs.diffuseIntensity = fbxLambert->DiffuseFactor.Get();
+            attrs.diffuseIntensityTexture =
+            importTexture(fbxLambert->DiffuseFactor.GetSrcObject<FbxTexture>(0), true);
+            attrs.alphaTexture = importTexture(fbxLambert->TransparentColor.GetSrcObject<FbxTexture>(0), true);
+            attrs.normalMap = importTexture(fbxLambert->NormalMap.GetSrcObject<FbxTexture>(0));
+        }
+        if (fbxPhong) {
+            attrs.shadingMode = ImportedMaterialAttributes::Phong;
+            attrs.specularColor = importVec3(fbxPhong->Specular.Get());
+            attrs.specularTexture = importTexture(fbxPhong->Specular.GetSrcObject<FbxTexture>(0));
+            attrs.specularIntensityTexture =
+            importTexture(fbxPhong->ReflectionFactor.GetSrcObject<FbxTexture>(0), true);
+        }
+        
+        ImportedMaterial imported = std::make_pair(attrs, addImportedMaterial(attrs, scene));
+        
+        _importedMaterials[fbxMaterial] = imported;
+        
+        materials.push_back(imported);
     }
-    if (fbxPhong) {
-        attrs.shadingMode = ImportedMaterialAttributes::Phong;
-        attrs.specularColor = importVec3(fbxPhong->Specular.Get());
-        attrs.specularTexture = importTexture(fbxPhong->Specular.GetSrcObject<FbxTexture>(0));
-        attrs.specularIntensityTexture = importTexture(fbxPhong->ReflectionFactor.GetSrcObject<FbxTexture>(0),
-                                                       true);
-    }
-    
-    ImportedMaterial imported = std::make_pair(attrs, addImportedMaterial(attrs, scene));
-    
-    _importedMaterials[fbxMaterial] = imported;
-    
-    return imported;
 }
 
-void FBXImporter::_loadMeshData(const FbxMesh* fbxMesh, uint_t *verticesCount, Vertex **vertices,
-                                uint_t *indicesCount, uint_t **indices) const {
+bool FBXImporter::_loadMeshData(FbxMesh* fbxMesh, uint_t *verticesCount, Vertex **vertices,
+                                uint_t *indicesCount, uint_t **indices, uint_t** materialIndices,
+                                bool* hasUVs, const FbxTime& time) const {
     bool reIndexVertices = false;
     
     // Load indices
@@ -259,9 +328,25 @@ void FBXImporter::_loadMeshData(const FbxMesh* fbxMesh, uint_t *verticesCount, V
         (*indices)[i] = polygonIndices[i];
     }
     
-    // Check normals mapping mode to decide wether we should re-index vertices or not
+    // Get normal and uv elements
     const FbxGeometryElementNormal* normalElement = fbxMesh->GetElementNormal();
     const FbxGeometryElementUV* uvElement = fbxMesh->GetElementUV();
+    
+    if (uvElement) {
+        *hasUVs = true;
+    }
+    
+    if (!normalElement) {
+        std::cerr << "FBXImporter error: no normals provided for mesh \"" << fbxMesh->GetNode()->GetName()
+        << "\", mesh ignored" << std::endl;
+        return false;
+    }
+    if (normalElement->GetMappingMode() != FbxGeometryElement::eByPolygonVertex
+        && normalElement->GetMappingMode() != FbxGeometryElement::eByControlPoint) {
+        std::cerr << "FBXImporter error: unsuported normal mapping mode for mesh \"" << fbxMesh->GetNode()->GetName()
+        << "\", mesh ignored" << std::endl;
+        return false;
+    }
     
     // Get mesh uv set name
     std::string uvName;
@@ -269,37 +354,91 @@ void FBXImporter::_loadMeshData(const FbxMesh* fbxMesh, uint_t *verticesCount, V
     fbxMesh->GetUVSetNames(uvNames);
     if (uvNames.GetCount() > 0) {
         uvName = uvNames[0];
+    } else {
+        *hasUVs = false;
     }
 
-    if ((normalElement
-         && normalElement->GetMappingMode() == FbxGeometryElement::eByPolygonVertex) ||
+    if (normalElement->GetMappingMode() == FbxGeometryElement::eByPolygonVertex ||
         (uvElement
          && uvElement->GetMappingMode() == FbxGeometryElement::eByPolygonVertex))
         {
         reIndexVertices = true;
     }
     
-    // Load vertices
+    // Get control points array
+    uint_t controlPointsCount = fbxMesh->GetControlPointsCount();
+    vec3* controlPoints = new vec3[controlPointsCount];
+    for (uint_t i = 0; i < controlPointsCount; ++i) {
+        controlPoints[i] = importVec3(fbxMesh->GetControlPointAt(i));
+    }
+    
+    // Get normals (per control point) array
+    vec3* normals = new vec3[controlPointsCount];
+    bool usePerVertexNormals = true;
+    if (normalElement->GetMappingMode() == FbxGeometryElement::eByPolygonVertex) {
+        // Average normals per vertices
+        for (uint_t i = 0; i < controlPointsCount; ++i) {
+            normals[i] = vec3(0.f);
+        }
+        
+        for (uint_t i = 0; i < fbxMesh->GetPolygonCount(); ++i) {
+            for (uint_t j = 0; j < 3; ++j) {
+                uint_t controlPoint = fbxMesh->GetPolygonVertex(i, j);
+                FbxVector4 normal;
+                if (fbxMesh->GetPolygonVertexNormal(i, j, normal)) {
+                    normals[controlPoint] += importVec3(normal);
+                }
+            }
+        }
+        
+        // Normalize
+        for (uint_t i = 0; i < controlPointsCount; ++i) {
+            normals[i] = normalize(normals[i]);
+        }
+    } else if (normalElement->GetMappingMode() == FbxGeometryElement::eByControlPoint) {
+        for (uint_t i = 0; i < controlPointsCount; ++i) {
+            int normalIndex = 0;
+            if (normalElement->GetReferenceMode() == FbxGeometryElement::eDirect) {
+                normalIndex = i;
+            } else if (normalElement->GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
+                normalIndex = normalElement->GetIndexArray().GetAt(i);
+            }
+            
+            normals[i] = importVec3(normalElement->GetDirectArray().GetAt(normalIndex));
+        }
+    }
+    
+    if (!_applyMeshSkinning(fbxMesh, &controlPointsCount, &controlPoints, &normals, time)) {
+        usePerVertexNormals = false;
+    }
     
     if (reIndexVertices) {
         // Create vertices for each indices
         *verticesCount = *indicesCount;
         *vertices = new Vertex[*verticesCount];
         uint_t vertexIndex = 0;
+        
         // Create vertices for each polygon vertex (each index)
         for (uint_t i = 0; i < fbxMesh->GetPolygonCount(); ++i) {
             for (uint_t j = 0; j < 3; ++j) {
                 uint_t controlPoint = fbxMesh->GetPolygonVertex(i, j);
-                (*vertices)[vertexIndex].position = importVec3(fbxMesh->GetControlPointAt(controlPoint));
-                FbxVector4 normal;
-                if (fbxMesh->GetPolygonVertexNormal(i, j, normal)) {
-                    (*vertices)[vertexIndex].normal = importVec3(normal);
+                (*vertices)[vertexIndex].position = controlPoints[controlPoint];
+                if (usePerVertexNormals) {
+                    (*vertices)[vertexIndex].normal = normals[controlPoint];
+                } else {
+                    FbxVector4 normal;
+                    if (fbxMesh->GetPolygonVertexNormal(i, j, normal)) {
+                        (*vertices)[vertexIndex].normal = importVec3(normal);
+                    }
                 }
                 FbxVector2 uv;
                 bool unMapped = true;
-                if (!uvName.empty() && fbxMesh->GetPolygonVertexUV(i, j, uvName.c_str(), uv, unMapped)
-                    && !unMapped) {
-                    (*vertices)[vertexIndex].texCoord = importVec2(uv);
+                if (!uvName.empty() && fbxMesh->GetPolygonVertexUV(i, j, uvName.c_str(), uv, unMapped)) {
+                    if (!unMapped) {
+                        (*vertices)[vertexIndex].texCoord = importVec2(uv);
+                    } else {
+                        *hasUVs = false;
+                    }
                 }
                 (*indices)[vertexIndex] = vertexIndex;
                 ++vertexIndex;
@@ -314,18 +453,20 @@ void FBXImporter::_loadMeshData(const FbxMesh* fbxMesh, uint_t *verticesCount, V
         }
         
         // Load normals
-        if (normalElement) {
-            if (normalElement->GetMappingMode() == FbxGeometryElement::eByControlPoint) {
-                for (uint_t i = 0; i < *verticesCount; ++i) {
-                    int normalIndex = 0;
-                    if (normalElement->GetReferenceMode() == FbxGeometryElement::eDirect) {
-                        normalIndex = i;
-                    } else if (normalElement->GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
-                        normalIndex = normalElement->GetIndexArray().GetAt(i);
-                    }
-                    
-                    (*vertices)[i].normal = importVec3(normalElement->GetDirectArray().GetAt(normalIndex));
+        if (usePerVertexNormals) {
+            for (uint_t i = 0; i < *verticesCount; ++i) {
+                (*vertices)[i].normal = normals[i];
+            }
+        } else if (normalElement->GetMappingMode() == FbxGeometryElement::eByControlPoint) {
+            for (uint_t i = 0; i < *verticesCount; ++i) {
+                int normalIndex = 0;
+                if (normalElement->GetReferenceMode() == FbxGeometryElement::eDirect) {
+                    normalIndex = i;
+                } else if (normalElement->GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
+                    normalIndex = normalElement->GetIndexArray().GetAt(i);
                 }
+                
+                (*vertices)[i].normal = importVec3(normalElement->GetDirectArray().GetAt(normalIndex));
             }
         }
         // Load texture coords
@@ -344,7 +485,109 @@ void FBXImporter::_loadMeshData(const FbxMesh* fbxMesh, uint_t *verticesCount, V
             }
         }
     }
+    
+    // Cleanup
+    delete[] controlPoints;
+    delete[] normals;
+    
+    // Get material indices
+    FbxLayerElementArrayTemplate<int>* fbxMaterialIndices = nullptr;
+    if (fbxMesh->GetMaterialIndices(&fbxMaterialIndices)
+        && fbxMaterialIndices->GetCount() == (*indicesCount / 3)) {
+        *materialIndices = new uint_t[(*indicesCount / 3)];
+        for (uint_t i = 0; i < (*indicesCount / 3); ++i) {
+            (*materialIndices)[i] = fbxMaterialIndices->GetAt(i);
+        }
+    }
+    
+    return true;
+}
 
+bool FBXImporter::_applyMeshSkinning(FbxMesh* fbxMesh, uint_t* controlPointsCount,
+                                     vec3** controlPoints, vec3** normals,
+                                     const FbxTime& time) const {
+    // Deform control points from skin
+    
+    /*
+     Skinned mesh:
+     - get skin deformer
+     - for each cluster
+     -  get bone transform
+     -  get bone binding matrix: inverse(transformLinkMatrix) * transformMatrix
+     -  apply transform to each control point into a new array
+     */
+    
+    if (fbxMesh->GetDeformerCount() < 1) {
+        return false;
+    }
+    
+    // Init skinned control points array
+    vec3* skinnedControlPoints = new vec3[*controlPointsCount];
+    for (uint_t i = 0; i < *controlPointsCount; ++i) {
+        skinnedControlPoints[i] = vec3(0.f);
+    }
+    vec3* skinnedNormals = new vec3[*controlPointsCount];
+    for (uint_t i = 0; i < *controlPointsCount; ++i) {
+        skinnedNormals[i] = vec3(0.f);
+    }
+    
+    const FbxSkin* fbxSkin = dynamic_cast<FbxSkin*>(fbxMesh->GetDeformer(0));
+    if (fbxSkin) {
+        for (uint_t i = 0; i < fbxSkin->GetClusterCount(); ++i) {
+            const FbxCluster* fbxCluster = fbxSkin->GetCluster(i);
+            
+            if (fbxCluster->GetLinkMode() == FbxCluster::eAdditive) {
+                continue;
+            }
+            
+            // Get cluster link node (bone)
+            FbxNode* bone = const_cast<FbxNode*>(fbxCluster->GetLink());
+            
+            // Extract bone matrix at current time
+            FbxAMatrix& fbxBoneTransform = bone->EvaluateGlobalTransform(time);
+            mat4x4 boneTransform = importMatrix(fbxBoneTransform);
+            
+            // Change bone transform from world-space to object space
+            Transform objectTransfrom = importNodeTransform(fbxMesh->GetNode());
+            boneTransform = glm::inverse(objectTransfrom.getMatrix()) * boneTransform;
+            
+            // Get bind matrix
+            FbxAMatrix fbxTransformMatrix, fbxTransformLinkMatrix;
+            fbxCluster->GetTransformMatrix(fbxTransformMatrix);
+            fbxCluster->GetTransformLinkMatrix(fbxTransformLinkMatrix);
+            mat4x4 transformMatrix = importMatrix(fbxTransformMatrix);
+            mat4x4 transformLinkMatrix = importMatrix(fbxTransformLinkMatrix);
+            
+            mat4x4 bindMatrix = glm::inverse(transformLinkMatrix) * transformMatrix;
+            
+            uint_t controlPointsIndicesCount = fbxCluster->GetControlPointIndicesCount();
+            int* controlPointsIndices = fbxCluster->GetControlPointIndices();
+            double* controlPointsWeight = fbxCluster->GetControlPointWeights();
+            
+            for (uint_t i = 0; i < controlPointsIndicesCount; ++i) {
+                uint_t pointIndex = controlPointsIndices[i];
+                float pointWeight = controlPointsWeight[i];
+                mat4x4 skinMatrix = pointWeight * boneTransform * bindMatrix;
+                mat4x4 normalSkinMatrix = glm::inverse(glm::transpose(skinMatrix));
+                skinnedControlPoints[pointIndex] += vec3(skinMatrix * vec4((*controlPoints)[pointIndex], 1.f));
+                skinnedNormals[pointIndex] += vec3(normalSkinMatrix * vec4((*normals)[pointIndex], 0.f));
+            }
+        }
+    }
+    
+    // Copy skinned points into control points array
+    for (uint_t i = 0; i < *controlPointsCount; ++i) {
+        (*controlPoints)[i] = skinnedControlPoints[i];
+    }
+    for (uint_t i = 0; i < *controlPointsCount; ++i) {
+        (*normals)[i] = normalize(skinnedNormals[i]);
+    }
+    
+    // Clean
+    delete[] skinnedControlPoints;
+    delete[] skinnedNormals;
+    
+    return true;
 }
 
 vec3 FBXImporter::importVec3(const FbxVector4& v) {
@@ -353,6 +596,18 @@ vec3 FBXImporter::importVec3(const FbxVector4& v) {
 
 vec2 FBXImporter::importVec2(const FbxVector2& v) {
     return vec2(v[0], v[1]);
+}
+
+mat4x4 FBXImporter::importMatrix(const FbxAMatrix& m) {
+    mat4x4 mat;
+    
+    for (uint_t i = 0; i < 4; ++i) {
+        for (uint_t j = 0; j < 4; ++j) {
+            mat[i][j] = m.Get(i, j);
+        }
+    }
+    
+    return mat;
 }
 
 Transform FBXImporter::importNodeTransform(const FbxNode* node) {
@@ -424,4 +679,122 @@ std::shared_ptr<Texture> FBXImporter::importTexture(FbxTexture* fbxTexture,
         std::cerr << "FbxImporter error: couldn't load texture \"" << path << "\"" << std::endl;
     }
     return texture;
+}
+
+bool FBXImporter::isNodeAnimated(FbxNode* fbxNode) {
+    FbxTimeSpan span;
+    return fbxNode->GetAnimationInterval(span);
+}
+
+FBXImporter::CameraAnimationEvaluator::CameraAnimationEvaluator(FbxCamera* fbxCamera,
+                                                                const std::shared_ptr<PerspectiveCamera>&
+                                                                camera,
+                                                                const std::shared_ptr<FBXImporter>& importer)
+: fbxCamera(fbxCamera), camera(camera), importer(importer) {
+}
+
+FBXImporter::CameraAnimationEvaluator::~CameraAnimationEvaluator() {
+    
+}
+
+void FBXImporter::CameraAnimationEvaluator::evaluate(float tstart, float tend) {
+    AnimatedTransform anim;
+    
+    FbxTime time;
+    time.SetFramePrecise(tstart, FbxTime::eFrames24);
+    vec3 target = importVec3(fbxCamera->EvaluateLookAtPosition(time));
+    Transform t1;
+    t1.lookAt(importVec3(fbxCamera->EvaluatePosition(time)), target);
+    
+    time.SetFramePrecise(tend, FbxTime::eFrames24);
+    Transform t2;
+    t2.lookAt(importVec3(fbxCamera->EvaluatePosition(time)),
+              importVec3(fbxCamera->EvaluateLookAtPosition(time)));
+    
+    camera->setFocusPoint(target);
+    
+    anim.setTransforms(t1, t2);
+    camera->setAnimatedTransform(anim);
+}
+
+FBXImporter::MeshAnimationEvaluator::MeshAnimationEvaluator(FbxNode* fbxNode,
+                                                            const std::shared_ptr<TransformedPrimitive>& tp,
+                                                            const std::shared_ptr<FBXImporter>& importer)
+: fbxNode(fbxNode), transformedPrimitive(tp), importer(importer) {
+    
+}
+
+FBXImporter::MeshAnimationEvaluator::~MeshAnimationEvaluator() {
+    
+}
+
+void FBXImporter::MeshAnimationEvaluator::evaluate(float tstart, float tend) {
+    AnimatedTransform anim;
+    Transform t1, t2;
+
+    FbxTime time;
+    time.SetFramePrecise(tstart, FbxTime::eFrames24);
+    t1.setMatrix(FBXImporter::importMatrix(fbxNode->EvaluateGlobalTransform(time)));
+    time.SetFramePrecise(tend, FbxTime::eFrames24);
+    t2.setMatrix(FBXImporter::importMatrix(fbxNode->EvaluateGlobalTransform(time)));
+    
+    anim.setTransforms(t1, t2);
+    transformedPrimitive->setAnimatedTransform(anim);
+}
+
+FBXImporter::SkinnedMeshAnimationEvaluator::
+SkinnedMeshAnimationEvaluator(FbxMesh* fbxMesh,
+                              const std::shared_ptr<AnimatedMesh>& mesh,
+                              const std::shared_ptr<Aggregate>& aggregate,
+                              const std::shared_ptr<FBXImporter>& importer)
+: fbxMesh(fbxMesh), mesh(mesh), aggregate(aggregate), importer(importer) {
+    
+}
+
+FBXImporter::SkinnedMeshAnimationEvaluator::~SkinnedMeshAnimationEvaluator() {
+    
+}
+
+void FBXImporter::SkinnedMeshAnimationEvaluator::evaluate(float tstart, float tend) {
+    // Re-load mesh data at start and end times
+    // Load mesh data
+    uint_t indicesCount, verticesCount;
+    uint_t* indices;
+    uint_t* materialIndices = nullptr;
+    Vertex* vertices;
+    bool hasUVs = false;
+    
+    FbxTime time;
+    time.SetFramePrecise(tstart, FbxTime::eFrames24);
+    if (!importer->_loadMeshData(fbxMesh, &verticesCount, &vertices, &indicesCount,
+                                 &indices, &materialIndices, &hasUVs, time)) {
+        std::cerr << "SkinnedMeshAnimation error: Unable to evaluate animation" << std::endl;
+        return;
+    }
+    
+    // Re-set mesh data
+    mesh->setVertices(verticesCount, vertices);
+    mesh->setIndices(indicesCount, indices);
+    mesh->setMaterialIndices(materialIndices);
+    
+    // Get end-vertices
+    time.SetFramePrecise(tend, FbxTime::eFrames24);
+    if (!importer->_loadMeshData(fbxMesh, &verticesCount, &vertices, &indicesCount,
+                                 &indices, &materialIndices, &hasUVs, time)) {
+        std::cerr << "SkinnedMeshAnimation error: Unable to evaluate animation" << std::endl;
+        return;
+    }
+    mesh->setEndVertices(vertices);
+    
+    // Delete unused indices
+    delete[] indices;
+    if (materialIndices) {
+        delete[] materialIndices;
+    }
+    
+    // Re-generate mesh tangents
+    mesh->generateTangents(hasUVs);
+    
+    // Re-build aggregate
+    aggregate->rebuild();
 }

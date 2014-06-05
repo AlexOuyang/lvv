@@ -35,7 +35,9 @@ bool GeometricPrimitive::intersect(const Ray& ray, Intersection* intersection) c
         return false;
     }
     intersection->primitive = this;
-    intersection->material = _material.get();
+    if (!_shape->hasMaterial()) {
+        intersection->material = _material.get();
+    }
     return true;
 }
 

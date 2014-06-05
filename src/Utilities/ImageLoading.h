@@ -13,8 +13,8 @@
 #include "Core/Texture.h"
 
 namespace ImageLoading {
-    std::shared_ptr<Texture> LoadImage(const std::string& filename);
-    std::shared_ptr<Texture> LoadFloatImage(const std::string& filename);
+    std::shared_ptr<Texture> LoadImage(std::string filename);
+    std::shared_ptr<Texture> LoadFloatImage(std::string filename);
 };
 
 #endif /* defined(__CSE168_Rendering__ImageLoader__) */

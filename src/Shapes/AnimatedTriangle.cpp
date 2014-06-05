@@ -1,54 +1,44 @@
 //
-//  Triangle.cpp
+//  AnimatedTriangle.cpp
 //  CSE168_Rendering
 //
-//  Created by Gael Jochaud du Plessix on 4/4/14.
+//  Created by Gael Jochaud du Plessix on 6/5/14.
 //
 //
 
-#include "Triangle.h"
+#include "AnimatedTriangle.h"
 
 #include "Core/Ray.h"
-#include "Shapes/Mesh.h"
+#include "Shapes/AnimatedMesh.h"
 #include "Core/Material.h"
 
-Triangle::Triangle() : _vertices(), _mesh(), _material() {
+AnimatedTriangle::AnimatedTriangle() : _vertices(), _mesh(), _material() {
     
 }
 
-Triangle::Triangle(uint_t a, uint_t b, uint_t c) : _vertices(), _mesh(), _material() {
-    _vertices[0] = a;
-    _vertices[1] = b;
-    _vertices[2] = c;    
-}
-
-Triangle::~Triangle() {
-}
-
-void Triangle::setMesh(const std::shared_ptr<const Mesh>& mesh) {
-    _mesh = mesh;
-}
-
-void Triangle::setMaterial(const std::shared_ptr<Material>& material) {
-    _material = material;
-}
-
-void Triangle::setVertices(uint_t a, uint_t b, uint_t c) {
+AnimatedTriangle::AnimatedTriangle(uint_t a, uint_t b, uint_t c) : _vertices(), _mesh(), _material() {
     _vertices[0] = a;
     _vertices[1] = b;
     _vertices[2] = c;
 }
 
-const Vertex* Triangle::getVertex(int num) const {
-    return _mesh->getVertex(num);
+AnimatedTriangle::~AnimatedTriangle() {
 }
 
-bool Triangle::intersect(const Ray& ray, Intersection* intersection) const {
-    const Vertex* v0 = _mesh->getVertex(_vertices[0]);
-    const Vertex* v1 = _mesh->getVertex(_vertices[1]);
-    const Vertex* v2 = _mesh->getVertex(_vertices[2]);
+void AnimatedTriangle::setMesh(const std::shared_ptr<const AnimatedMesh>& mesh) {
+    _mesh = mesh;
+}
+
+void AnimatedTriangle::setMaterial(const std::shared_ptr<Material>& material) {
+    _material = material;
+}
+
+bool AnimatedTriangle::intersect(const Ray& ray, Intersection* intersection) const {
+    Vertex v0 = _mesh->getInterpolatedVertex(_vertices[0], ray.time);
+    Vertex v1 = _mesh->getInterpolatedVertex(_vertices[1], ray.time);
+    Vertex v2 = _mesh->getInterpolatedVertex(_vertices[2], ray.time);
     
-    const vec3 &a = v0->position, &b = v1->position, &c = v2->position;
+    const vec3 &a = v0.position, &b = v1.position, &c = v2.position;
     vec3 oa = ray.origin - a, ca = c - a, ba = b - a;
     vec3 normal = cross(ba, ca);
     float det = dot(-ray.direction, normal);
@@ -78,9 +68,9 @@ bool Triangle::intersect(const Ray& ray, Intersection* intersection) const {
     }
     
     // Compute uv coords
-    vec2 uvs = ((1-alpha-beta)*v0->texCoord
-                + alpha*v1->texCoord
-                + beta*v2->texCoord);
+    vec2 uvs = ((1-alpha-beta)*v0.texCoord
+                + alpha*v1.texCoord
+                + beta*v2.texCoord);
     
     // Reject if we have an alpha texture
     const Texture* alphaTexture = nullptr;
@@ -94,9 +84,9 @@ bool Triangle::intersect(const Ray& ray, Intersection* intersection) const {
     }
     
     // Compute smoothed normal
-    normal = ((1-alpha-beta)*v0->normal
-              + alpha*v1->normal
-              + beta*v2->normal);
+    normal = ((1-alpha-beta)*v0.normal
+              + alpha*v1.normal
+              + beta*v2.normal);
     
     // Update the ray
     ray.tmax = t;
@@ -108,27 +98,27 @@ bool Triangle::intersect(const Ray& ray, Intersection* intersection) const {
     intersection->uv = uvs;
     
     // Interpolate tangents
-    intersection->tangentU = ((1-alpha-beta)*v0->tangentU
-                              + alpha*v1->tangentU
-                              + beta*v2->tangentU);
-    intersection->tangentV = ((1-alpha-beta)*v0->tangentV
-                              + alpha*v1->tangentV
-                              + beta*v2->tangentV);
+    intersection->tangentU = ((1-alpha-beta)*v0.tangentU
+                              + alpha*v1.tangentU
+                              + beta*v2.tangentU);
+    intersection->tangentV = ((1-alpha-beta)*v0.tangentV
+                              + alpha*v1.tangentV
+                              + beta*v2.tangentV);
     
     if (_material) {
         intersection->material = _material.get();
     }
-
+    
     intersection->rayEpsilon = 1e-3f * t;
     return true;
 }
 
-bool Triangle::intersectP(const Ray& ray) const {
-    const Vertex* v0 = _mesh->getVertex(_vertices[0]);
-    const Vertex* v1 = _mesh->getVertex(_vertices[1]);
-    const Vertex* v2 = _mesh->getVertex(_vertices[2]);
+bool AnimatedTriangle::intersectP(const Ray& ray) const {
+    Vertex v0 = _mesh->getInterpolatedVertex(_vertices[0], ray.time);
+    Vertex v1 = _mesh->getInterpolatedVertex(_vertices[1], ray.time);
+    Vertex v2 = _mesh->getInterpolatedVertex(_vertices[2], ray.time);
     
-    const vec3 &a = v0->position, &b = v1->position, &c = v2->position;
+    const vec3 &a = v0.position, &b = v1.position, &c = v2.position;
     vec3 oa = ray.origin - a, ca = c - a, ba = b - a;
     vec3 normal = cross(ba, ca);
     float det = dot(-ray.direction, normal);
@@ -154,9 +144,9 @@ bool Triangle::intersectP(const Ray& ray) const {
     }
     
     // Compute uv coords
-    vec2 uvs = ((1-alpha-beta)*v0->texCoord
-                + alpha*v1->texCoord
-                + beta*v2->texCoord);
+    vec2 uvs = ((1-alpha-beta)*v0.texCoord
+                + alpha*v1.texCoord
+                + beta*v2.texCoord);
     
     // Reject if we have an alpha texture
     if (_mesh && _mesh->_alphaTexture) {
@@ -168,11 +158,16 @@ bool Triangle::intersectP(const Ray& ray) const {
     return true;
 }
 
-AABB Triangle::getBoundingBox() const {
-    return AABB::Union(AABB(getVertex(_vertices[0])->position, getVertex(_vertices[1])->position),
-                       getVertex(_vertices[2])->position);
+AABB AnimatedTriangle::getBoundingBox() const {
+    AABB b1 = AABB::Union(AABB(_mesh->getVertex(_vertices[0])->position,
+                               _mesh->getVertex(_vertices[1])->position),
+                          _mesh->getVertex(_vertices[2])->position);
+    AABB b2 = AABB::Union(AABB(_mesh->getEndVertex(_vertices[0])->position,
+                               _mesh->getEndVertex(_vertices[1])->position),
+                          _mesh->getEndVertex(_vertices[2])->position);
+    return AABB::Union(b1, b2);
 }
 
-bool Triangle::hasMaterial() const {
+bool AnimatedTriangle::hasMaterial() const {
     return (bool)_material;
 }

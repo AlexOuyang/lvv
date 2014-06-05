@@ -11,6 +11,7 @@
 #include "Texture.h"
 
 #include "Spectrum.h"
+#include "Utilities/ImageLoading.h"
 
 std::shared_ptr<Texture> Texture::Load(const rapidjson::Value& value) {
     std::shared_ptr<Texture> texture;
@@ -52,6 +53,23 @@ std::shared_ptr<Texture> Texture::Load(const rapidjson::Value& value) {
             texture = std::make_shared<UniformFloatTexture>(floatValue);
         } else {
             texture = std::make_shared<UniformVec3Texture>(color);
+        }
+    } else if (type == "file") {
+        std::string filename = value["filename"].GetString();
+        std::string dataType = "vec3";
+        
+        if (value.HasMember("data")) {
+            dataType = value["data"].GetString();
+        }
+        
+        if (dataType == "vec3") {
+            texture = ImageLoading::LoadImage(filename);
+        } else if (dataType == "float") {
+            texture = ImageLoading::LoadFloatImage(filename);
+        }
+        
+        if (!texture) {
+            std::cerr << "Texture load error: couldn't load texture \"" << filename << "\"" << std::endl;
         }
     }
     

@@ -27,6 +27,7 @@ public:
     void rotate(float angle, const vec3& axis);
     void scale(const vec3& scale);
     void applyMatrix(const mat4x4& matrix);
+    void setMatrix(const mat4x4& matrix);
     
     vec3 applyToVector(const vec3& v) const;
     vec3 applyToNormal(const vec3& n) const;

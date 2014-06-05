@@ -10,7 +10,11 @@
 
 #include <QImage>
 
-std::shared_ptr<Texture> ImageLoading::LoadImage(const std::string& filename) {
+std::shared_ptr<Texture> ImageLoading::LoadImage(std::string filename) {
+    if (filename[0] != '/') {
+        filename = Core::baseDirectory + filename;
+    }
+    
     QImage image(filename.c_str());
     
     if (image.isNull()) {
@@ -31,7 +35,11 @@ std::shared_ptr<Texture> ImageLoading::LoadImage(const std::string& filename) {
     return texture;
 }
 
-std::shared_ptr<Texture> ImageLoading::LoadFloatImage(const std::string& filename) {
+std::shared_ptr<Texture> ImageLoading::LoadFloatImage(std::string filename) {
+    if (filename[0] != '/') {
+        filename = Core::baseDirectory + filename;
+    }
+    
     QImage image(filename.c_str());
     
     if (image.isNull()) {

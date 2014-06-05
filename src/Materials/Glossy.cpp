@@ -14,8 +14,8 @@ std::shared_ptr<Glossy> Glossy::Load(const rapidjson::Value& value) {
     if (value.HasMember("name")) {
         material->setName(value["name"].GetString());
     }
-    if (value.HasMember("color")) {
-        std::shared_ptr<Texture> texture = Texture::Load(value["color"]);
+    if (value.HasMember("diffuseColor")) {
+        std::shared_ptr<Texture> texture = Texture::Load(value["diffuseColor"]);
         if (texture) {
             material->setDiffuseColor(texture);
         }
@@ -34,7 +34,7 @@ std::shared_ptr<Glossy> Glossy::Load(const rapidjson::Value& value) {
 }
 
 Glossy::Glossy() : Material(), _color(std::make_shared<UniformVec3Texture>()),
-_indexIn(2.33f), _indexOut(1.003f), _roughness(0.2f) {
+_indexIn(2.33f), _indexOut(1.003f), _roughness(20.f) {
     
 }
 
@@ -73,7 +73,7 @@ Spectrum Glossy::evaluateBSDF(const vec3 &wo, const vec3 &wi,
     float fr = refracted(cosi, wo, intersection.normal, _indexOut, _indexIn, &t);
     vec3 h = normalize(wo + wi);
     float blinn = pow(dot(intersection.normal, h), _roughness);
-    return (1.f - fr) * Spectrum(_color->evaluateVec3(intersection.uv)) + blinn * Spectrum(1.0f);
+    return (1.f - fr) * Spectrum(_color->evaluateVec3(intersection.uv)) + blinn * Spectrum(1.f);
 }
 
 Spectrum Glossy::sampleBSDF(const vec3 &wo, vec3 *wi, const Intersection &intersection,

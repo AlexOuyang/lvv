@@ -176,8 +176,19 @@ Spectrum AshikhminMaterial::evaluateBSDF(const vec3& wo, const vec3& wi,
     vec3 specularColor = _specularColor->evaluateVec3(intersection.uv);
     
     vec3 h = normalize(wo + wi);
-    float hu = dot(h, intersection.tangentU);
-    float hv = dot(h, intersection.tangentV);
+    
+    // Generate dummy tangents
+    vec3 tangentU, tangentV;
+    if (abs(n.y) > 1.0f-0.00001f) {
+        tangentU = vec3(1.0f, 0.0f, 0.0f);
+        tangentV = vec3(0.0f, 0.0f, 1.0f);
+    } else {
+        tangentU = normalize(cross(vec3(0.0f, 1.0f, 0.0f), n));
+        tangentV = cross(n, tangentU);
+    }
+    
+    float hu = dot(h, tangentU);
+    float hv = dot(h, tangentV);
     float nh = dot(h, n);
     float hk = dot(h, wo);
     

@@ -19,21 +19,25 @@ class Triangle : public Shape {
 public:
     
     Triangle();
-    Triangle(Vertex* a, Vertex* b, Vertex* c);
+    Triangle(uint_t a, uint_t b, uint_t c);
     ~Triangle();
     
     void setMesh(const std::shared_ptr<const Mesh>& mesh);
-    void setVertices(Vertex* v1, Vertex* v2, Vertex* v3);
+    void setMaterial(const std::shared_ptr<Material>& material);
+    void setVertices(uint_t a, uint_t b, uint_t c);
     
-    Vertex* getVertex(int num) const;
+    const Vertex* getVertex(int num) const;
     
     virtual bool intersect(const Ray& ray, Intersection* intersection) const;
     virtual bool intersectP(const Ray& ray) const;
     virtual AABB getBoundingBox() const;
+    
+    bool hasMaterial() const;
 
 private:
-    Vertex*                     _vertices[3];
+    uint_t                      _vertices[3];
     std::shared_ptr<const Mesh> _mesh;
+    std::shared_ptr<Material>   _material;
 };
 
 #endif /* defined(__CSE168_Rendering__Triangle__) */

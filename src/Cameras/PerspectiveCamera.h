@@ -22,8 +22,6 @@ public:
     
     virtual float generateRay(const CameraSample& sample, Ray* ray);
 
-    void setTransform(const AnimatedTransform& t);
-    void setTransform(const Transform& t);
     void lookAt(const vec3& position, const vec3& target, const vec3& up=vec3(0, 1, 0));
     
     void setVFov(float vfov);
@@ -33,7 +31,6 @@ public:
     void setApertureSize(float aperture);
   
 private:
-    AnimatedTransform   _transform;
     float               _vfov;
     float               _aspect;
     float               _focusDistance;

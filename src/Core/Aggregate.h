@@ -21,6 +21,7 @@ public:
     
     virtual void addPrimitive(const std::shared_ptr<Primitive>& primitive) = 0;
     virtual void preprocess();
+    virtual void rebuild();
     
     virtual std::shared_ptr<Primitive> findPrimitive(const std::string& name);
     virtual void removePrimitive(const std::string& name);

@@ -32,7 +32,8 @@ public:
     BVHAccelerator(SplitMethod splitMethod=SplitSAH);
     ~BVHAccelerator();
     
-    virtual void preprocess();    
+    virtual void preprocess();
+    virtual void rebuild();
     
     virtual void addPrimitive(const std::shared_ptr<Primitive>& primitive);
 

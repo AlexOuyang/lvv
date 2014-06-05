@@ -27,6 +27,8 @@ public:
     virtual bool intersectP(const Ray& ray) const;
     
     virtual void refine(std::vector<std::shared_ptr<Shape>> &refined) const;
+    
+    virtual bool hasMaterial() const;
 };
 
 #endif /* defined(__CSE168_Rendering__Shape__) */
