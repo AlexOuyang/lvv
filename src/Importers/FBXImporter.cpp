@@ -140,6 +140,7 @@ void FBXImporter::importNodeAttribute(FbxNode* fbxNode, FbxNodeAttribute* fbxAtt
         
         camera->lookAt(importVec3(fbxCamera->Position.Get()), importVec3(fbxCamera->InterestPosition.Get()),
                        importVec3(fbxCamera->UpVector.Get()));
+        camera->setFocusDistance(fbxCamera->FocusDistance.Get());
         
         if (isNodeAnimated(fbxNode)) {
             scene.registerAnimationEvaluator(std::make_shared<CameraAnimationEvaluator>(fbxCamera,

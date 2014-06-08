@@ -79,41 +79,48 @@ int main(int argc, char* argv[]) {
     
     camera->setFilm(film);
     
+    // Camera aperture size
+    std::shared_ptr<PerspectiveCamera> persp = std::dynamic_pointer_cast<PerspectiveCamera>(camera);
+    if (persp) {
+        persp->setApertureSize(0.1f);
+    }
+    
+    // Animation config
+    float startFrame = 120.f;
+    float endFrame = 200.f;
+    float exposureTime = 0.3f;
+    float deltaFrame = 1.f;
+    int nbSamples = 1;
+    
+    std::shared_ptr<ImageFilm> image = std::dynamic_pointer_cast<ImageFilm>(film);
+    
     // ANIMATE
-    if (true)
+    if (image)
     {
-        std::shared_ptr<ImageFilm> image = std::dynamic_pointer_cast<ImageFilm>(film);
-        // Animation config
-        float startFrame = 150.f;
-        float endFrame = 151.f;
-        float exposureTime = 0.2f;
-        float deltaFrame = 1.f;
-        int nbSamples = 200;
-        
+        qDebug() << "Begin rendring animation...";
         // Init animation values
-        int nbFrames = (endFrame - startFrame) / deltaFrame;
-        int frameNum = 0;
+        int frameNum = startFrame;
         float currentFrame = startFrame;
-        while (currentFrame < endFrame) {
+        while (currentFrame <= endFrame) {
             QTime clock;
             clock.start();
             
             scene->evaluateAnimation(currentFrame-(exposureTime/2), currentFrame+(exposureTime/2));
             currentFrame += deltaFrame;
-            qDebug() << "Rendering frame " << frameNum << "/" << nbFrames;
+            renderer->preprocess(*scene, camera.get());
             for (int j = 0; j < nbSamples; ++j) {
                 renderer->render(*scene, camera.get());
             }
             
             // Create filename
             std::stringstream ss;
-            ss << "/Users/gael/Desktop/dragon_anim/frame_" << std::setfill('0') << std::setw(3) << frameNum << ".bmp";
+            ss << "/Users/gael/Desktop/output_anim/frame_" << std::setfill('0') << std::setw(3) << frameNum << ".bmp";
             image->writeToFile(ss.str());
             image->clear();
             renderer->reset();
             
             float elapsed = ((float)clock.elapsed()/1000.f);
-            qDebug() << "Rendered frame in" << elapsed << "s";
+            qDebug() << "Rendered frame" << frameNum << "/" << endFrame << "in" << elapsed << "s";
             
             ++frameNum;
         }
@@ -122,7 +129,6 @@ int main(int argc, char* argv[]) {
     }
     
     // If we have an image film, render an store
-    std::shared_ptr<ImageFilm> image = std::dynamic_pointer_cast<ImageFilm>(film);
     if (image) {
         renderer->render(*scene, camera.get());
         image->writeToFile();
@@ -139,6 +145,10 @@ int main(int argc, char* argv[]) {
         });
         
         window->show();
+        
+        // Evaluate scene animation
+//        startFrame = 54;
+//        scene->evaluateAnimation(startFrame-(exposureTime/2), startFrame+(exposureTime/2));
         
         QTime clock;
         clock.start();
@@ -162,7 +172,8 @@ int main(int argc, char* argv[]) {
                     qDebug() << "Rendered sample" << sampleCount
                     << "in" << elapsed << "s, avg"
                     << avgSampleTime << "s";
-                    //continueRendering = false;
+//                    if (sampleCount > 10)
+//                        continueRendering = false;
                 } else {
                     QThread::msleep(100);
                 }

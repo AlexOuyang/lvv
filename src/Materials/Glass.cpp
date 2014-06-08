@@ -75,8 +75,12 @@ void Glass::setRoughness(float roughness) {
 Spectrum Glass::evaluateBSDF(const vec3& wo, const vec3 &wi,
                              const Intersection& intersection) const {
     vec3 h = normalize(wo + wi);
-    float blinn = pow(dot(intersection.normal, h), _roughness);
-    return Spectrum(0.0f) * blinn;
+    vec3 n = intersection.normal;
+    if (dot(n, wo) < 0) {
+        n = -n;
+    }
+    float blinn = pow(dot(n, h), _roughness);
+    return Spectrum(0.6f) * blinn;
 }
 
 Spectrum Glass::sampleBSDF(const vec3 &wo, vec3 *wi, const Intersection &intersection,

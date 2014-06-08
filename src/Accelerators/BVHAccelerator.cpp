@@ -262,13 +262,13 @@ BVHAccelerator::Node* BVHAccelerator::recursiveBuild(std::vector<BuildPrimitiveI
                     }
                     
                     // Either create leaf or split primitives at selected SAH bucket
-                    if (primitivesCount > 10 ||
-                        bestSplitCost < primitivesCount) {
+                    if (primitivesCount > 10 || bestSplitCost < primitivesCount) {
                         BuildPrimitiveInfo *pmid = std::partition(&buildData[start],
                                                                   &buildData[end-1]+1,
                                                                   CompareToBucket(bestSplit, nBuckets,
                                                                                   bestDimension, centroidsBB));
                         mid = pmid - &buildData[0];
+                        splitDimension = bestDimension;
                     }
                     else {
                         // Create leaf _BVHBuildNode_

@@ -61,7 +61,7 @@ PhotonMappingIntegrator::PhotonMapNode::~PhotonMapNode() {
 PhotonMappingIntegrator::PhotonMappingIntegrator() :
 _globalMap(nullptr), _causticsMap(nullptr),
 _globalPhotonsCount(1e6), _causticsPhotonsCount(1e6),
-_searchRadius(sqrt(0.1f)), _searchCount(200) {
+_searchRadius(sqrt(0.05f)), _searchCount(500) {
 }
 
 void PhotonMappingIntegrator::setGlobalPhotonsCount(uint_t count) {
@@ -90,6 +90,15 @@ PhotonMappingIntegrator::~PhotonMappingIntegrator() {
 }
 
 void PhotonMappingIntegrator::preprocess(const Scene& scene, const Camera* camera, const Renderer& renderer) {
+    // Cleanup any previous state
+    if (_globalMap) {
+        delete _globalMap;
+    }
+    if (_causticsMap) {
+        delete _causticsMap;
+    }
+    
+    // Generate maps
     _globalMap = _generatePhotonMap(scene, camera, renderer, _globalPhotonsCount, false);
     _causticsMap = _generatePhotonMap(scene, camera, renderer, _causticsPhotonsCount, true);
 }

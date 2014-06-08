@@ -74,7 +74,11 @@ void Metal::setDiffuseColor(const std::shared_ptr<Texture>& color) {
 Spectrum Metal::evaluateBSDF(const vec3& wo, const vec3& wi,
                              const Intersection& intersection) const {
     vec3 h = normalize(wo + wi);
-    float blinn = pow(dot(intersection.normal, h), _roughness);
+    vec3 n = intersection.normal;
+    if (dot(n, wo) < 0) {
+        n = -n;
+    }
+    float blinn = pow(dot(n, h), _roughness);
     return Spectrum(_color->evaluateVec3(intersection.uv)) * blinn * 0.f;
 }
 
