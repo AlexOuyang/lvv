@@ -19,14 +19,25 @@ public:
     virtual ~GridVolume();
     
     bool loadData(const std::string& filename);
+    void setFrame(int frame);
     
     virtual float density(const vec3& p) const;
+    virtual float dataAtPoint(float* data, const vec3& p) const;
     
-    float gridDensity(int x, int y, int z) const;
+    float gridData(float* data, int x, int y, int z) const;
+    
+    virtual Spectrum le(const vec3& p) const;
+    
+    struct Frame {
+        float*  density;
+        float*  temperature;
+    };
     
 private:
-    uint_t  _sizeX, _sizeY, _sizeZ;
-    float*  _data;
+    uint_t              _sizeX, _sizeY, _sizeZ;
+    std::vector<Frame>  _frames;
+    float*              _density;
+    float*              _temperature;
 };
 
 #endif /* defined(__CSE168_Rendering__GridVolume__) */
