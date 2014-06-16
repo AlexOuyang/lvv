@@ -245,22 +245,23 @@ void AssimpImporter::importNode(const aiScene* assimpScene, aiNode* assimpNode,
         std::shared_ptr<GeometricPrimitive> primitive = std::make_shared<GeometricPrimitive>(mesh,
                                                                                              material.second);
         
+        // Create mesh acceleration structure
+        std::shared_ptr<Aggregate> aggregate = createMeshAccelerationStructure();
+        
+        // Create transformed primitive
+        std::shared_ptr<TransformedPrimitive> transformedPrimitive =
+        std::make_shared<TransformedPrimitive>(aggregate, transform);
+        transformedPrimitive->setName(name);
+        
         // Apply overrides
-        bool addToScene = applyPrimitiveOverrides(scene, name, transform, *primitive,
+        bool addToScene = applyPrimitiveOverrides(scene, name, transformedPrimitive, *primitive,
                                                   &material.first, mesh.get());
         
         if (addToScene) {
-            // Create mesh acceleration structure
-            std::shared_ptr<Aggregate> aggregate = createMeshAccelerationStructure();
             *aggregate << primitive;
             
             // Build acceleration structure
             aggregate->preprocess();
-            
-            // Create transformed primitive
-            std::shared_ptr<TransformedPrimitive> transformedPrimitive =
-            std::make_shared<TransformedPrimitive>(aggregate, transform);
-            transformedPrimitive->setName(name);
             
             // Add primitive to scene
             scene << transformedPrimitive;

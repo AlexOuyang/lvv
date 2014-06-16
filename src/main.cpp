@@ -82,15 +82,15 @@ int main(int argc, char* argv[]) {
     // Camera aperture size
     std::shared_ptr<PerspectiveCamera> persp = std::dynamic_pointer_cast<PerspectiveCamera>(camera);
     if (persp) {
-        persp->setApertureSize(0.1f);
+         //persp->setApertureSize(0.1f);
     }
     
     // Animation config
-    float startFrame = 120.f;
-    float endFrame = 200.f;
-    float exposureTime = 0.3f;
+    float startFrame = 80.f;
+    float endFrame = 190.f;
+    float exposureTime = 0.f;
     float deltaFrame = 1.f;
-    int nbSamples = 1;
+    int nbSamples = 50;
     
     std::shared_ptr<ImageFilm> image = std::dynamic_pointer_cast<ImageFilm>(film);
     
@@ -147,7 +147,7 @@ int main(int argc, char* argv[]) {
         window->show();
         
         // Evaluate scene animation
-//        startFrame = 54;
+//        startFrame = 190;
 //        scene->evaluateAnimation(startFrame-(exposureTime/2), startFrame+(exposureTime/2));
         
         QTime clock;

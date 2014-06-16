@@ -29,7 +29,7 @@ AreaLight* AreaLight::CreateFromMesh(MeshBase* meshBase, const Transform& t, boo
         p3 = t(triangle->getVertex((2+indexOffset)%3)->position)
     ;
     light->setPoints(p1, p2, p3);
-    vec3 normal = normalize(cross(p2 - p1, p3 - p1));
+    vec3 normal = normalize(t.applyToNormal(triangle->getVertex(0)->normal));
     if (inverseNormal) {
         normal = -normal;
     }
@@ -39,7 +39,8 @@ AreaLight* AreaLight::CreateFromMesh(MeshBase* meshBase, const Transform& t, boo
 
 AreaLight::AreaLight() : Light(),
 _points(), _normal(),
-_intensity(1.0f), _color(std::make_shared<UniformVec3Texture>()) {
+_intensity(1.0f), _color(std::make_shared<UniformVec3Texture>()),
+_isDirectional(false) {
 }
 
 AreaLight::~AreaLight() {
@@ -68,7 +69,15 @@ void AreaLight::setColor(const std::shared_ptr<Texture>& texture) {
     _color = texture;
 }
 
+void AreaLight::setDirectional(bool directional) {
+    _isDirectional = directional;
+}
+
 Spectrum AreaLight::le(const Ray& ray, const Intersection* intersection) const {
+    if (_isDirectional) {
+        return Spectrum(0.f);
+    }
+    
     if (ray.tmax == INFINITY) {
         return Spectrum(0.f);
     }
@@ -88,6 +97,12 @@ Spectrum AreaLight::le(const Ray& ray, const Intersection* intersection) const {
 Spectrum AreaLight::sampleL(const vec3 &point, float rayEpsilon,
                             const LightSample& lightSample,
                             vec3 *wi, VisibilityTester *vt) const {
+    if (_isDirectional) {
+        *wi = -_normal;
+        vt->setRay(point, rayEpsilon, *wi);
+        return _intensity * _color->evaluateVec3(vec2(0.f));
+    }
+    
     vec3 v1 = _points[1] - _points[0], v2 = _points[2] - _points[0];
     vec3 sampledPosition = _points[0] + lightSample.u * v1 + lightSample.v * v2;
     
@@ -121,14 +136,19 @@ Spectrum AreaLight::samplePhoton(vec3 *p, vec3 *direction) const {
     
     float area = length(v1) * length(v2);
     
-    // Cosine sample hemisphere direction
-    float s = (float)rand()/RAND_MAX;
-    float t = (float)rand()/RAND_MAX;
-    u = 2.0f*M_PI*s;
-    v = sqrt(1.f - t);
-    vec3 dir = vec3(v*cos(u), sqrt(t), v*sin(u));
-    
-    *direction = normalize(normalize(v1)*dir.x + normalize(v2)*dir.z + _normal*dir.y);
+    if (_isDirectional) {
+        *direction = _normal;
+        return color * _intensity * area;
+    } else {
+        // Cosine sample hemisphere direction
+        float s = (float)rand()/RAND_MAX;
+        float t = (float)rand()/RAND_MAX;
+        u = 2.0f*M_PI*s;
+        v = sqrt(1.f - t);
+        vec3 dir = vec3(v*cos(u), sqrt(t), v*sin(u));
+        
+        *direction = normalize(normalize(v1)*dir.x + normalize(v2)*dir.z + _normal*dir.y);
+    }
     
     return color * _intensity * area * (float)M_PI;
 }

@@ -17,6 +17,9 @@
 #include "TransformedPrimitive.h"
 #include "GeometricPrimitive.h"
 #include "Shapes/Mesh.h"
+#include "Volumes/HomogeneousVolume.h"
+#include "Volumes/GridVolume.h"
+#include "Core/AnimationEvaluator.h"
 
 class SceneImporter {
 public:
@@ -49,11 +52,13 @@ public:
         static PrimitiveLightOverride Load(const rapidjson::Value& value);
         
         PrimitiveLightOverride()
-        : type(), inverseNormal(false), indexOffset(), color(), intensity() {}
+        : type(), inverseNormal(false), indexOffset(), isDirectional(false),
+        color(), intensity() {}
         
         Type                        type;
         bool                        inverseNormal;
         int                         indexOffset;
+        bool                        isDirectional;
         std::shared_ptr<Texture>    color;
         OverridenProperty<float>    intensity;
         OverridenProperty<float>    rotationOffset;
@@ -73,6 +78,7 @@ public:
         vec3        le;
         float       g;
         std::string gridDataFile;
+        float       stepSize;
     };
     
     struct PrimitiveOverride {
@@ -134,12 +140,24 @@ public:
     std::shared_ptr<Material> addImportedMaterial(const ImportedMaterialAttributes& attrs, Scene& scene);
     
     bool applyPrimitiveOverrides(Scene& scene, const std::string& name,
-                                 const Transform& transform, GeometricPrimitive& p,
+                                 const std::shared_ptr<TransformedPrimitive>& transformedPrimitive,
+                                 GeometricPrimitive& p,
                                  const ImportedMaterialAttributes* material=nullptr,
                                  MeshBase* mesh=nullptr) const;
     bool applyLightOverrides(Scene& scene, Light* light) const;
     
 protected:
+    
+    class GridVolumeAnimationEvaluator : public AnimationEvaluator {
+    public:
+        GridVolumeAnimationEvaluator(GridVolume* vol);
+        virtual ~GridVolumeAnimationEvaluator();
+        
+        virtual void evaluate(float tstart, float tend);
+        
+        GridVolume* volume;
+    };
+    
     std::string                     _filename;
     MeshAccelerationStructure       _meshAccelerationStructure;
     std::vector<MaterialOverride>   _materialsOverrides;

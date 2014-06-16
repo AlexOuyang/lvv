@@ -61,7 +61,7 @@ PhotonMappingIntegrator::PhotonMapNode::~PhotonMapNode() {
 PhotonMappingIntegrator::PhotonMappingIntegrator() :
 _globalMap(nullptr), _causticsMap(nullptr),
 _globalPhotonsCount(1e6), _causticsPhotonsCount(1e6),
-_searchRadius(sqrt(0.05f)), _searchCount(500) {
+_searchRadius(sqrt(0.0001f)), _searchCount(500) {
 }
 
 void PhotonMappingIntegrator::setGlobalPhotonsCount(uint_t count) {
@@ -268,6 +268,8 @@ PhotonMappingIntegrator::_buildPhotonMapNode(std::vector<Photon> &photons, uint_
 Spectrum PhotonMappingIntegrator::li(const Scene& scene, const Renderer& renderer, const Ray& ray,
                                      const Intersection& intersection) const {
     Spectrum l(0.f);
+    
+    //return _getPhotonMapRadiance(intersection, ray, _globalMap);
 
     // If primitive is an area light, simply return its emited light
     AreaLight* areaLight = intersection.primitive->getAreaLight();
@@ -331,8 +333,10 @@ Spectrum PhotonMappingIntegrator::_getPhotonMapRadiance(const Intersection& inte
 
     while (queue.size() > 0) {
         const Photon& photon = queue.top().second->photon;
-        Spectrum fr = intersection.material->evaluateBSDF(-ray.direction, photon.direction, intersection);
-        l += fr * photon.power;
+        if (dot(photon.direction, intersection.normal) > 0) {
+            Spectrum fr = intersection.material->evaluateBSDF(-ray.direction, photon.direction, intersection);
+            l += fr * photon.power;
+        }
         queue.pop();
     }
 

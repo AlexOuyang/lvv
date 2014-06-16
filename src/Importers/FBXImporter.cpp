@@ -64,6 +64,7 @@ bool FBXImporter::import(Scene &scene) {
 void FBXImporter::importNode(FbxNode *fbxNode, Scene &scene, const Transform& parentTransform) {
     // Import node transform
     Transform transform = importNodeTransform(fbxNode);
+    
     transform = parentTransform(transform);
     
     // Import node attributes
@@ -227,39 +228,38 @@ void FBXImporter::importMesh(FbxNode* fbxNode, FbxMesh* fbxMesh, Scene &scene,
     std::shared_ptr<GeometricPrimitive> primitive = std::make_shared<GeometricPrimitive>(mesh,
                                                                                          materials[0].second);
     
+    // Create mesh acceleration structure
+    std::shared_ptr<Aggregate> aggregate = createMeshAccelerationStructure();
+    
+    // Create transformed primitive
+    std::shared_ptr<TransformedPrimitive> transformedPrimitive =
+    std::make_shared<TransformedPrimitive>(aggregate, transform);
+    
+    transformedPrimitive->setName(name);
+    
     // Apply overrides
-    bool addToScene = applyPrimitiveOverrides(scene, name, transform, *primitive, &materials[0].first,
-                                              mesh.get());
+    bool addToScene = applyPrimitiveOverrides(scene, name, transformedPrimitive, *primitive,
+                                              &materials[0].first, mesh.get());
+    
+    // Build acceleration structure
+    *aggregate << primitive;
+    aggregate->preprocess();
+    
+    // Create animation evaluators
+    if (isNodeAnimated(fbxNode)) {
+        scene.registerAnimationEvaluator(std::make_shared<MeshAnimationEvaluator>(fbxNode,
+                                                                                  transformedPrimitive,
+                                                                                  shared_from_this()));
+    }
+    if (animated) {
+        scene
+        .registerAnimationEvaluator(std::make_shared<SkinnedMeshAnimationEvaluator>(fbxMesh,
+                                                                                    animated,
+                                                                                    aggregate,
+                                                                                    shared_from_this()));
+    }
     
     if (addToScene) {
-        // Create mesh acceleration structure
-        std::shared_ptr<Aggregate> aggregate = createMeshAccelerationStructure();
-        *aggregate << primitive;
-        
-        // Build acceleration structure
-        aggregate->preprocess();
-        
-        // Create transformed primitive
-        std::shared_ptr<TransformedPrimitive> transformedPrimitive =
-        //std::make_shared<TransformedPrimitive>(aggregate, Transform());
-        std::make_shared<TransformedPrimitive>(aggregate, transform);
-        
-        transformedPrimitive->setName(name);
-        
-        // Create animation evaluators
-        if (isNodeAnimated(fbxNode)) {
-            scene.registerAnimationEvaluator(std::make_shared<MeshAnimationEvaluator>(fbxNode,
-                                                                                      transformedPrimitive,
-                                                                                      shared_from_this()));
-        }
-        if (animated) {
-            scene
-            .registerAnimationEvaluator(std::make_shared<SkinnedMeshAnimationEvaluator>(fbxMesh,
-                                                                                        animated,
-                                                                                        aggregate,
-                                                                                        shared_from_this()));
-        }
-        
         // Add primitive to scene
         scene << transformedPrimitive;
     }
@@ -611,53 +611,58 @@ mat4x4 FBXImporter::importMatrix(const FbxAMatrix& m) {
     return mat;
 }
 
-Transform FBXImporter::importNodeTransform(const FbxNode* node) {
+Transform FBXImporter::importNodeTransform(FbxNode* node) {
     Transform t;
     
-    vec3 translation = importVec3(node->LclTranslation.Get());
-    vec3 rotation = importVec3(node->LclRotation.Get());
-    vec3 scale = importVec3(node->LclScaling.Get());
-    
-    EFbxRotationOrder rotationOrder = node->RotationOrder.Get();
-    mat4x4 rotationMatrix;
-    
-    if (rotationOrder == eEulerXYZ) {
-        rotationMatrix = (glm::eulerAngleZ(glm::radians(rotation[2])))
-                          * glm::eulerAngleY(glm::radians(rotation[1]))
-                          * glm::eulerAngleX(glm::radians(rotation[0]));
-    } else if (rotationOrder == eEulerXZY) {
-        rotationMatrix = (glm::eulerAngleY(glm::radians(rotation[1]))
-                          * glm::eulerAngleZ(glm::radians(rotation[2]))
-                          * glm::eulerAngleX(glm::radians(rotation[0])));
-    } else if (rotationOrder == eEulerYZX) {
-        rotationMatrix = (glm::eulerAngleX(glm::radians(rotation[0]))
-                          * glm::eulerAngleZ(glm::radians(rotation[2]))
-                          * glm::eulerAngleY(glm::radians(rotation[1])));
-    } else if (rotationOrder == eEulerYXZ) {
-        rotationMatrix = (glm::eulerAngleZ(glm::radians(rotation[2]))
-                          * glm::eulerAngleX(glm::radians(rotation[0]))
-                          * glm::eulerAngleY(glm::radians(rotation[1])));
-    } else if (rotationOrder == eEulerZXY) {
-        rotationMatrix = (glm::eulerAngleY(glm::radians(rotation[1]))
-                          * glm::eulerAngleX(glm::radians(rotation[0]))
-                          * glm::eulerAngleZ(glm::radians(rotation[2])));
-    } else if (rotationOrder == eEulerZYX) {
-        rotationMatrix = (glm::eulerAngleX(glm::radians(rotation[0]))
-                          * glm::eulerAngleY(glm::radians(rotation[1]))
-                          * glm::eulerAngleZ(glm::radians(rotation[2])));
+    if (false) {
+        mat4x4 m = importMatrix(node->EvaluateLocalTransform());
+        t.setMatrix(m);
+    } else {
+        vec3 translation = importVec3(node->LclTranslation.Get());
+        vec3 rotation = importVec3(node->LclRotation.Get());
+        vec3 scale = importVec3(node->LclScaling.Get());
+        
+        EFbxRotationOrder rotationOrder = node->RotationOrder.Get();
+        mat4x4 rotationMatrix;
+        
+        if (rotationOrder == eEulerXYZ) {
+            rotationMatrix = (glm::eulerAngleZ(glm::radians(rotation[2])))
+            * glm::eulerAngleY(glm::radians(rotation[1]))
+            * glm::eulerAngleX(glm::radians(rotation[0]));
+        } else if (rotationOrder == eEulerXZY) {
+            rotationMatrix = (glm::eulerAngleY(glm::radians(rotation[1]))
+                              * glm::eulerAngleZ(glm::radians(rotation[2]))
+                              * glm::eulerAngleX(glm::radians(rotation[0])));
+        } else if (rotationOrder == eEulerYZX) {
+            rotationMatrix = (glm::eulerAngleX(glm::radians(rotation[0]))
+                              * glm::eulerAngleZ(glm::radians(rotation[2]))
+                              * glm::eulerAngleY(glm::radians(rotation[1])));
+        } else if (rotationOrder == eEulerYXZ) {
+            rotationMatrix = (glm::eulerAngleZ(glm::radians(rotation[2]))
+                              * glm::eulerAngleX(glm::radians(rotation[0]))
+                              * glm::eulerAngleY(glm::radians(rotation[1])));
+        } else if (rotationOrder == eEulerZXY) {
+            rotationMatrix = (glm::eulerAngleY(glm::radians(rotation[1]))
+                              * glm::eulerAngleX(glm::radians(rotation[0]))
+                              * glm::eulerAngleZ(glm::radians(rotation[2])));
+        } else if (rotationOrder == eEulerZYX) {
+            rotationMatrix = (glm::eulerAngleX(glm::radians(rotation[0]))
+                              * glm::eulerAngleY(glm::radians(rotation[1]))
+                              * glm::eulerAngleZ(glm::radians(rotation[2])));
+        }
+        
+        vec3 rotationPivot = importVec3(node->RotationPivot.Get());
+        vec3 scalePivot = importVec3(node->ScalingPivot.Get());
+        
+        t.translate(translation);
+        t.translate(rotationPivot);
+        t.applyMatrix(rotationMatrix);
+        t.translate(-rotationPivot);
+        t.translate(scalePivot);
+        t.scale(scale);
+        t.translate(-scalePivot);
     }
-    
-    vec3 rotationPivot = importVec3(node->RotationPivot.Get());
-    vec3 scalePivot = importVec3(node->ScalingPivot.Get());
-    
-    t.translate(translation);
-    t.translate(rotationPivot);
-    t.applyMatrix(rotationMatrix);
-    t.translate(-rotationPivot);
-    t.translate(scalePivot);
-    t.scale(scale);
-    t.translate(-scalePivot);
-    
+
     return t;
 }
 

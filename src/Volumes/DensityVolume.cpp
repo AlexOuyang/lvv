@@ -10,7 +10,8 @@
 
 #include "Core/Ray.h"
 
-DensityVolume::DensityVolume() : Volume(), _bounds(), _sigmaA(0.f), _sigmaS(0.f), _le(0.f), _g(0.f) {
+DensityVolume::DensityVolume() :
+Volume(), _parentNode(), _bounds(), _sigmaA(0.f), _sigmaS(0.f), _le(0.f), _g(0.f), _stepSize(1.f) {
     
 }
 
@@ -18,8 +19,8 @@ DensityVolume::~DensityVolume() {
     
 }
 
-void DensityVolume::setTransform(const Transform& objectToWorld) {
-    _worldToObject = Transform::Inverse(objectToWorld);
+void DensityVolume::setParentNode(const std::shared_ptr<SceneNode>& node) {
+    _parentNode = node;
 }
 
 void DensityVolume::setBounds(const AABB& bounds) {
@@ -42,44 +43,57 @@ void DensityVolume::setPhaseParameter(float g) {
     _g = g;
 }
 
+void DensityVolume::setStepSize(float stepSize) {
+    _stepSize = stepSize;
+}
+
 AABB DensityVolume::getBoundingBox() const {
     return AABB();
 }
 
 bool DensityVolume::intersectP(const Ray &ray, float *t0, float *t1) const {
-    return _bounds.intersectP(ray, t0, t1);
+    Transform worldToObject = _parentNode ? Transform::Inverse(_parentNode->getTransform()) : Transform();
+    Ray volumeRay = worldToObject(ray);
+    return _bounds.intersectP(volumeRay, t0, t1);
 }
 
 Spectrum DensityVolume::sigmaA(const vec3 &p) const {
-    return density(p) * _sigmaA;
+    Transform worldToObject = _parentNode ? Transform::Inverse(_parentNode->getTransform()) : Transform();
+    return density(worldToObject(p)) * _sigmaA;
 }
 
 Spectrum DensityVolume::sigmaS(const vec3 &p) const {
-    return density(p) * _sigmaS;
+    Transform worldToObject = _parentNode ? Transform::Inverse(_parentNode->getTransform()) : Transform();
+    return density(worldToObject(p)) * _sigmaS;
 }
 
 Spectrum DensityVolume::le(const vec3 &p) const {
-    return density(p) * _le;
+    Transform worldToObject = _parentNode ? Transform::Inverse(_parentNode->getTransform()) : Transform();
+    return density(worldToObject(p)) * _le;
 }
 
 float DensityVolume::phase(const vec3& p, const vec3& wi, const vec3& wo) const {
-    if (!_bounds.intersectP(p)) {
+    Transform worldToObject = _parentNode ? Transform::Inverse(_parentNode->getTransform()) : Transform();
+    if (!_bounds.intersectP(worldToObject(p))) {
         return 0.f;
     }
     return Volume::PhaseHenyeyGreenstein(wi, wo, _g);
 }
 
 Spectrum DensityVolume::sigmaT(const vec3& p) const {
-    return density(p) * (_sigmaA + _sigmaS);
+    return (sigmaA(p) + sigmaS(p));
 }
 
 Spectrum DensityVolume::tau(const Ray& ray) const {
+    Transform worldToObject = _parentNode ? Transform::Inverse(_parentNode->getTransform()) : Transform();
+    Ray volumeRay = worldToObject(ray);
+    
     float t0, t1;
-    if (!_bounds.intersectP(ray, &t0, &t1)) {
+    if (!_bounds.intersectP(volumeRay, &t0, &t1)) {
         return Spectrum(0.f);
     }
     
-    const float stepSize = 0.1f;
+    const float stepSize = this->stepSize();
     
     Spectrum tau = 0.f;
     
@@ -92,4 +106,8 @@ Spectrum DensityVolume::tau(const Ray& ray) const {
     }
     
     return tau;
+}
+
+float DensityVolume::stepSize() const {
+    return _stepSize;
 }

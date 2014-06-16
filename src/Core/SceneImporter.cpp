@@ -13,8 +13,6 @@
 #include "Accelerators/BVHAccelerator.h"
 #include "Lights/AreaLight.h"
 #include "Lights/Skylight.h"
-#include "Volumes/HomogeneousVolume.h"
-#include "Volumes/GridVolume.h"
 
 #include "SceneImporter.h"
 
@@ -164,6 +162,9 @@ SceneImporter::PrimitiveLightOverride SceneImporter::PrimitiveLightOverride::Loa
         if (value.HasMember("indexOffset")) {
             override.indexOffset = value["indexOffset"].GetInt();
         }
+        if (value.HasMember("isDirectional")) {
+            override.isDirectional = value["isDirectional"].GetBool();
+        }
     } else if (type == "environment") {
         override.type = Environment;
     }
@@ -218,6 +219,10 @@ SceneImporter::PrimitiveVolumeOverride SceneImporter::PrimitiveVolumeOverride::L
     }
     if (value.HasMember("g")) {
         override.g = value["g"].GetDouble();
+    }
+    
+    if (value.HasMember("stepSize")) {
+        override.stepSize = value["stepSize"].GetDouble();
     }
     
     return override;
@@ -440,9 +445,12 @@ std::shared_ptr<Material> SceneImporter::addImportedMaterial(const SceneImporter
 }
 
 bool SceneImporter::applyPrimitiveOverrides(Scene& scene, const std::string& name,
-                                            const Transform& transform, GeometricPrimitive& p,
+                                            const std::shared_ptr<TransformedPrimitive>& transformedPrimitive,
+                                            GeometricPrimitive& p,
                                             const ImportedMaterialAttributes* material,
                                             MeshBase* mesh) const {
+    const Transform& transform = transformedPrimitive->getTransform();
+    
     // Look for a matching override
     for (const PrimitiveOverride& override : _primitivesOverrides) {
         if (MatchName(override.namePattern, name)) {
@@ -488,6 +496,12 @@ bool SceneImporter::applyPrimitiveOverrides(Scene& scene, const std::string& nam
                     
                     // Add light to scene
                     scene << light;
+                    
+                    if (lightOverride.isDirectional) {
+                        light->setDirectional(true);
+                        // Do not add mesh to scene
+                        return false;
+                    }
                 } else if (lightOverride.type == PrimitiveLightOverride::Environment) {
                     // Create environment light
                     SkyLight* light = new SkyLight();
@@ -523,7 +537,7 @@ bool SceneImporter::applyPrimitiveOverrides(Scene& scene, const std::string& nam
             // Apply volume overrides
             if (override.volume.isSet) {
                 const PrimitiveVolumeOverride& volumeOverride = override.volume.value;
-                
+
                 AABB bounds = transform(p.getBoundingBox());
                 
                 // Create volume base on type
@@ -537,23 +551,31 @@ bool SceneImporter::applyPrimitiveOverrides(Scene& scene, const std::string& nam
                     homogeneous->setSigmaS(Spectrum(volumeOverride.sigmaS));
                     homogeneous->setLe(Spectrum(volumeOverride.le));
                     homogeneous->setPhaseParameter(volumeOverride.g);
+                    homogeneous->setStepSize(volumeOverride.stepSize);
                     
                     volume = homogeneous;
                 } else if (volumeOverride.type == PrimitiveVolumeOverride::Grid) {
-                    GridVolume* density = new GridVolume();
+                    GridVolume* grid = new GridVolume();
                     
-                    if (!density->loadData(volumeOverride.gridDataFile)) {
-                        delete density;
-                        density = nullptr;
+                    if (!grid->loadData(volumeOverride.gridDataFile)) {
+                        delete grid;
+                        grid = nullptr;
                     } else {
-                        density->setBounds(bounds);
-                        density->setSigmaA(Spectrum(volumeOverride.sigmaA));
-                        density->setSigmaS(Spectrum(volumeOverride.sigmaS));
-                        density->setLe(Spectrum(volumeOverride.le));
-                        density->setPhaseParameter(volumeOverride.g);
+                        grid->setParentNode(transformedPrimitive);
+                        grid->setBounds(p.getBoundingBox());
+                        grid->setSigmaA(Spectrum(volumeOverride.sigmaA));
+                        grid->setSigmaS(Spectrum(volumeOverride.sigmaS));
+                        grid->setLe(Spectrum(volumeOverride.le));
+                        grid->setPhaseParameter(volumeOverride.g);
+                        grid->setStepSize(volumeOverride.stepSize);
                     }
                     
-                    volume = density;
+                    // Create animation evaluator
+                    if (grid) {
+                        scene.registerAnimationEvaluator(std::make_shared<GridVolumeAnimationEvaluator>(grid));
+                    }
+                    
+                    volume = grid;
                 }
                 
                 if (!volume) {
@@ -604,4 +626,16 @@ bool SceneImporter::applyLightOverrides(Scene&, Light* light) const {
         }
     }
     return true;
+}
+
+SceneImporter::GridVolumeAnimationEvaluator::GridVolumeAnimationEvaluator(GridVolume* vol) : volume(vol) {
+    
+}
+
+SceneImporter::GridVolumeAnimationEvaluator::~GridVolumeAnimationEvaluator() {
+    
+}
+
+void SceneImporter::GridVolumeAnimationEvaluator::evaluate(float tstart, float tend) {
+    volume->setFrame((int)tend);
 }

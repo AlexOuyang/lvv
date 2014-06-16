@@ -11,7 +11,7 @@
 
 #include "Core/Core.h"
 #include "Core/Volume.h"
-#include "Core/Transform.h"
+#include "Core/SceneNode.h"
 
 class DensityVolume : public Volume {
 public:
@@ -19,12 +19,13 @@ public:
     DensityVolume();
     virtual ~DensityVolume();
     
-    void setTransform(const Transform& objectToWorld);
+    void setParentNode(const std::shared_ptr<SceneNode>& node);
     void setBounds(const AABB& bounds);
     void setSigmaA(const Spectrum& sa);
     void setSigmaS(const Spectrum& ss);
     void setLe(const Spectrum& le);
     void setPhaseParameter(float g);
+    void setStepSize(float stepSize);
     
     virtual float density(const vec3& p) const = 0;
     
@@ -36,14 +37,16 @@ public:
     virtual float phase(const vec3& p, const vec3& wi, const vec3& wo) const;
     virtual Spectrum sigmaT(const vec3& p) const;
     virtual Spectrum tau(const Ray& ray) const;
+    virtual float stepSize() const;
     
 protected:
-    Transform   _worldToObject;
-    AABB        _bounds;
-    Spectrum    _sigmaA;
-    Spectrum    _sigmaS;
-    Spectrum    _le;
-    float       _g;
+    std::shared_ptr<SceneNode>  _parentNode;
+    AABB                        _bounds;
+    Spectrum                    _sigmaA;
+    Spectrum                    _sigmaS;
+    Spectrum                    _le;
+    float                       _g;
+    float                       _stepSize;
 };
 
 #endif /* defined(__CSE168_Rendering__DensityVolume__) */

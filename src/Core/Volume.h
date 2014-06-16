@@ -27,6 +27,7 @@ public:
     virtual float phase(const vec3& p, const vec3& wi, const vec3& wo) const = 0;
     virtual Spectrum sigmaT(const vec3& p) const = 0;
     virtual Spectrum tau(const Ray& ray) const = 0;
+    virtual float stepSize() const = 0;
 };
 
 #endif /* defined(__CSE168_Rendering__Volume__) */

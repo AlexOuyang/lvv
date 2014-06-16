@@ -39,7 +39,7 @@ public:
     static vec3                     importVec3(const FbxVector4& v);
     static vec2                     importVec2(const FbxVector2& v);
     static mat4x4                   importMatrix(const FbxAMatrix& m);
-    static Transform                importNodeTransform(const FbxNode* node);
+    static Transform                importNodeTransform(FbxNode* node);
     static std::shared_ptr<Texture> importTexture(FbxTexture* fbxTexture,
                                                   bool isFloat=false);
     static bool                     isNodeAnimated(FbxNode* fbxNode);

@@ -24,6 +24,7 @@ public:
     void setSigmaS(const Spectrum& ss);
     void setLe(const Spectrum& le);
     void setPhaseParameter(float g);
+    void setStepSize(float stepSize);
     
     virtual AABB getBoundingBox() const;
     virtual bool intersectP(const Ray& ray, float* t0, float* t1) const;
@@ -33,6 +34,7 @@ public:
     virtual float phase(const vec3& p, const vec3& wi, const vec3& wo) const;
     virtual Spectrum sigmaT(const vec3& p) const;
     virtual Spectrum tau(const Ray& ray) const;
+    virtual float stepSize() const;
     
 private:
     AABB        _bounds;
@@ -40,6 +42,7 @@ private:
     Spectrum    _sigmaS;
     Spectrum    _le;
     float       _g;
+    float       _stepSize;
 };
 
 #endif /* defined(__CSE168_Rendering__Homogeneous__) */

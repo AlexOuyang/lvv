@@ -9,7 +9,7 @@
 #include "HomogeneousVolume.h"
 
 HomogeneousVolume::HomogeneousVolume() : Volume(),
-_bounds(), _sigmaA(0.f), _sigmaS(0.f), _le(0.f), _g(0.f) {
+_bounds(), _sigmaA(0.f), _sigmaS(0.f), _le(0.f), _g(0.f), _stepSize(1.f) {
     
 }
 
@@ -35,6 +35,10 @@ void HomogeneousVolume::setLe(const Spectrum& le) {
 
 void HomogeneousVolume::setPhaseParameter(float g) {
     _g = g;
+}
+
+void HomogeneousVolume::setStepSize(float stepSize) {
+    _stepSize = stepSize;
 }
 
 AABB HomogeneousVolume::getBoundingBox() const {
@@ -87,4 +91,8 @@ Spectrum HomogeneousVolume::tau(const Ray& ray) const {
         return Spectrum(0.f);
     }
     return glm::distance(ray(t0), ray(t1)) * (_sigmaA + _sigmaS);
+}
+
+float HomogeneousVolume::stepSize() const {
+    return _stepSize;
 }

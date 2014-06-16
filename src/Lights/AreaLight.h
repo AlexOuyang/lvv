@@ -28,6 +28,7 @@ public:
     void setIntensity(float intensity);
     void setColor(const vec3& color);
     void setColor(const std::shared_ptr<Texture>& texture);
+    void setDirectional(bool directional);
     
     virtual Spectrum le(const Ray& ray, const Intersection* intersection=nullptr) const;
     virtual Spectrum sampleL(const vec3& point, float rayEpsilon,
@@ -40,6 +41,7 @@ private:
     vec3                        _normal;
     float                       _intensity;
     std::shared_ptr<Texture>    _color;
+    bool                        _isDirectional;
 };
 
 #endif /* defined(__CSE168_Rendering__AreaLight__) */

@@ -80,6 +80,9 @@ Spectrum Glass::evaluateBSDF(const vec3& wo, const vec3 &wi,
         n = -n;
     }
     float blinn = pow(dot(n, h), _roughness);
+    if (glm::isnan(blinn)) {
+        blinn = 0.f;
+    }
     return Spectrum(0.6f) * blinn;
 }
 

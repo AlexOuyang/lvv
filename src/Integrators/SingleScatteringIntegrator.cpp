@@ -36,7 +36,7 @@ Spectrum SingleScatteringIntegrator::li(const Scene& scene, const Renderer& rend
     
     vec3 wo = -ray.direction;
     
-    const float stepSize = 500.f;
+    float stepSize = volume->stepSize();
     
     float tstart, tend;
     if (volume->intersectP(ray, &tstart, &tend)) {

@@ -11,7 +11,6 @@
 GeometricPrimitive::GeometricPrimitive(const std::shared_ptr<Shape>& shape,
                                        const std::shared_ptr<Material>& material, AreaLight* areaLight)
 : _shape(shape), _material(material), _areaLight(areaLight) {
-    
 }
 
 GeometricPrimitive::~GeometricPrimitive() {
